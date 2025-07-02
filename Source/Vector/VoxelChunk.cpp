@@ -47,54 +47,39 @@ void AVoxelChunk::GenerateMesh()
 	};
 	TMap<int32, FMeshSectionData> MeshSections;
 
-	const FVector ChunkActorWorldOrigin = FVector(ChunkCoord) * CHUNK_SIZE * VOXEL_SIZE;
-
 	for (int32 x = 0; x < CHUNK_SIZE; ++x)
 	{
 		for (int32 y = 0; y < CHUNK_SIZE; ++y)
 		{
 			for (int32 z = 0; z < CHUNK_SIZE; ++z)
 			{
-				float CornerDensities[8];
+				const FIntVector LocalVoxelCoord = FIntVector(x, y, z);
+				TMap<int32, int32> SubstanceCount;
+
+				float CornerDensities[8]{};
 				FVector CornerPositions[8];
 				int32 CubeIndex = 0;
-				for (int i = 0; i < 8; ++i)
-				{
-					const FIntVector GlobalGridCoord = (ChunkCoord * CHUNK_SIZE) + FIntVector(x, y, z) + VoxelCellCorners[i];
+				for (int i = 0; i < 8; ++i) {
+					const FIntVector GlobalGridCoord = (ChunkCoord * CHUNK_SIZE) + LocalVoxelCoord + VoxelCellCorners[i];
 
-					CornerDensities[i] = OwningWorld->CalculateGlobalDensity(GlobalGridCoord);
-					CornerPositions[i] = (FVector(GlobalGridCoord) * VOXEL_SIZE) - ChunkActorWorldOrigin;
+					CornerDensities[i] = OwningWorld->CalculateDensity(GlobalGridCoord);
+					CornerPositions[i] = (FVector(GlobalGridCoord) * VOXEL_SIZE) - GetActorLocation();
 
-					if (CornerDensities[i] > SurfaceLevel) CubeIndex |= (1 << i);
+					if (CornerDensities[i] > SurfaceLevel) {
+						CubeIndex |= (1 << i);
+						if (OwningWorld->GetVoxelID(GlobalGridCoord) != OwningWorld->GetVoidID())
+							SubstanceCount.FindOrAdd(OwningWorld->GetVoxelID(GlobalGridCoord))++;
+					}
 				}
 
 				if (EdgeTable[CubeIndex] == 0) continue;
 
 				int32 VoxelID = OwningWorld->GetDefaultID();
-
-				bool bMaterialFound = false;
-				for (int i = 0; i < 8; ++i)
-				{
-					if (CornerDensities[i] > SurfaceLevel)
-					{
-						const FIntVector CornerGlobalBlockCoord = (ChunkCoord * CHUNK_SIZE) + FIntVector(x, y, z) + VoxelCellCorners[i];
-						const int32 CornerVoxelID = OwningWorld->GetGlobalVoxelID(CornerGlobalBlockCoord);
-
-						if (CornerVoxelID != OwningWorld->GetVoidID())
-						{
-							VoxelID = CornerVoxelID;
-							bMaterialFound = true;
-							break;
-						}
-					}
-				}
-
-				if (VoxelID == OwningWorld->GetVoidID()) continue;
-
+				for (const auto& Pair : SubstanceCount)
+					if (Pair.Value > SubstanceCount[VoxelID])
+						VoxelID = Pair.Key;
 
 				FVector EdgeVertices[12];
-				// 각 EdgeVertex에 해당하는 GlobalGridCoord를 저장할 배열
-				FIntVector EdgeVertexGlobalGridCoords[12];
 
 				for (int i = 0; i < 12; ++i)
 				{
@@ -103,10 +88,6 @@ void AVoxelChunk::GenerateMesh()
 						const int32 CornerA = EdgeConnections[i][0];
 						const int32 CornerB = EdgeConnections[i][1];
 						EdgeVertices[i] = InterpolateVertex(CornerPositions[CornerA], CornerPositions[CornerB], CornerDensities[CornerA], CornerDensities[CornerB]);
-
-						// EdgeVertex의 GlobalGridCoord를 계산 (보간된 위치를 그리드 좌표로 변환)
-						// EdgeVertex는 로컬 공간에 있으므로, ChunkActorWorldOrigin을 다시 더해 월드 공간으로 변환 후 VOXEL_SIZE로 나눕니다.
-						EdgeVertexGlobalGridCoords[i] = FIntVector((EdgeVertices[i] + ChunkActorWorldOrigin) / VOXEL_SIZE);
 					}
 				}
 
@@ -115,30 +96,29 @@ void AVoxelChunk::GenerateMesh()
 				{
 					const int32 VertCount = Section.Vertices.Num();
 
-					Section.Vertices.Add(EdgeVertices[TriTable[CubeIndex][i]]);
-					Section.Vertices.Add(EdgeVertices[TriTable[CubeIndex][i + 1]]);
-					Section.Vertices.Add(EdgeVertices[TriTable[CubeIndex][i + 2]]);
+					const FVector V0 = EdgeVertices[TriTable[CubeIndex][i]];
+					const FVector V1 = EdgeVertices[TriTable[CubeIndex][i + 1]];
+					const FVector V2 = EdgeVertices[TriTable[CubeIndex][i + 2]];
+
+					Section.Vertices.Add(V0);
+					Section.Vertices.Add(V1);
+					Section.Vertices.Add(V2);
 
 					Section.Triangles.Add(VertCount);
 					Section.Triangles.Add(VertCount + 1);
 					Section.Triangles.Add(VertCount + 2);
+					
+					const FVector FlatNormal = -FVector::CrossProduct(V1 - V0, V2 - V0).GetSafeNormal();
 
-					FVector SmoothNormal0 = OwningWorld->GetSmoothNormalAtGlobalCoord(EdgeVertexGlobalGridCoords[TriTable[CubeIndex][i]]);
-					FVector SmoothNormal1 = OwningWorld->GetSmoothNormalAtGlobalCoord(EdgeVertexGlobalGridCoords[TriTable[CubeIndex][i + 1]]);
-					FVector SmoothNormal2 = OwningWorld->GetSmoothNormalAtGlobalCoord(EdgeVertexGlobalGridCoords[TriTable[CubeIndex][i + 2]]);
-
-					Section.Normals.Add(SmoothNormal0);
-					Section.Normals.Add(SmoothNormal1);
-					Section.Normals.Add(SmoothNormal2);
+					Section.Normals.Add(FlatNormal);
+					Section.Normals.Add(FlatNormal);
+					Section.Normals.Add(FlatNormal);
 
 					Section.UVs.Append({ FVector2D::ZeroVector, FVector2D::ZeroVector, FVector2D::ZeroVector });
 				}
 			}
 		}
 	}
-
-	UE_LOG(LogTemp, Log, TEXT("%d"),
-		MeshSections.Num());
 
 	ProceduralMesh->ClearAllMeshSections();
 	for (const auto& Pair : MeshSections)
@@ -148,10 +128,6 @@ void AVoxelChunk::GenerateMesh()
 
 		ProceduralMesh->CreateMeshSection(VoxelID, SectionData.Vertices, SectionData.Triangles, SectionData.Normals, SectionData.UVs, TArray<FColor>(), TArray<FProcMeshTangent>(), true);
 
-		UE_LOG(LogTemp, Log, TEXT("%d %d %d"),
-			SectionData.Vertices.Num(),
-			SectionData.Triangles.Num(), SectionData.Normals.Num());
-
 		if (UMaterialInterface* VoxelMaterial = OwningWorld->GetVoxelMaterial(VoxelID))
 		{
 			ProceduralMesh->SetMaterial(VoxelID, VoxelMaterial);
@@ -159,7 +135,7 @@ void AVoxelChunk::GenerateMesh()
 	}
 }
 
-void AVoxelChunk::DrawDebugBounds(float Duration, float Thickness, FColor Color)
+void AVoxelChunk::DrawDebugBounds(float Thickness, FColor Color)
 {
 	if (!GetWorld()) return;
 
@@ -173,7 +149,7 @@ void AVoxelChunk::DrawDebugBounds(float Duration, float Thickness, FColor Color)
 		FRotator::ZeroRotator.Quaternion(),
 		Color,
 		true,
-		Duration,
+		-1.f,
 		0,
 		Thickness
 	);

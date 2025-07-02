@@ -15,10 +15,11 @@ void AVectorPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent)) {
 		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AVectorPlayerController::Move);
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 		EnhancedInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this, &AVectorPlayerController::Look);
+		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &AVectorPlayerController::Fire);
+	}
 }
 
 void AVectorPlayerController::Move(const FInputActionValue& Value)
@@ -37,4 +38,14 @@ void AVectorPlayerController::Look(const FInputActionValue& Value)
 
 	if (ControlledCharacter)
 		ControlledCharacter->Look(Value);
+}
+
+
+void AVectorPlayerController::Fire(const FInputActionValue& Value)
+{
+	if (!ControlledCharacter)
+		ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
+
+	if (ControlledCharacter)
+		ControlledCharacter->Fire();
 }

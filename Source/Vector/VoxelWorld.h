@@ -1,4 +1,3 @@
-// VoxelWorld.h
 #pragma once
 
 #include "CoreMinimal.h"
@@ -16,6 +15,7 @@ USTRUCT(BlueprintType)
 struct FSphericalRoom
 {
 	GENERATED_BODY()
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FVector Center;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly) float Radius;
 };
@@ -52,19 +52,17 @@ public:
 
 	const TArray<APlayerStart*>& GetPlayerStartPoints() const { return PlayerStartPoints; }
 
-	int32 GetGlobalVoxelID(const FIntVector& GlobalCoord) const;
-	void SetGlobalVoxelID(const FIntVector& GlobalCoord, int32 NewVoxelID);
+	int32 GetVoxelID(const FIntVector& VoxelCoord) const;
+	void SetVoxelID(const FIntVector& VoxelCoord, int32 NewVoxelID);
 
-	float GetGlobalDurability(const FIntVector& GlobalCoord) const;
-	void SetGlobalDurability(const FIntVector& GlobalCoord, float NewDurability);
+	float GetDurability(const FIntVector& VoxelCoord) const;
+	void SetDurability(const FIntVector& VoxelCoord, float NewDurability);
 
-	float CalculateGlobalDensity(const FIntVector& GlobalCoord) const;
+	float CalculateDensity(const FIntVector& VoxelCoord) const;
 
-	bool IsGlobalCoordValid(const FIntVector& GlobalCoord) const;
+	bool IsVoxelCoordValid(const FIntVector& VoxelCoord) const;
 
-	int32 GetGlobalIndex(const FIntVector& GlobalCoord) const;
-
-	FVector GetSmoothNormalAtGlobalCoord(const FIntVector& GlobalCoord) const;
+	int32 GetIndex(const FIntVector& VoxelCoord) const;
 
 private:
 	UPROPERTY()
@@ -85,13 +83,13 @@ private:
 	int32 DefaultID = 1;
 
 	UPROPERTY()
-	TArray<int32> GlobalVoxelIDMap;
+	TArray<int32> VoxelIDs;
 
 	UPROPERTY()
-	TArray<float> GlobalDurabilityMap;
+	TArray<float> Durabilities;
 
-	int32 WorldVoxelVolume = 0;
-	FIntVector WorldVoxelDimensions;
+	int32 WorldVolume = 0;
+	FIntVector WorldSize;
 
 
 	void GenerateRooms(int32 NumberOfRoomsToGenerate);

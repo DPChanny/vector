@@ -7,9 +7,9 @@
 class UProceduralMeshComponent;
 class AVoxelWorld;
 
-constexpr int32 CHUNK_SIZE = 10;
+constexpr int32 CHUNK_SIZE = 20;
 
-constexpr int32 VOXEL_SIZE = 10;
+constexpr int32 VOXEL_SIZE = 50;
 
 
 UCLASS()
@@ -23,7 +23,7 @@ public:
 
 	void GenerateMesh();
 
-	void DrawDebugBounds(float Duration = 0.f, float Thickness = 10.f, FColor Color = FColor::Red);
+	void DrawDebugBounds(float Thickness = 10.f, FColor Color = FColor::Red);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

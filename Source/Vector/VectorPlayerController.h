@@ -27,6 +27,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	TObjectPtr<UInputAction> IA_Fire;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	TObjectPtr<UInputAction> IA_Roll;
+
 	virtual void BeginPlay() override;
 
 	virtual void SetupInputComponent() override;
@@ -34,6 +37,7 @@ protected:
 private:
 	void Move(const FInputActionValue& Value);
 	void Fire(const FInputActionValue& Value);
+	void Roll(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
 	UPROPERTY()

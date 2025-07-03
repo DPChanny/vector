@@ -1,15 +1,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "VoxelBaseDataAsset.h"
+#include "VoxelBlockDataAsset.h"
+#include "VoxelVoidDataAsset.h"
+#include "VoxelBorderDataAsset.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerStart.h"
 #include "VoxelWorld.generated.h"
 
 class AVoxelChunk;
-class UVoxelBaseDataAsset;
-class UVoxelBlockDataAsset;
-class UVoxelSubstanceDataAsset;
 class UMaterialInterface;
+
+constexpr int32 VOXEL_VOID_ID = 0;
+constexpr int32 VOXEL_BORDER_ID = 1;
+constexpr int32 VOXEL_DEFAULT_BLOCK_ID = 2;
 
 USTRUCT(BlueprintType)
 struct FSphericalRoom
@@ -31,24 +36,26 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Voxel | World")
 	FIntVector WorldSizeInChunks = FIntVector(10, 10, 10);
 
-	UPROPERTY(EditAnywhere, Category = "Voxel | Data", meta = (DisplayThumbnail = "false"))
-	TArray<TObjectPtr<UVoxelBaseDataAsset>> VoxelDataAssets;
+	UPROPERTY(EditAnywhere, Category = "Voxel | Data")
+	TArray<TObjectPtr<UVoxelBlockDataAsset>> VoxelBlockDataAssets;
 
-	UPROPERTY(EditAnywhere, Category = "Voxel | Generation")
-	TObjectPtr<UVoxelBaseDataAsset> VoidVoxelData;
+	UPROPERTY(EditAnywhere, Category = "Voxel | Data")
+	TObjectPtr<UVoxelVoidDataAsset>  VoxelVoidDataAsset;
 
-	UPROPERTY(EditAnywhere, Category = "Voxel | Generation")
-	TObjectPtr<UVoxelBaseDataAsset> DefaultVoxelData;
+	UPROPERTY(EditAnywhere, Category = "Voxel | Data")
+	TObjectPtr<UVoxelBorderDataAsset>  VoxelBorderDataAsset;
 
 	UPROPERTY(EditAnywhere, Category = "Voxel | Room Generation")
 	float RoomRadius = 200.f;
 
-	void InitializeWorld(int32 NumberOfPlayers);
+	void Initialize(int32 NumberOfPlayers);
 
 	UVoxelBaseDataAsset* GetVoxelData(int32 VoxelID) const;
 	UMaterialInterface* GetVoxelMaterial(int32 VoxelID) const;
-	int32 GetVoidID() const { return VoidID; }
-	int32 GetDefaultID() const { return DefaultID; }
+
+	int32 GetVoidID() const { return VOXEL_VOID_ID; }
+	int32 GetBorderID() const { return VOXEL_BORDER_ID; }
+	int32 GetDefaultBlockID() const { return VOXEL_DEFAULT_BLOCK_ID; }
 
 	const TArray<APlayerStart*>& GetPlayerStartPoints() const { return PlayerStartPoints; }
 
@@ -64,6 +71,9 @@ public:
 
 	int32 GetIndex(const FIntVector& VoxelCoord) const;
 
+	void DamageVoxel(const FVector& HitPoint, float Radius, float DamageAmount);
+	void ConstructVoxel(const FIntVector& TargetCoord, int32 NewVoxelID);
+
 private:
 	UPROPERTY()
 	TArray<TObjectPtr<APlayerStart>> PlayerStartPoints;
@@ -76,11 +86,6 @@ private:
 
 	UPROPERTY()
 	TArray<FSphericalRoom> GeneratedRooms;
-
-	UPROPERTY()
-	int32 VoidID = 0;
-	UPROPERTY()
-	int32 DefaultID = 1;
 
 	UPROPERTY()
 	TArray<int32> VoxelIDs;

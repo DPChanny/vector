@@ -6,33 +6,28 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "DrawDebugHelpers.h"
+#include "VoxelWorld.h"
 #include <Kismet/KismetMathLibrary.h>
+#include <Kismet/GameplayStatics.h>
 
 AVectorPlayerCharacter::AVectorPlayerCharacter()
 {
-	bIsGrounded = false;
-	CameraPitch = 0.f;
-	GroundNormal = FVector::UpVector;
-
 	PrimaryActorTick.bCanEverTick = true;
 
-	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	RootComponent = Root;
-
 	Collider = CreateDefaultSubobject<USphereComponent>(TEXT("Collider"));
-	Collider->SetupAttachment(Root);
+	RootComponent = Collider;
 	Collider->SetSphereRadius(50.0f);
-	Collider->SetCollisionProfileName(TEXT("VectorPlayerCharacter"));
-	Collider->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	Collider->SetCollisionProfileName(TEXT("Pawn"));
 	Collider->SetEnableGravity(false);
 	Collider->SetSimulatePhysics(true);
-	Collider->OnComponentHit.AddDynamic(this, &AVectorPlayerCharacter::OnColliderHit);
+	Collider->SetLinearDamping(1.f);
+	Collider->SetAngularDamping(1.f);
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(Root);
+	Camera->SetupAttachment(RootComponent);
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	Mesh->SetupAttachment(Root);
+	Mesh->SetupAttachment(RootComponent);
 	Mesh->SetOwnerNoSee(true);
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Mesh->SetSimulatePhysics(false);
@@ -48,13 +43,15 @@ AVectorPlayerCharacter::AVectorPlayerCharacter()
 	Light->SetupAttachment(Camera);
 
 	Light->SetIntensityUnits(ELightUnits::Lumens);
-	Light->SetIntensity(100.f);
+	Light->SetIntensity(50.f);
 
 	Light->SetOuterConeAngle(30.f);
 	Light->SetInnerConeAngle(0.f);
 
 	Light->SetAttenuationRadius(500.f);
 	Light->SetSourceRadius(50.f);
+
+	World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(GetWorld(), AVoxelWorld::StaticClass()));
 }
 
 void AVectorPlayerCharacter::BeginPlay()
@@ -65,132 +62,44 @@ void AVectorPlayerCharacter::BeginPlay()
 void AVectorPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (!bIsGrounded)
-		if (Collider)
-			SetActorLocation(Collider->GetComponentLocation());
-
-	if (Collider && Mesh)
-		Mesh->SetWorldRotation(Collider->GetComponentRotation());
 }
 
 void AVectorPlayerCharacter::Move(const FInputActionValue& Value)
 {
+	const FVector2D MoveAxisVector = Value.Get<FVector2D>();
 
+	const FVector ForceDirection = (GetActorForwardVector() * MoveAxisVector.Y) + (GetActorRightVector() * MoveAxisVector.X).GetSafeNormal();
+
+	Collider->AddForce(ForceDirection * 100, NAME_None, true);
 }
 
 void AVectorPlayerCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (bIsGrounded)
-	{
-		AddActorLocalRotation(FRotator(0.f, LookAxisVector.X, 0.f));
-		CameraPitch = FMath::Clamp(CameraPitch - LookAxisVector.Y, MinCameraPitch, MaxCameraPitch);
-		Camera->SetRelativeRotation(FRotator(CameraPitch, 0.f, 0.f));
-	}
-	else
-	{
-		AddActorLocalRotation(FRotator(-LookAxisVector.Y, LookAxisVector.X, 0.f));
-	}
+	AddActorLocalRotation(FRotator(-LookAxisVector.Y, LookAxisVector.X, 0.f));
+}
+
+void AVectorPlayerCharacter::Roll(const FInputActionValue& Value)
+{
+	const float value = Value.Get<float>();
+
+	AddActorLocalRotation(FRotator(0, 0, value));
 }
 
 void AVectorPlayerCharacter::Fire()
 {
-	Collider->AddImpulse(-Camera->GetForwardVector() * 10, NAME_None, true);
+	//Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
 
-	//FVector StartLocation = MainCamera->GetComponentLocation();
-	//FVector EndLocation = StartLocation + MainCamera->GetForwardVector() * 2000.f;
+	FVector StartLocation = Camera->GetComponentLocation();
+	FVector EndLocation = StartLocation + Camera->GetForwardVector() * 2000.f;
 
-	//FHitResult HitResult;
-	//FCollisionQueryParams Params;
-	//Params.AddIgnoredActor(this);
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
 
-	//bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
 
-	//DrawDebugLine(GetWorld(), StartLocation, EndLocation, bHit ? FColor::Green : FColor::Red, false, 2.f);
-
-	//if (bHit)
-	//{
-	//	if (GEngine)
-	//	{
-	//		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, FString::Printf(TEXT("Hit: %s"), *HitResult.GetActor()->GetName()));
-	//	}
-	//}
-}
-
-void AVectorPlayerCharacter::SetIsGrounded(bool bNewGroundedState, FVector NewGroundNormal)
-{
-	if (bIsGrounded == bNewGroundedState) return;
-
-	bIsGrounded = bNewGroundedState;
-	GroundNormal = NewGroundNormal.GetSafeNormal();
-
-	Collider->SetSimulatePhysics(!bIsGrounded);
-
-	if (bIsGrounded)
-	{
-		const FVector OriginalCameraForward = Camera->GetForwardVector();
-
-		const FVector ProjectedActorForward = FVector::VectorPlaneProject(GetActorForwardVector(), GroundNormal).GetSafeNormal();
-		const FRotator TargetActorRotation = UKismetMathLibrary::MakeRotFromXZ(ProjectedActorForward, GroundNormal);
-		SetActorRotation(TargetActorRotation);
-
-		const FRotator TargetCameraRotation = UKismetMathLibrary::MakeRotFromXZ(OriginalCameraForward, GroundNormal);
-		Camera->SetWorldRotation(TargetCameraRotation);
-
-		CameraPitch = Camera->GetRelativeRotation().Pitch;
-
-	}
-	else
-	{
-		const FRotator CurrentRotation = Camera->GetComponentRotation();
-		Camera->SetRelativeRotation(FRotator::ZeroRotator);
-		SetActorRotation(CurrentRotation);
-		Collider->SetWorldLocation(GetActorLocation());
-	}
-}
-
-void AVectorPlayerCharacter::OnColliderHit(
-	UPrimitiveComponent* HitComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse,
-	const FHitResult& Hit)
-{
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1, 2.f, FColor::Green,
-			FString::Printf(TEXT("HI"))
-		);
-	}
-
-	if (bIsGrounded)
-	{
-		return;
-	}
-
-	if (OtherActor == nullptr || OtherActor == this)
-	{
-		return;
-	}
-
-	const FVector MyVelocity = Collider->GetPhysicsLinearVelocity();
-	if (FVector::DotProduct(MyVelocity, Hit.ImpactNormal) >= 0.f)
-	{
-		return;
-	}
-
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1, 2.f, FColor::Green,
-			FString::Printf(TEXT("Sticking to surface! Normal: %s"), *Hit.ImpactNormal.ToString())
-		);
-	}
-
-	SetIsGrounded(true, Hit.ImpactNormal);
+	if (bHit)
+		World->DamageVoxel(HitResult.ImpactPoint, 200, 20);
 }

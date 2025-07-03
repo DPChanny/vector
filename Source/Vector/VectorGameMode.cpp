@@ -24,7 +24,7 @@ AActor* AVectorGameMode::FindPlayerStart_Implementation(AController* Player, con
                     NumDesiredPlayers = 1;
                     UE_LOG(LogTemp, Warning, TEXT("AVectorGameMode::FindPlayerStart_Implementation: No players currently. Requesting VoxelWorld to generate 1 player start."));
                 }
-                VoxelWorld->InitializeWorld(NumDesiredPlayers);
+                VoxelWorld->Initialize(NumDesiredPlayers);
                 UE_LOG(LogTemp, Log, TEXT("AVectorGameMode::FindPlayerStart_Implementation: Requested VoxelWorld initialization. Number of players: %d"), NumDesiredPlayers);
 
                 AvailablePlayerStarts.Empty();

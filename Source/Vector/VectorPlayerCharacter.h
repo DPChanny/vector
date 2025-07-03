@@ -10,6 +10,8 @@
 #include "VectorPlayerCharacter.generated.h"
 
 
+class AVoxelWorld;
+
 UCLASS()
 class VECTOR_API AVectorPlayerCharacter : public APawn
 {
@@ -20,47 +22,25 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USceneComponent* Root;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USphereComponent* Collider;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCameraComponent* Camera;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* Mesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USpotLightComponent* Light;
-
-	bool bIsGrounded;
-	FVector GroundNormal;
-
-	float CameraPitch;
-
-	UPROPERTY(EditAnywhere, Category = "Camera")
-	float MinCameraPitch = -89.f;
-
-	UPROPERTY(EditAnywhere, Category = "Camera")
-	float MaxCameraPitch = 89.f;
-
-	UFUNCTION()
-	void OnColliderHit(
-		UPrimitiveComponent* HitComponent,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		FVector NormalImpulse,
-		const FHitResult& Hit
-	);
-
-public:
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr < USphereComponent> Collider;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr < UCameraComponent> Camera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr < UStaticMeshComponent> Mesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USpotLightComponent> Light;
+
+	TObjectPtr<AVoxelWorld> World;
+
+public:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	void Roll(const FInputActionValue& Value);
 	void Fire();
-	void SetIsGrounded(bool bNewGroundedState, FVector NewGroundNormal);
 };

@@ -19,6 +19,7 @@ AVoxelChunk::AVoxelChunk()
 
 	ProceduralMesh->bUseAsyncCooking = true;
 	ProceduralMesh->SetCastShadow(true);
+	ProceduralMesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
 void AVoxelChunk::Initialize(AVoxelWorld* InOwningWorld, const FIntVector& InChunkCoord)
@@ -60,24 +61,31 @@ void AVoxelChunk::GenerateMesh()
 				FVector CornerPositions[8];
 				int32 CubeIndex = 0;
 				for (int i = 0; i < 8; ++i) {
-					const FIntVector GlobalGridCoord = (ChunkCoord * CHUNK_SIZE) + LocalVoxelCoord + VoxelCellCorners[i];
+					const FIntVector VoxelCoord = (ChunkCoord * CHUNK_SIZE) + LocalVoxelCoord + VoxelCellCorners[i];
 
-					CornerDensities[i] = OwningWorld->CalculateDensity(GlobalGridCoord);
-					CornerPositions[i] = (FVector(GlobalGridCoord) * VOXEL_SIZE) - GetActorLocation();
+					CornerDensities[i] = OwningWorld->CalculateDensity(VoxelCoord);
+					CornerPositions[i] = (FVector(VoxelCoord) * VOXEL_SIZE) - GetActorLocation();
 
 					if (CornerDensities[i] > SurfaceLevel) {
 						CubeIndex |= (1 << i);
-						if (OwningWorld->GetVoxelID(GlobalGridCoord) != OwningWorld->GetVoidID())
-							SubstanceCount.FindOrAdd(OwningWorld->GetVoxelID(GlobalGridCoord))++;
+						if (OwningWorld->GetVoxelID(VoxelCoord) != OwningWorld->GetVoidID())
+							SubstanceCount.FindOrAdd(OwningWorld->GetVoxelID(VoxelCoord))++;
 					}
 				}
 
 				if (EdgeTable[CubeIndex] == 0) continue;
 
-				int32 VoxelID = OwningWorld->GetDefaultID();
+				int32 VoxelID = OwningWorld->GetVoidID();
+				int32 MaxCount = 0;
+
 				for (const auto& Pair : SubstanceCount)
-					if (Pair.Value > SubstanceCount[VoxelID])
+				{
+					if (Pair.Value > MaxCount)
+					{
+						MaxCount = Pair.Value;
 						VoxelID = Pair.Key;
+					}
+				}
 
 				FVector EdgeVertices[12];
 

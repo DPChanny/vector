@@ -2,8 +2,8 @@
 #include "VoxelWorld.h"
 #include "ProceduralMeshComponent.h"
 #include "VoxelBaseDataAsset.h"
-#include "VoxelBlockDataAsset.h"
 #include "VoxelSubstanceDataAsset.h"
+#include "VoxelBlockDataAsset.h"
 #include "Materials/MaterialInterface.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
@@ -14,30 +14,32 @@ AVoxelChunk::AVoxelChunk()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	ProceduralMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
-	RootComponent = ProceduralMesh;
+	Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
+	RootComponent = Mesh;
 
-	ProceduralMesh->bUseAsyncCooking = true;
-	ProceduralMesh->SetCastShadow(true);
-	ProceduralMesh->SetCollisionProfileName(TEXT("BlockAll"));
+	Mesh->bUseAsyncCooking = true;
+	Mesh->SetCastShadow(true);
+	Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
 void AVoxelChunk::Initialize(AVoxelWorld* InOwningWorld, const FIntVector& InChunkCoord)
 {
-	OwningWorld = InOwningWorld;
+	World = InOwningWorld;
 	ChunkCoord = InChunkCoord;
+
+	UpdateMesh();
 }
 
 FVector AVoxelChunk::InterpolateVertex(const FVector& p1, const FVector& p2, float val1, float val2) const
 {
 	if (FMath::IsNearlyEqual(val1, val2)) return p1;
-	const float Mu = (SurfaceLevel - val1) / (val2 - val1);
+	const float Mu = (SURFACE_LEVEL - val1) / (val2 - val1);
 	return p1 + Mu * (p2 - p1);
 }
 
-void AVoxelChunk::GenerateMesh()
+void AVoxelChunk::UpdateMesh()
 {
-	if (!OwningWorld) return;
+	if (!World) return;
 
 	struct FMeshSectionData
 	{
@@ -63,19 +65,20 @@ void AVoxelChunk::GenerateMesh()
 				for (int i = 0; i < 8; ++i) {
 					const FIntVector VoxelCoord = (ChunkCoord * CHUNK_SIZE) + LocalVoxelCoord + VoxelCellCorners[i];
 
-					CornerDensities[i] = OwningWorld->CalculateDensity(VoxelCoord);
+					CornerDensities[i] = World->CalculateDensity(VoxelCoord);
 					CornerPositions[i] = (FVector(VoxelCoord) * VOXEL_SIZE) - GetActorLocation();
 
-					if (CornerDensities[i] > SurfaceLevel) {
+					if (CornerDensities[i] > SURFACE_LEVEL) {
 						CubeIndex |= (1 << i);
-						if (OwningWorld->GetVoxelID(VoxelCoord) != OwningWorld->GetVoidID())
-							SubstanceCount.FindOrAdd(OwningWorld->GetVoxelID(VoxelCoord))++;
+						if (const UVoxelBaseDataAsset* VoxelData = World->GetVoxelData(World->GetVoxelID(VoxelCoord)))
+							if (Cast<UVoxelSubstanceDataAsset>(VoxelData))
+								SubstanceCount.FindOrAdd(World->GetVoxelID(VoxelCoord))++;
 					}
 				}
 
 				if (EdgeTable[CubeIndex] == 0) continue;
 
-				int32 VoxelID = OwningWorld->GetVoidID();
+				int32 VoxelID = World->GetDefaultBlockID();
 				int32 MaxCount = 0;
 
 				for (const auto& Pair : SubstanceCount)
@@ -128,37 +131,16 @@ void AVoxelChunk::GenerateMesh()
 		}
 	}
 
-	ProceduralMesh->ClearAllMeshSections();
+	Mesh->ClearAllMeshSections();
 	for (const auto& Pair : MeshSections)
 	{
 		const int32 VoxelID = Pair.Key;
 		const FMeshSectionData& SectionData = Pair.Value;
 
-		ProceduralMesh->CreateMeshSection(VoxelID, SectionData.Vertices, SectionData.Triangles, SectionData.Normals, SectionData.UVs, TArray<FColor>(), TArray<FProcMeshTangent>(), true);
+		Mesh->CreateMeshSection(VoxelID, SectionData.Vertices, SectionData.Triangles, SectionData.Normals, SectionData.UVs, TArray<FColor>(), TArray<FProcMeshTangent>(), true);
 
-		if (UMaterialInterface* VoxelMaterial = OwningWorld->GetVoxelMaterial(VoxelID))
-		{
-			ProceduralMesh->SetMaterial(VoxelID, VoxelMaterial);
-		}
+		if (const UVoxelBaseDataAsset* VoxelData = World->GetVoxelData(VoxelID))
+			if (const UVoxelSubstanceDataAsset* SubstanceData = Cast<UVoxelSubstanceDataAsset>(VoxelData))
+				Mesh->SetMaterial(VoxelID, SubstanceData->Material);
 	}
-}
-
-void AVoxelChunk::DrawDebugBounds(float Thickness, FColor Color)
-{
-	if (!GetWorld()) return;
-
-	FVector ChunkWorldOrigin = FVector(ChunkCoord) * CHUNK_SIZE * VOXEL_SIZE;
-	FVector ChunkWorldSize = FVector(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE) * VOXEL_SIZE;
-
-	DrawDebugBox(
-		GetWorld(),
-		ChunkWorldOrigin + ChunkWorldSize * 0.5f,
-		ChunkWorldSize * 0.5f,
-		FRotator::ZeroRotator.Quaternion(),
-		Color,
-		true,
-		-1.f,
-		0,
-		Thickness
-	);
 }

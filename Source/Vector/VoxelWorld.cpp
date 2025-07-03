@@ -172,10 +172,7 @@ void AVoxelWorld::SpawnChunk(const FIntVector& ChunkCoord)
         if (NewChunk)
         {
             NewChunk->Initialize(this, ChunkCoord);
-            NewChunk->GenerateMesh();
             Chunks.Add(ChunkCoord, NewChunk);
-
-            NewChunk->DrawDebugBounds(1.f, FColor::Green);
         }
     }
 }
@@ -184,18 +181,6 @@ UVoxelBaseDataAsset* AVoxelWorld::GetVoxelData(int32 VoxelID) const
 {
     if (const TObjectPtr<UVoxelBaseDataAsset>* FoundData = VoxelDataMap.Find(VoxelID)) return *FoundData;
     return VoxelDataMap.FindRef(GetVoidID());
-}
-
-UMaterialInterface* AVoxelWorld::GetVoxelMaterial(int32 VoxelID) const
-{
-    if (const UVoxelBaseDataAsset* VoxelData = GetVoxelData(VoxelID))
-    {
-        if (const UVoxelSubstanceDataAsset* SubstanceData = Cast<UVoxelSubstanceDataAsset>(VoxelData))
-        {
-            return SubstanceData->Material;
-        }
-    }
-    return nullptr;
 }
 
 bool AVoxelWorld::IsVoxelCoordValid(const FIntVector& VoxelCoord) const
@@ -261,28 +246,92 @@ float AVoxelWorld::CalculateDensity(const FIntVector& VoxelCoord) const
     {
         const float BaseDensity = VoxelData->BaseDensity;
         if (const UVoxelBlockDataAsset* BlockData = Cast<UVoxelBlockDataAsset>(VoxelData))
-        {
-            const float DurabilityRatio = FMath::Clamp(GetDurability(VoxelCoord) / BlockData->MaxDurability, 0.f, 1.f);
-            return FMath::Lerp(-1.0f, BaseDensity, DurabilityRatio);
-        }
+            return BaseDensity * GetDurability(VoxelCoord) / BlockData->MaxDurability;
         else return BaseDensity;
     }
 
-    return 0.f;
+    return -1.f;
 }
 
 
 void AVoxelWorld::DamageVoxel(const FVector& Center, float Radius, float DamageAmount)
 {
-    TArray<FIntVector> FoundVoxels;
+    auto DamageLogic = [&](const FIntVector& VoxelCoord, TSet<FIntVector>& DirtyChunks)
+        {
+            const float NewDurability = GetDurability(VoxelCoord) - DamageAmount;
 
-    const FIntVector CenterVoxelCoord = FIntVector(
-        FMath::RoundToInt(Center.X / VOXEL_SIZE),
-        FMath::RoundToInt(Center.Y / VOXEL_SIZE),
-        FMath::RoundToInt(Center.Z / VOXEL_SIZE)
-    );
+            if (NewDurability <= 0)
+            {
+                SetVoxelID(VoxelCoord, GetVoidID());
+                SetDurability(VoxelCoord, 0.f);
+            }
+            else
+            {
+                SetDurability(VoxelCoord, NewDurability);
+            }
+
+            AddDirtyChunk(VoxelCoord, DirtyChunks);
+        };
+
+    ProcessVoxel(Center, Radius, DamageLogic);
+}
+
+void AVoxelWorld::ConstructVoxel(const FVector& Center, float Radius, float ConstructionAmount, int32 VoxelIDToConstruct)
+{
+    auto ConstructLogic = [&](const FIntVector& VoxelCoord, TSet<FIntVector>& DirtyChunks)
+        {
+            const UVoxelBlockDataAsset* BlockData = Cast<UVoxelBlockDataAsset>(GetVoxelData(GetVoxelID(VoxelCoord)));
+            if (!BlockData) return;
+
+            const float NewDurability = GetDurability(VoxelCoord) + ConstructionAmount;
+
+            if (NewDurability >= BlockData->MaxDurability)
+            {
+                SetDurability(VoxelCoord, BlockData->MaxDurability);
+
+                const TArray<FIntVector> NeighborOffsets = {
+                    FIntVector(1, 0, 0), FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
+                    FIntVector(0, -1, 0), FIntVector(0, 0, 1), FIntVector(0, 0, -1)
+                };
+
+                for (const FIntVector& Offset : NeighborOffsets)
+                {
+                    const FIntVector NeighborCoord = VoxelCoord + Offset;
+                    if (IsVoxelCoordValid(NeighborCoord) && GetVoxelID(NeighborCoord) == GetVoidID())
+                    {
+                        SetVoxelID(NeighborCoord, VoxelIDToConstruct);
+
+                        const UVoxelBlockDataAsset* NewBlockData = Cast<UVoxelBlockDataAsset>(GetVoxelData(VoxelIDToConstruct));
+                        if (NewBlockData)
+                            SetDurability(NeighborCoord, 0);
+
+                        AddDirtyChunk(NeighborCoord, DirtyChunks);
+                    }
+                }
+            }
+            else
+            {
+                SetDurability(VoxelCoord, NewDurability);
+            }
+
+            AddDirtyChunk(VoxelCoord, DirtyChunks);
+        };
+
+    ProcessVoxel(Center, Radius, ConstructLogic);
+}
+
+void AVoxelWorld::ProcessVoxel(const FVector& Center, float Radius, TFunction<void(const FIntVector&, TSet<FIntVector>&)> VoxelModifier)
+{
+    const FIntVector CenterVoxelCoord = FIntVector(FMath::RoundToInt(Center.X / VOXEL_SIZE), FMath::RoundToInt(Center.Y / VOXEL_SIZE), FMath::RoundToInt(Center.Z / VOXEL_SIZE));
     const int32 RadiusInVoxels = FMath::CeilToInt(Radius / VOXEL_SIZE);
     const float RadiusSquared = FMath::Square(Radius);
+
+    const TArray<FIntVector> NeighborOffsets = {
+        FIntVector(1, 0, 0), FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
+        FIntVector(0, -1, 0), FIntVector(0, 0, 1), FIntVector(0, 0, -1)
+    };
+
+    TSet<FIntVector> DirtyChunkCoords;
 
     for (int32 z = CenterVoxelCoord.Z - RadiusInVoxels; z <= CenterVoxelCoord.Z + RadiusInVoxels; ++z)
     {
@@ -291,96 +340,70 @@ void AVoxelWorld::DamageVoxel(const FVector& Center, float Radius, float DamageA
             for (int32 x = CenterVoxelCoord.X - RadiusInVoxels; x <= CenterVoxelCoord.X + RadiusInVoxels; ++x)
             {
                 const FIntVector VoxelCoord(x, y, z);
+
                 if (!IsVoxelCoordValid(VoxelCoord)) continue;
 
-                const FVector VoxelWorldPos = (FVector(VoxelCoord) * VOXEL_SIZE) + (VOXEL_SIZE / 2.0f);
-                if (FVector::DistSquared(VoxelWorldPos, Center) < RadiusSquared)
+                const FVector VoxelWorldPos = FVector(VoxelCoord) * VOXEL_SIZE + (VOXEL_SIZE / 2.f);
+                if (FVector::DistSquared(VoxelWorldPos, Center) >= RadiusSquared) continue;
+
+                if (GetVoxelID(VoxelCoord) == GetVoidID() || !Cast<UVoxelBlockDataAsset>(GetVoxelData(GetVoxelID(VoxelCoord))))
                 {
-                    FoundVoxels.Add(VoxelCoord);
+                    continue;
+                }
+
+                bool bIsSurface = false;
+                for (const FIntVector& Offset : NeighborOffsets)
+                {
+                    if (!IsVoxelCoordValid(VoxelCoord + Offset) || GetVoxelID(VoxelCoord + Offset) == GetVoidID())
+                    {
+                        bIsSurface = true;
+                        break;
+                    }
+                }
+
+                if (bIsSurface)
+                {
+                    VoxelModifier(VoxelCoord, DirtyChunkCoords);
                 }
             }
         }
     }
 
-    TArray<FIntVector> SurfaceVoxels;
-    const TArray<FIntVector> NeighborOffsets = {
-        FIntVector(1, 0, 0), FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
-        FIntVector(0, -1, 0), FIntVector(0, 0, 1), FIntVector(0, 0, -1)
-    };
+    UpdateDirtyChunk(DirtyChunkCoords);
+}
 
-    for (const FIntVector& VoxelCoord : FoundVoxels)
-    {
-        const UVoxelBaseDataAsset* VoxelData = GetVoxelData(GetVoxelID(VoxelCoord));
-        const UVoxelBlockDataAsset* BlockData = Cast<UVoxelBlockDataAsset>(VoxelData);
+void AVoxelWorld::AddDirtyChunk(const FIntVector& VoxelCoord, TSet<FIntVector>& DirtyChunks)
+{
+    const FIntVector ChunkCoord = FIntVector(
+        FMath::FloorToInt(static_cast<float>(VoxelCoord.X) / CHUNK_SIZE),
+        FMath::FloorToInt(static_cast<float>(VoxelCoord.Y) / CHUNK_SIZE),
+        FMath::FloorToInt(static_cast<float>(VoxelCoord.Z) / CHUNK_SIZE)
+    );
 
-        if (!BlockData)
-        {
-            continue;
-        }
+    const int32 LocalX = VoxelCoord.X % CHUNK_SIZE;
+    const int32 LocalY = VoxelCoord.Y % CHUNK_SIZE;
+    const int32 LocalZ = VoxelCoord.Z % CHUNK_SIZE;
 
-        if (GetVoxelID(VoxelCoord) == GetVoidID())
-        {
-            continue;
-        }
+    const int32 LastVoxelIndexInChunk = CHUNK_SIZE - 1;
 
-        bool bIsSurface = false;
-        for (const FIntVector& Offset : NeighborOffsets)
-        {
-            if (!IsVoxelCoordValid(VoxelCoord + Offset) || GetVoxelID(VoxelCoord + Offset) == GetVoidID())
-            {
-                bIsSurface = true;
-                break;
-            }
-        }
+    const int32 StartX = (LocalX == 0) ? -1 : 0;
+    const int32 EndX = (LocalX == LastVoxelIndexInChunk) ? 1 : 0;
 
-        if (bIsSurface)
-        {
-            SurfaceVoxels.Add(VoxelCoord);
-        }
-    }
+    const int32 StartY = (LocalY == 0) ? -1 : 0;
+    const int32 EndY = (LocalY == LastVoxelIndexInChunk) ? 1 : 0;
 
-    if (SurfaceVoxels.Num() == 0)
-    {
-        return;
-    }
+    const int32 StartZ = (LocalZ == 0) ? -1 : 0;
+    const int32 EndZ = (LocalZ == LastVoxelIndexInChunk) ? 1 : 0;
 
-    TSet<FIntVector> DirtyChunkCoords;
+    for (int32 i = StartX; i <= EndX; ++i)
+        for (int32 j = StartY; j <= EndY; ++j)
+            for (int32 k = StartZ; k <= EndZ; ++k)
+                DirtyChunks.Add(ChunkCoord + FIntVector(i, j, k));
+}
 
-    for (const FIntVector& VoxelCoord : SurfaceVoxels)
-    {
-        const float NewDurability = GetDurability(VoxelCoord) - DamageAmount;
-
-        if (NewDurability <= 0)
-        {
-            SetVoxelID(VoxelCoord, GetVoidID());
-            SetDurability(VoxelCoord, 0.f);
-        }
-        else
-        {
-            SetDurability(VoxelCoord, NewDurability);
-        }
-
-        const FIntVector ChunkCoord = FIntVector(
-            FMath::FloorToInt(static_cast<float>(VoxelCoord.X) / CHUNK_SIZE),
-            FMath::FloorToInt(static_cast<float>(VoxelCoord.Y) / CHUNK_SIZE),
-            FMath::FloorToInt(static_cast<float>(VoxelCoord.Z) / CHUNK_SIZE)
-        );
-        DirtyChunkCoords.Add(ChunkCoord);
-
-        const int32 LastVoxelIndexInChunk = CHUNK_SIZE - 1;
-        const int32 LocalX = VoxelCoord.X % CHUNK_SIZE;
-        const int32 LocalY = VoxelCoord.Y % CHUNK_SIZE;
-        const int32 LocalZ = VoxelCoord.Z % CHUNK_SIZE;
-
-        if (LocalX == 0)                 DirtyChunkCoords.Add(ChunkCoord + FIntVector(-1, 0, 0));
-        if (LocalX == LastVoxelIndexInChunk) DirtyChunkCoords.Add(ChunkCoord + FIntVector(1, 0, 0));
-        if (LocalY == 0)                 DirtyChunkCoords.Add(ChunkCoord + FIntVector(0, -1, 0));
-        if (LocalY == LastVoxelIndexInChunk) DirtyChunkCoords.Add(ChunkCoord + FIntVector(0, 1, 0));
-        if (LocalZ == 0)                 DirtyChunkCoords.Add(ChunkCoord + FIntVector(0, 0, -1));
-        if (LocalZ == LastVoxelIndexInChunk) DirtyChunkCoords.Add(ChunkCoord + FIntVector(0, 0, 1));
-    }
-
-    for (const FIntVector& CoordToUpdate : DirtyChunkCoords)
+void AVoxelWorld::UpdateDirtyChunk(const TSet<FIntVector>& DirtyChunks)
+{
+    for (const FIntVector& CoordToUpdate : DirtyChunks)
     {
         if (CoordToUpdate.X >= 0 && CoordToUpdate.X < WorldSizeInChunks.X &&
             CoordToUpdate.Y >= 0 && CoordToUpdate.Y < WorldSizeInChunks.Y &&
@@ -390,7 +413,8 @@ void AVoxelWorld::DamageVoxel(const FVector& Center, float Radius, float DamageA
             {
                 if (*FoundChunk)
                 {
-                    (*FoundChunk)->GenerateMesh();
+                    (*FoundChunk)->UpdateMesh();
+                    (*FoundChunk)->DrawDebugInfo();
                 }
             }
         }

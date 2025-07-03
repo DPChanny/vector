@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "VoxelSubstanceDataAsset.h"
-#include "DestructibleVoxelInterface.h"
 #include "VoxelBlockDataAsset.generated.h"
 
 

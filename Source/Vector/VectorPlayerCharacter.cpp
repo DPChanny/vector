@@ -16,7 +16,7 @@ AVectorPlayerCharacter::AVectorPlayerCharacter()
 
 	Collider = CreateDefaultSubobject<USphereComponent>(TEXT("Collider"));
 	RootComponent = Collider;
-	Collider->SetSphereRadius(50.0f);
+	Collider->SetSphereRadius(25.f);
 	Collider->SetCollisionProfileName(TEXT("Pawn"));
 	Collider->SetEnableGravity(false);
 	Collider->SetSimulatePhysics(true);
@@ -29,7 +29,7 @@ AVectorPlayerCharacter::AVectorPlayerCharacter()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(RootComponent);
 	Mesh->SetOwnerNoSee(true);
-	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
 	Mesh->SetSimulatePhysics(false);
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshAsset(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
@@ -37,6 +37,13 @@ AVectorPlayerCharacter::AVectorPlayerCharacter()
 	if (SphereMeshAsset.Succeeded())
 	{
 		Mesh->SetStaticMesh(SphereMeshAsset.Object);
+
+		const float DefaultSphereMeshRadius = 50.f;
+
+		const float TargetRadius = Collider->GetUnscaledSphereRadius();
+		const float ScaleValue = TargetRadius / DefaultSphereMeshRadius;
+
+		Mesh->SetRelativeScale3D(FVector(ScaleValue));
 	}
 
 	Light = CreateDefaultSubobject<USpotLightComponent>(TEXT("Light"));
@@ -44,12 +51,10 @@ AVectorPlayerCharacter::AVectorPlayerCharacter()
 
 	Light->SetIntensityUnits(ELightUnits::Lumens);
 	Light->SetIntensity(50.f);
-
-	Light->SetOuterConeAngle(30.f);
+	Light->SetOuterConeAngle(40.f);
 	Light->SetInnerConeAngle(0.f);
-
 	Light->SetAttenuationRadius(500.f);
-	Light->SetSourceRadius(50.f);
+	Light->SetSourceRadius(25.f);
 
 	World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(GetWorld(), AVoxelWorld::StaticClass()));
 }
@@ -66,11 +71,11 @@ void AVectorPlayerCharacter::Tick(float DeltaTime)
 
 void AVectorPlayerCharacter::Move(const FInputActionValue& Value)
 {
-	const FVector2D MoveAxisVector = Value.Get<FVector2D>();
+	const FVector MoveAxisVector = Value.Get<FVector>();
 
-	const FVector ForceDirection = (GetActorForwardVector() * MoveAxisVector.Y) + (GetActorRightVector() * MoveAxisVector.X).GetSafeNormal();
+	const FVector ForceDirection = GetActorForwardVector() * MoveAxisVector.Y + GetActorRightVector() * MoveAxisVector.X + GetActorUpVector() * MoveAxisVector.Z;
 
-	Collider->AddForce(ForceDirection * 100, NAME_None, true);
+	Collider->AddForce(ForceDirection.GetSafeNormal() * 100, NAME_None, true);
 }
 
 void AVectorPlayerCharacter::Look(const FInputActionValue& Value)
@@ -89,7 +94,7 @@ void AVectorPlayerCharacter::Roll(const FInputActionValue& Value)
 
 void AVectorPlayerCharacter::Fire()
 {
-	//Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
+	Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
 
 	FVector StartLocation = Camera->GetComponentLocation();
 	FVector EndLocation = StartLocation + Camera->GetForwardVector() * 2000.f;
@@ -101,5 +106,19 @@ void AVectorPlayerCharacter::Fire()
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
 
 	if (bHit)
-		World->DamageVoxel(HitResult.ImpactPoint, 200, 20);
+		World->ConstructVoxel(HitResult.ImpactPoint, 100, 25, World->GetDefaultBlockID());
+}
+
+void AVectorPlayerCharacter::Eat() {
+	FVector StartLocation = Camera->GetComponentLocation();
+	FVector EndLocation = StartLocation + Camera->GetForwardVector() * 2000.f;
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
+
+	if (bHit)
+		World->DamageVoxel(HitResult.ImpactPoint, 100, 25);
 }

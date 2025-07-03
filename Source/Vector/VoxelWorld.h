@@ -34,7 +34,7 @@ public:
 	AVoxelWorld();
 
 	UPROPERTY(EditAnywhere, Category = "Voxel | World")
-	FIntVector WorldSizeInChunks = FIntVector(10, 10, 10);
+	FIntVector WorldSizeInChunks = FIntVector(20, 20, 20);
 
 	UPROPERTY(EditAnywhere, Category = "Voxel | Data")
 	TArray<TObjectPtr<UVoxelBlockDataAsset>> VoxelBlockDataAssets;
@@ -51,7 +51,6 @@ public:
 	void Initialize(int32 NumberOfPlayers);
 
 	UVoxelBaseDataAsset* GetVoxelData(int32 VoxelID) const;
-	UMaterialInterface* GetVoxelMaterial(int32 VoxelID) const;
 
 	int32 GetVoidID() const { return VOXEL_VOID_ID; }
 	int32 GetBorderID() const { return VOXEL_BORDER_ID; }
@@ -72,9 +71,13 @@ public:
 	int32 GetIndex(const FIntVector& VoxelCoord) const;
 
 	void DamageVoxel(const FVector& HitPoint, float Radius, float DamageAmount);
-	void ConstructVoxel(const FIntVector& TargetCoord, int32 NewVoxelID);
+	void ConstructVoxel(const FVector& Center, float Radius, float ConstructionAmount, int32 VoxelIDToConstruct);
 
 private:
+	void ProcessVoxel(const FVector& Center, float Radius, TFunction<void(const FIntVector&, TSet<FIntVector>&)> VoxelModifier);
+	void AddDirtyChunk(const FIntVector& VoxelCoord, TSet<FIntVector>& DirtyChunks);
+	void UpdateDirtyChunk(const TSet<FIntVector>& DirtyChunks);
+
 	UPROPERTY()
 	TArray<TObjectPtr<APlayerStart>> PlayerStartPoints;
 
@@ -95,7 +98,6 @@ private:
 
 	int32 WorldVolume = 0;
 	FIntVector WorldSize;
-
 
 	void GenerateRooms(int32 NumberOfRoomsToGenerate);
 	void SpawnChunk(const FIntVector& ChunkCoord);

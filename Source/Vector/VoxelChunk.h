@@ -7,10 +7,10 @@
 class UProceduralMeshComponent;
 class AVoxelWorld;
 
-constexpr int32 CHUNK_SIZE = 20;
-
+constexpr int32 CHUNK_SIZE = 10;
 constexpr int32 VOXEL_SIZE = 50;
 
+constexpr float SURFACE_LEVEL = 0;
 
 UCLASS()
 class VECTOR_API AVoxelChunk : public AActor
@@ -19,22 +19,21 @@ class VECTOR_API AVoxelChunk : public AActor
 
 public:
 	AVoxelChunk();
+
 	void Initialize(AVoxelWorld* InOwningWorld, const FIntVector& InChunkCoord);
+	void UpdateMesh();
 
-	void GenerateMesh();
-
-	void DrawDebugBounds(float Thickness = 10.f, FColor Color = FColor::Red);
+	void DrawDebugInfo() const;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<UProceduralMeshComponent> ProceduralMesh;
+	TObjectPtr<UProceduralMeshComponent> Mesh;
 
 	UPROPERTY()
-	TObjectPtr<AVoxelWorld> OwningWorld;
+	TObjectPtr<AVoxelWorld> World;
 
+private:
 	FIntVector ChunkCoord;
-
-	float SurfaceLevel = 0.0f;
 
 	FVector InterpolateVertex(const FVector& p1, const FVector& p2, float val1, float val2) const;
 };

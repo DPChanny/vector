@@ -20,9 +20,13 @@ class VECTOR_API AVectorPlayerCharacter : public APawn
 public:
 	AVectorPlayerCharacter();
 
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	void Roll(const FInputActionValue& Value);
+	void Eat();
+	void Fire();
+
 protected:
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr < USphereComponent> Collider;
@@ -38,9 +42,7 @@ protected:
 
 	TObjectPtr<AVoxelWorld> World;
 
-public:
-	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
-	void Roll(const FInputActionValue& Value);
-	void Fire();
+private:
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 };

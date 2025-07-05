@@ -7,11 +7,6 @@
 class UProceduralMeshComponent;
 class AVoxelWorld;
 
-constexpr int32 CHUNK_SIZE = 10;
-constexpr int32 VOXEL_SIZE = 50;
-
-constexpr float SURFACE_LEVEL = 0;
-
 UCLASS()
 class VECTOR_API AVoxelChunk : public AActor
 {
@@ -20,10 +15,8 @@ class VECTOR_API AVoxelChunk : public AActor
 public:
 	AVoxelChunk();
 
-	void Initialize(AVoxelWorld* InOwningWorld, const FIntVector& InChunkCoord);
+	void Initialize(const FIntVector& InChunkCoord);
 	void UpdateMesh();
-
-	void DrawDebugInfo() const;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

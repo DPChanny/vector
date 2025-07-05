@@ -2,15 +2,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "Components/SphereComponent.h"
-#include "Camera/CameraComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/SpotLightComponent.h"
 #include "InputActionValue.h"
 #include "VectorPlayerCharacter.generated.h"
 
 
 class AVoxelWorld;
+class USphereComponent;
+class UCameraComponent;
+class UStaticMeshComponent;
+class USpotLightComponent;
+class UVoxelBlockDataAsset;
 
 UCLASS()
 class VECTOR_API AVectorPlayerCharacter : public APawn
@@ -27,7 +28,6 @@ public:
 	void Fire();
 
 protected:
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr < USphereComponent> Collider;
 
@@ -39,6 +39,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<USpotLightComponent> Light;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Poops")
+	TObjectPtr<UVoxelBlockDataAsset> Poop;
 
 	TObjectPtr<AVoxelWorld> World;
 

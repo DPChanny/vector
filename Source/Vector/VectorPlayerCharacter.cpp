@@ -2,8 +2,10 @@
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SpotLightComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "EnhancedInputComponent.h"
+#include "VoxelBlockDataAsset.h"
 #include "EnhancedInputSubsystems.h"
 #include "DrawDebugHelpers.h"
 #include "VoxelWorld.h"
@@ -94,7 +96,7 @@ void AVectorPlayerCharacter::Roll(const FInputActionValue& Value)
 
 void AVectorPlayerCharacter::Fire()
 {
-	Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
+	//Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
 
 	FVector StartLocation = Camera->GetComponentLocation();
 	FVector EndLocation = StartLocation + Camera->GetForwardVector() * 2000.f;
@@ -105,8 +107,12 @@ void AVectorPlayerCharacter::Fire()
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
 
-	if (bHit)
-		World->ConstructVoxel(HitResult.ImpactPoint, 100, 25, World->GetDefaultBlockID());
+	if (bHit) {
+		World->ConstructVoxel(HitResult.ImpactPoint, 100, 25, World->GetVoxelID(Poop));
+		TSet<FIntVector> DebugVoxels;
+		World->GetVoxelCoordsInRadius(HitResult.ImpactPoint, 150, DebugVoxels);
+		World->SetDebugVoxels(DebugVoxels);
+	}
 }
 
 void AVectorPlayerCharacter::Eat() {
@@ -119,6 +125,10 @@ void AVectorPlayerCharacter::Eat() {
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
 
-	if (bHit)
+	if (bHit) {
 		World->DamageVoxel(HitResult.ImpactPoint, 100, 25);
+		TSet<FIntVector> DebugVoxels;
+		World->GetVoxelCoordsInRadius(HitResult.ImpactPoint, 150, DebugVoxels);
+		World->SetDebugVoxels(DebugVoxels);
+	}
 }

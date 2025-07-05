@@ -8,13 +8,14 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "MarchingCubesTables.h"
+#include <Kismet/GameplayStatics.h>
 
 
 AVoxelChunk::AVoxelChunk()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMesh"));
+	Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Mesh"));
 	RootComponent = Mesh;
 
 	Mesh->bUseAsyncCooking = true;
@@ -22,9 +23,9 @@ AVoxelChunk::AVoxelChunk()
 	Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
-void AVoxelChunk::Initialize(AVoxelWorld* InOwningWorld, const FIntVector& InChunkCoord)
+void AVoxelChunk::Initialize(const FIntVector& InChunkCoord)
 {
-	World = InOwningWorld;
+	World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(GetWorld(), AVoxelWorld::StaticClass()));
 	ChunkCoord = InChunkCoord;
 
 	UpdateMesh();
@@ -33,7 +34,7 @@ void AVoxelChunk::Initialize(AVoxelWorld* InOwningWorld, const FIntVector& InChu
 FVector AVoxelChunk::InterpolateVertex(const FVector& p1, const FVector& p2, float val1, float val2) const
 {
 	if (FMath::IsNearlyEqual(val1, val2)) return p1;
-	const float Mu = (SURFACE_LEVEL - val1) / (val2 - val1);
+	const float Mu = (World->GetSurfaceLevel() - val1) / (val2 - val1);
 	return p1 + Mu * (p2 - p1);
 }
 
@@ -50,11 +51,14 @@ void AVoxelChunk::UpdateMesh()
 	};
 	TMap<int32, FMeshSectionData> MeshSections;
 
-	for (int32 x = 0; x < CHUNK_SIZE; ++x)
+	const int32 ChunkSize = World->GetChunkSize();
+	const int32 VoxelSize = World->GetVoxelSize();
+
+	for (int32 x = 0; x < ChunkSize; ++x)
 	{
-		for (int32 y = 0; y < CHUNK_SIZE; ++y)
+		for (int32 y = 0; y < ChunkSize; ++y)
 		{
-			for (int32 z = 0; z < CHUNK_SIZE; ++z)
+			for (int32 z = 0; z < ChunkSize; ++z)
 			{
 				const FIntVector LocalVoxelCoord = FIntVector(x, y, z);
 				TMap<int32, int32> SubstanceCount;
@@ -63,12 +67,12 @@ void AVoxelChunk::UpdateMesh()
 				FVector CornerPositions[8];
 				int32 CubeIndex = 0;
 				for (int i = 0; i < 8; ++i) {
-					const FIntVector VoxelCoord = (ChunkCoord * CHUNK_SIZE) + LocalVoxelCoord + VoxelCellCorners[i];
+					const FIntVector VoxelCoord = (ChunkCoord * ChunkSize) + LocalVoxelCoord + VoxelCellCorners[i];
 
-					CornerDensities[i] = World->CalculateDensity(VoxelCoord);
-					CornerPositions[i] = (FVector(VoxelCoord) * VOXEL_SIZE) - GetActorLocation();
+					CornerDensities[i] = World->GetDensity(VoxelCoord);
+					CornerPositions[i] = (FVector(VoxelCoord) * VoxelSize) - GetActorLocation();
 
-					if (CornerDensities[i] > SURFACE_LEVEL) {
+					if (CornerDensities[i] > World->GetSurfaceLevel()) {
 						CubeIndex |= (1 << i);
 						if (const UVoxelBaseDataAsset* VoxelData = World->GetVoxelData(World->GetVoxelID(VoxelCoord)))
 							if (Cast<UVoxelSubstanceDataAsset>(VoxelData))

@@ -9,7 +9,7 @@ class UMaterialInterface;
 class UNiagaraSystem;
 class USoundCue;
 
-UCLASS(BlueprintType)
+UCLASS()
 class VECTOR_API UVoxelBlockDataAsset : public UVoxelSubstanceDataAsset
 {
 	GENERATED_BODY()

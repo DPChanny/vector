@@ -10,41 +10,30 @@ AActor* AVectorGameMode::FindPlayerStart_Implementation(AController* Player, con
 {
     if (!bVoxelWorldSetupAttempted)
     {
-        TArray<AActor*> FoundActors;
-        UGameplayStatics::GetAllActorsOfClass(GetWorld(), AVoxelWorld::StaticClass(), FoundActors);
-
-        if (FoundActors.Num() > 0)
+        if (AVoxelWorld* VoxelWorld = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(GetWorld(), AVoxelWorld::StaticClass())))
         {
-            AVoxelWorld* VoxelWorld = Cast<AVoxelWorld>(FoundActors[0]);
-            if (VoxelWorld)
+            int32 NumDesiredPlayers = GetNumPlayers();
+            if (NumDesiredPlayers == 0)
             {
-                int32 NumDesiredPlayers = GetNumPlayers();
-                if (NumDesiredPlayers == 0)
-                {
-                    NumDesiredPlayers = 1;
-                    UE_LOG(LogTemp, Warning, TEXT("AVectorGameMode::FindPlayerStart_Implementation: No players currently. Requesting VoxelWorld to generate 1 player start."));
-                }
-                VoxelWorld->Initialize(NumDesiredPlayers);
-                UE_LOG(LogTemp, Log, TEXT("AVectorGameMode::FindPlayerStart_Implementation: Requested VoxelWorld initialization. Number of players: %d"), NumDesiredPlayers);
-
-                AvailablePlayerStarts.Empty();
-                AvailablePlayerStarts.Append(VoxelWorld->GetPlayerStartPoints());
-
-                UE_LOG(LogTemp, Log, TEXT("AVectorGameMode::FindPlayerStart_Implementation: Directly retrieved %d PlayerStarts from VoxelWorld."), AvailablePlayerStarts.Num());
+                NumDesiredPlayers = 1;
+                UE_LOG(LogTemp, Warning, TEXT("AVectorGameMode::FindPlayerStart_Implementation: No players currently. Requesting VoxelWorld to generate 1 player start."));
             }
-            else
-            {
-                UE_LOG(LogTemp, Error, TEXT("AVectorGameMode::FindPlayerStart_Implementation: Found actor is not AVoxelWorld."));
-            }
+            VoxelWorld->Initialize(NumDesiredPlayers);
+            UE_LOG(LogTemp, Log, TEXT("AVectorGameMode::FindPlayerStart_Implementation: Requested VoxelWorld initialization. Number of players: %d"), NumDesiredPlayers);
+
+            AvailablePlayerStarts.Empty();
+            AvailablePlayerStarts.Append(VoxelWorld->GetPlayerStarts());
+
+            UE_LOG(LogTemp, Log, TEXT("AVectorGameMode::FindPlayerStart_Implementation: Directly retrieved %d PlayerStarts from VoxelWorld."), AvailablePlayerStarts.Num());
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("AVectorGameMode::FindPlayerStart_Implementation: AVoxelWorld not found in the level. PlayerStarts will not be dynamically assigned by VoxelWorld."));
+            UE_LOG(LogTemp, Error, TEXT("AVectorGameMode::FindPlayerStart_Implementation: Found actor is not AVoxelWorld."));
         }
         bVoxelWorldSetupAttempted = true;
     }
 
-    if (AvailablePlayerStarts.Num() > 0)
+    if (!AvailablePlayerStarts.IsEmpty())
     {
         APlayerStart* ChosenPlayerStart = AvailablePlayerStarts[0];
         AvailablePlayerStarts.RemoveAt(0);

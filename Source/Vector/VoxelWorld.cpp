@@ -223,9 +223,7 @@ void AVoxelWorld::SetVoxelID(const FIntVector& VoxelCoord, int32 NewVoxelID)
     if (VoxelIDs.IsValidIndex(Index))
         VoxelIDs[Index] = NewVoxelID;
 
-    if (const TObjectPtr<AVoxelDebugActor>* FoundActor = ActiveVoxelDebugs.Find(VoxelCoord)) {
-        (*FoundActor)->UpdateWidget();
-    }
+    SetDebugVoxel(VoxelCoord);
 }
 
 float AVoxelWorld::GetDurability(const FIntVector& VoxelCoord) const
@@ -250,9 +248,7 @@ void AVoxelWorld::SetDurability(const FIntVector& VoxelCoord, float NewDurabilit
     if (Durabilities.IsValidIndex(Index))
         Durabilities[Index] = NewDurability;
 
-    if (const TObjectPtr<AVoxelDebugActor>* FoundActor = ActiveVoxelDebugs.Find(VoxelCoord)) {
-        (*FoundActor)->UpdateWidget();
-    }
+    SetDebugVoxel(VoxelCoord);
 }
 
 float AVoxelWorld::GetDensity(const FIntVector& VoxelCoord) const
@@ -263,7 +259,7 @@ float AVoxelWorld::GetDensity(const FIntVector& VoxelCoord) const
     {
         const float BaseDensity = VoxelData->BaseDensity;
         if (const UVoxelBlockDataAsset* BlockData = Cast<UVoxelBlockDataAsset>(VoxelData))
-            return BaseDensity * GetDurability(VoxelCoord) / BlockData->MaxDurability;
+            return GetDurability(VoxelCoord) ? BaseDensity * GetDurability(VoxelCoord) / BlockData->MaxDurability : -1.f;
         else return BaseDensity;
     }
 
@@ -487,34 +483,43 @@ bool AVoxelWorld::IsSurfaceVoxel(const FIntVector& VoxelCoord) const
     return false;
 }
 
-void AVoxelWorld::SetDebugVoxels(const TSet<FIntVector>& NewDebugVoxelCoords)
+void AVoxelWorld::SetDebugVoxel(const FIntVector& NewDebugVoxel)
 {
-    TSet<FIntVector> CurrentDebugVoxels;
-    ActiveVoxelDebugs.GetKeys(CurrentDebugVoxels);
-
-    TSet<FIntVector> VoxelsToRemove = CurrentDebugVoxels.Difference(NewDebugVoxelCoords);
-    for (const FIntVector& VoxelToRemove : VoxelsToRemove)
-    {
-        HideVoxelDebug(VoxelToRemove);
-    }
-
-    TSet<FIntVector> VoxelsToAdd = NewDebugVoxelCoords.Difference(CurrentDebugVoxels);
-    for (const FIntVector& VoxelToAdd : VoxelsToAdd)
-    {
-        DrawVoxelDebug(VoxelToAdd);
-    }
+    DebugVoxelsBuffer.Add(NewDebugVoxel);
 }
 
-void AVoxelWorld::DrawVoxelDebug(const FIntVector& VoxelCoord)
+void AVoxelWorld::SetDebugVoxels(const TSet<FIntVector>& NewDebugVoxels)
 {
-    if (ActiveVoxelDebugs.Contains(VoxelCoord))
+    DebugVoxelsBuffer.Append(NewDebugVoxels);
+}
+
+void AVoxelWorld::FlushDebugVoxelBuffer()
+{
+    TSet<FIntVector> CurrentDebugVoxels;
+    DebugVoxels.GetKeys(CurrentDebugVoxels);
+
+    const TSet<FIntVector> VoxelsToRemove = CurrentDebugVoxels.Difference(DebugVoxelsBuffer);
+    for (const FIntVector& VoxelToRemove : VoxelsToRemove)
+        RemoveDebugVoxel(VoxelToRemove);
+
+    const TSet<FIntVector> VoxelsToUpdate = CurrentDebugVoxels.Difference(VoxelsToRemove);
+    for (const FIntVector& VoxelToUpdate : VoxelsToUpdate)
+        if (const TObjectPtr<AVoxelDebugActor>* FoundActor = DebugVoxels.Find(VoxelToUpdate))
+            (*FoundActor)->UpdateWidget();
+
+    const TSet<FIntVector> VoxelsToAdd = DebugVoxelsBuffer.Difference(CurrentDebugVoxels);
+    for (const FIntVector& VoxelToAdd : VoxelsToAdd)
+        AddDebugVoxel(VoxelToAdd);
+
+    DebugVoxelsBuffer.Reset();
+}
+
+void AVoxelWorld::AddDebugVoxel(const FIntVector& VoxelCoord)
+{
+    if (DebugVoxels.Contains(VoxelCoord))
     {
         return;
     }
-
-    if (GetVoxelID(VoxelCoord) == GetVoidID()) return;
-
-    if (!IsSurfaceVoxel(VoxelCoord)) return;
 
     if (!DebugActorClass)
     {
@@ -529,18 +534,18 @@ void AVoxelWorld::DrawVoxelDebug(const FIntVector& VoxelCoord)
     if (NewDebugActor)
     {
         NewDebugActor->Initialize(VoxelCoord);
-        ActiveVoxelDebugs.Add(VoxelCoord, NewDebugActor);
+        DebugVoxels.Add(VoxelCoord, NewDebugActor);
     }
 }
 
-void AVoxelWorld::HideVoxelDebug(const FIntVector& VoxelCoord)
+void AVoxelWorld::RemoveDebugVoxel(const FIntVector& VoxelCoord)
 {
-    if (TObjectPtr<AVoxelDebugActor> FoundActor = ActiveVoxelDebugs.FindRef(VoxelCoord))
+    if (TObjectPtr<AVoxelDebugActor> FoundActor = DebugVoxels.FindRef(VoxelCoord))
     {
         if (FoundActor)
         {
             FoundActor->Destroy();
         }
-        ActiveVoxelDebugs.Remove(VoxelCoord);
+        DebugVoxels.Remove(VoxelCoord);
     }
 }

@@ -51,14 +51,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Voxel | Nexus")
 	float NexusRadius = 200.f;
 
-	void DrawVoxelDebug(const FIntVector& VoxelCoord);
-	void HideVoxelDebug(const FIntVector& VoxelCoord);
+	void AddDebugVoxel(const FIntVector& VoxelCoord);
+	void RemoveDebugVoxel(const FIntVector& VoxelCoord);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Voxel Debug")
 	TSubclassOf<AVoxelDebugActor> DebugActorClass;
 
-	UPROPERTY()
-	TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> ActiveVoxelDebugs;
+	TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;
+
+	TSet<FIntVector> DebugVoxelsBuffer;
 
 public:
 	void Initialize(int32 NumberOfPlayers);
@@ -100,7 +101,9 @@ public:
 	void InitializeNexuses(int32 NexusCount);
 	void InitializeChunk(const FIntVector& ChunkCoord);
 
-	void SetDebugVoxels(const TSet<FIntVector>& NewDebugVoxelCoords);
+	void SetDebugVoxels(const TSet<FIntVector>& NewDebugVoxels);
+	void SetDebugVoxel(const FIntVector& NewDebugVoxel);
+	void FlushDebugVoxelBuffer();
 
 private:
 	void ProcessVoxel(const FVector& Center, float Radius, TFunction<void(const FIntVector&, TSet<FIntVector>&)> VoxelModifier);

@@ -109,9 +109,7 @@ void AVectorPlayerCharacter::Fire()
 
 	if (bHit) {
 		World->ConstructVoxel(HitResult.ImpactPoint, 100, 25, World->GetVoxelID(Poop));
-		TSet<FIntVector> DebugVoxels;
-		World->GetVoxelCoordsInRadius(HitResult.ImpactPoint, 150, DebugVoxels);
-		World->SetDebugVoxels(DebugVoxels);
+		World->FlushDebugVoxelBuffer();
 	}
 }
 
@@ -127,8 +125,6 @@ void AVectorPlayerCharacter::Eat() {
 
 	if (bHit) {
 		World->DamageVoxel(HitResult.ImpactPoint, 100, 25);
-		TSet<FIntVector> DebugVoxels;
-		World->GetVoxelCoordsInRadius(HitResult.ImpactPoint, 150, DebugVoxels);
-		World->SetDebugVoxels(DebugVoxels);
+		World->FlushDebugVoxelBuffer();
 	}
 }

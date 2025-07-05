@@ -13,7 +13,8 @@ AVoxelDebugActor::AVoxelDebugActor()
 
     Box = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
     RootComponent = Box;
-    Box->SetBoxExtent(FVector(50.f));
+    Box->SetHiddenInGame(false);
+    Box->SetLineThickness(.5f);
     Box->SetCollisionProfileName(TEXT("NoCollision"));
 
     Widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
@@ -27,6 +28,8 @@ void AVoxelDebugActor::Initialize(const FIntVector& InVoxelCoord)
     World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(GetWorld(), AVoxelWorld::StaticClass()));
 
     VoxelCoord = InVoxelCoord;
+
+    Box->SetBoxExtent(FVector(World->GetVoxelSize() / 2));
 
     UpdateWidget();
 }

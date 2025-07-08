@@ -12,6 +12,7 @@
 
 
 AVoxelChunk::AVoxelChunk()
+	: ChunkCoord(FIntVector::ZeroValue)
 {
 	PrimaryActorTick.bCanEverTick = false;
 

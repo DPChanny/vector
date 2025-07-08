@@ -13,8 +13,5 @@ public:
 	UVoxelSubstanceDataAsset();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Substance")
-	TObjectPtr<UMaterialInterface> Material;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Substance")
-	TSoftObjectPtr<USoundCue> FootstepSound;
+	FLinearColor BlendingColor;
 };

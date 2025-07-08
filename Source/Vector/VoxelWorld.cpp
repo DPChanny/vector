@@ -259,7 +259,7 @@ float AVoxelWorld::GetDensity(const FIntVector& VoxelCoord) const
     {
         const float BaseDensity = VoxelData->BaseDensity;
         if (const UVoxelBlockDataAsset* BlockData = Cast<UVoxelBlockDataAsset>(VoxelData))
-            return GetDurability(VoxelCoord) ? BaseDensity * GetDurability(VoxelCoord) / BlockData->MaxDurability : -1.f;
+            return BaseDensity * GetDurability(VoxelCoord) / BlockData->MaxDurability;
         else return BaseDensity;
     }
 
@@ -271,6 +271,8 @@ void AVoxelWorld::DamageVoxel(const FVector& Center, float Radius, float DamageA
 {
     auto DamageLogic = [&](const FIntVector& VoxelCoord, TSet<FIntVector>& DirtyChunks)
         {
+            if (!Cast<UVoxelBlockDataAsset>(GetVoxelData(GetVoxelID(VoxelCoord)))) return;
+
             const float NewDurability = GetDurability(VoxelCoord) - DamageAmount;
 
             if (NewDurability <= 0)
@@ -404,23 +406,22 @@ void AVoxelWorld::GetVoxelCoordsInRadius(const FVector& Center, float Radius, TS
 
 void AVoxelWorld::ProcessVoxel(const FVector& Center, float Radius, TFunction<void(const FIntVector&, TSet<FIntVector>&)> VoxelModifier)
 {
-    TSet<FIntVector> VoxelsToProcess;
-    GetVoxelCoordsInRadius(Center, Radius, VoxelsToProcess);
+    TSet<FIntVector> VoxelCoordsInRadius;
+    TSet<FIntVector> VoxelCoordsToProcess;
+    GetVoxelCoordsInRadius(Center, Radius, VoxelCoordsInRadius);
 
     TSet<FIntVector> DirtyChunkCoords;
 
-    for (const FIntVector& VoxelCoord : VoxelsToProcess)
+    for (const FIntVector& VoxelCoord : VoxelCoordsInRadius)
     {
-        if (GetVoxelID(VoxelCoord) == GetVoidID() || !Cast<UVoxelBlockDataAsset>(GetVoxelData(GetVoxelID(VoxelCoord))))
-        {
-            continue;
-        }
+        if (GetVoxelID(VoxelCoord) == GetVoidID()) continue;
 
         if (IsSurfaceVoxel(VoxelCoord))
-        {
-            VoxelModifier(VoxelCoord, DirtyChunkCoords);
-        }
+			VoxelCoordsToProcess.Add(VoxelCoord);
     }
+
+	for (const FIntVector& VoxelCoord : VoxelCoordsToProcess)
+        VoxelModifier(VoxelCoord, DirtyChunkCoords);
 
     UpdateDirtyChunk(DirtyChunkCoords);
 }
@@ -527,7 +528,7 @@ void AVoxelWorld::AddDebugVoxel(const FIntVector& VoxelCoord)
         return;
     }
 
-    const FVector SpawnLocation = (FVector(VoxelCoord) * VoxelSize) + (FVector(VoxelSize) * 0.5f);
+    const FVector SpawnLocation = (FVector(VoxelCoord) * VoxelSize);
 
     AVoxelDebugActor* NewDebugActor = GetWorld()->SpawnActor<AVoxelDebugActor>(DebugActorClass, SpawnLocation, FRotator::ZeroRotator);
 

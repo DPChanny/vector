@@ -1,8 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "VoxelBlockDataAsset.generated.h"
 #include "VoxelSubstanceDataAsset.h"
+
+// clang-format off
+#include "VoxelBlockDataAsset.generated.h"
+// clang-format on
 
 class UMaterialInterface;
 class UNiagaraSystem;

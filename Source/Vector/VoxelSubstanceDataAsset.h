@@ -1,8 +1,6 @@
 #pragma once
 
-#include <Math/Color.h>
-#include <UObject/ObjectMacros.h>
-
+#include "CoreMinimal.h"
 #include "VoxelBaseDataAsset.h"
 #include "VoxelSubstanceDataAsset.generated.h"
 

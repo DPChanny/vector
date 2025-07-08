@@ -197,4 +197,4 @@ FVector2D AVoxelChunk::CalculateUV(const FVector& Position) const {
   } else {
     return FVector2D(Position.X, Position.Y) * 0.05f;
   }
-  £ý
+}

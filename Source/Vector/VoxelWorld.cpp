@@ -268,9 +268,8 @@ void AVoxelWorld::DamageVoxel(const FVector& Center, float Radius,
     if (NewDurability <= 0) {
       SetVoxelID(VoxelCoord, GetVoidID());
       SetDurability(VoxelCoord, 0.f);
-    } else {
+    } else
       SetDurability(VoxelCoord, NewDurability);
-    }
 
     AddDirtyChunk(VoxelCoord, DirtyChunks);
   };

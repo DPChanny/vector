@@ -1,26 +1,27 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "VoxelSubstanceDataAsset.h"
 #include "VoxelBlockDataAsset.generated.h"
-
+#include "VoxelSubstanceDataAsset.h"
 
 class UMaterialInterface;
 class UNiagaraSystem;
 class USoundCue;
 
 UCLASS()
-class VECTOR_API UVoxelBlockDataAsset : public UVoxelSubstanceDataAsset
-{
-	GENERATED_BODY()
+class VECTOR_API UVoxelBlockDataAsset : public UVoxelSubstanceDataAsset {
+  GENERATED_BODY()
 
-public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Destructible", meta = (ClampMin = "0.0"))
-	float MaxDurability = 100.0f;
+ public:
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+            Category = "Voxel | Destructible", meta = (ClampMin = "0.0"))
+  float MaxDurability = 100.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Destructible")
-	TSoftObjectPtr<UNiagaraSystem> BreakEffect;
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+            Category = "Voxel | Destructible")
+  TSoftObjectPtr<UNiagaraSystem> BreakEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Destructible")
-	TSoftObjectPtr<USoundCue> BreakSound;
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+            Category = "Voxel | Destructible")
+  TSoftObjectPtr<USoundCue> BreakSound;
 };

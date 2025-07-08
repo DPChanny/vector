@@ -10,30 +10,28 @@ class UWidgetComponent;
 class UVoxelDebugWidget;
 
 UCLASS()
-class VECTOR_API AVoxelDebugActor : public AActor
-{
-	GENERATED_BODY()
+class VECTOR_API AVoxelDebugActor : public AActor {
+  GENERATED_BODY()
 
-private:
-	AVoxelDebugActor();
+ private:
+  AVoxelDebugActor();
 
-	virtual void BeginPlay() override;
+  virtual void BeginPlay() override;
 
-	FIntVector VoxelCoord;
-	TWeakObjectPtr<AVoxelWorld> World;
-	
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<UBoxComponent> Box;
+  FIntVector VoxelCoord;
+  TWeakObjectPtr<AVoxelWorld> World;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<UWidgetComponent> Widget;
+ protected:
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  TObjectPtr<UBoxComponent> Box;
 
-	UPROPERTY()
-	TObjectPtr<UVoxelDebugWidget> DisplayWidget;
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  TObjectPtr<UWidgetComponent> Widget;
 
-public:
-	void Initialize(const FIntVector& InVoxelCoord);
-	void UpdateWidget();
+  UPROPERTY()
+  TObjectPtr<UVoxelDebugWidget> DisplayWidget;
 
+ public:
+  void Initialize(const FIntVector& InVoxelCoord);
+  void UpdateWidget();
 };

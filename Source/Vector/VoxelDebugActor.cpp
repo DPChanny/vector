@@ -1,75 +1,70 @@
 #include "VoxelDebugActor.h"
-#include "VoxelWorld.h"
-#include "Components/BoxComponent.h"
-#include "Components/WidgetComponent.h"
-#include "VoxelBlockDataAsset.h"
-#include "VoxelBaseDataAsset.h"
-#include "VoxelDebugWidget.h"
+
 #include <Kismet/GameplayStatics.h>
 
-AVoxelDebugActor::AVoxelDebugActor()
-{
-    PrimaryActorTick.bCanEverTick = true;
+#include "Components/BoxComponent.h"
+#include "Components/WidgetComponent.h"
+#include "VoxelBaseDataAsset.h"
+#include "VoxelBlockDataAsset.h"
+#include "VoxelDebugWidget.h"
+#include "VoxelWorld.h"
 
-    Box = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
-    RootComponent = Box;
-    Box->SetHiddenInGame(false);
-    Box->SetLineThickness(.5f);
-    Box->SetCollisionProfileName(TEXT("NoCollision"));
+AVoxelDebugActor::AVoxelDebugActor() {
+  PrimaryActorTick.bCanEverTick = true;
 
-    Widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
-    Widget->SetupAttachment(RootComponent);
-    Widget->SetWidgetSpace(EWidgetSpace::Screen);
-    Widget->SetDrawSize(FVector2D(300.f, 200.f));
+  Box = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
+  RootComponent = Box;
+  Box->SetHiddenInGame(false);
+  Box->SetLineThickness(.5f);
+  Box->SetCollisionProfileName(TEXT("NoCollision"));
+
+  Widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
+  Widget->SetupAttachment(RootComponent);
+  Widget->SetWidgetSpace(EWidgetSpace::Screen);
+  Widget->SetDrawSize(FVector2D(300.f, 200.f));
 }
 
-void AVoxelDebugActor::Initialize(const FIntVector& InVoxelCoord)
-{
-    World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(GetWorld(), AVoxelWorld::StaticClass()));
+void AVoxelDebugActor::Initialize(const FIntVector& InVoxelCoord) {
+  World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
+      GetWorld(), AVoxelWorld::StaticClass()));
 
-    VoxelCoord = InVoxelCoord;
+  VoxelCoord = InVoxelCoord;
 
-    Box->SetBoxExtent(FVector(World->GetVoxelSize() / 2));
+  Box->SetBoxExtent(FVector(World->GetVoxelSize() / 2));
 
-    UpdateWidget();
+  UpdateWidget();
 }
 
+void AVoxelDebugActor::BeginPlay() {
+  Super::BeginPlay();
 
-void AVoxelDebugActor::BeginPlay()
-{
-    Super::BeginPlay();
-
-    if (UUserWidget* UserWidget = Widget->GetUserWidgetObject())
-    {
-        DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
-    }
+  if (UUserWidget* UserWidget = Widget->GetUserWidgetObject()) {
+    DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
+  }
 }
 
-void AVoxelDebugActor::UpdateWidget()
-{
-    if (!World.IsValid() || !DisplayWidget)
-    {
-        if (UUserWidget* UserWidget = Widget->GetUserWidgetObject())
-        {
-            DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
-        }
-        if (!DisplayWidget) return;
+void AVoxelDebugActor::UpdateWidget() {
+  if (!World.IsValid() || !DisplayWidget) {
+    if (UUserWidget* UserWidget = Widget->GetUserWidgetObject()) {
+      DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
     }
+    if (!DisplayWidget) return;
+  }
 
-    const int32 VoxelID = World->GetVoxelID(VoxelCoord);
-    const float CurrentDurability = World->GetDurability(VoxelCoord);
-    const float CurrentDensity = World->GetDensity(VoxelCoord);
-    float MaxDurability = 0.f;
-    float BaseDensity = 0.f;
+  const int32 VoxelID = World->GetVoxelID(VoxelCoord);
+  const float CurrentDurability = World->GetDurability(VoxelCoord);
+  const float CurrentDensity = World->GetDensity(VoxelCoord);
+  float MaxDurability = 0.f;
+  float BaseDensity = 0.f;
 
-    if (const UVoxelBaseDataAsset* VoxelData = World->GetVoxelData(VoxelID))
-    {
-        BaseDensity = VoxelData->BaseDensity;
-        if (const UVoxelBlockDataAsset* BlockData = Cast<UVoxelBlockDataAsset>(VoxelData))
-        {
-            MaxDurability = BlockData->MaxDurability;
-        }
+  if (const UVoxelBaseDataAsset* VoxelData = World->GetVoxelData(VoxelID)) {
+    BaseDensity = VoxelData->BaseDensity;
+    if (const UVoxelBlockDataAsset* BlockData =
+            Cast<UVoxelBlockDataAsset>(VoxelData)) {
+      MaxDurability = BlockData->MaxDurability;
     }
+  }
 
-    DisplayWidget->UpdateInfo(VoxelCoord, VoxelID, CurrentDurability, MaxDurability, CurrentDensity, BaseDensity);
+  DisplayWidget->UpdateInfo(VoxelCoord, VoxelID, CurrentDurability,
+                            MaxDurability, CurrentDensity, BaseDensity);
 }

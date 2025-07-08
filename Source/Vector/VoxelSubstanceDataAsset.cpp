@@ -1,7 +1,3 @@
 #include "VoxelSubstanceDataAsset.h"
 
-
-UVoxelSubstanceDataAsset::UVoxelSubstanceDataAsset()
-{
-	BaseDensity = 1.0f;
-}
+UVoxelSubstanceDataAsset::UVoxelSubstanceDataAsset() { BaseDensity = 1.0f; }

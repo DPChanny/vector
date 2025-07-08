@@ -4,12 +4,10 @@
 #include "VoxelBaseDataAsset.h"
 #include "VoxelVoidDataAsset.generated.h"
 
-
 UCLASS()
-class VECTOR_API UVoxelVoidDataAsset : public UVoxelBaseDataAsset
-{
-	GENERATED_BODY()
+class VECTOR_API UVoxelVoidDataAsset : public UVoxelBaseDataAsset {
+  GENERATED_BODY()
 
-public:
-	UVoxelVoidDataAsset();
+ public:
+  UVoxelVoidDataAsset();
 };

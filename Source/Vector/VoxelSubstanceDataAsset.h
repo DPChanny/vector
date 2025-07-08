@@ -1,17 +1,18 @@
 #pragma once
 
-#include "CoreMinimal.h"
+#include <Math/Color.h>
+#include <UObject/ObjectMacros.h>
+
 #include "VoxelBaseDataAsset.h"
 #include "VoxelSubstanceDataAsset.generated.h"
 
 UCLASS()
-class VECTOR_API UVoxelSubstanceDataAsset : public UVoxelBaseDataAsset
-{
-	GENERATED_BODY()
+class VECTOR_API UVoxelSubstanceDataAsset : public UVoxelBaseDataAsset {
+  GENERATED_BODY()
 
-public:
-	UVoxelSubstanceDataAsset();
+ public:
+  UVoxelSubstanceDataAsset();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Substance")
-	FLinearColor BlendingColor;
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Substance")
+  FLinearColor VertexColor;
 };

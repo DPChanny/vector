@@ -1,72 +1,67 @@
 #include "VectorPlayerController.h"
+
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "VectorPlayerCharacter.h"
 
-void AVectorPlayerController::BeginPlay()
-{
-	Super::BeginPlay();
+void AVectorPlayerController::BeginPlay() {
+  Super::BeginPlay();
 
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-		Subsystem->AddMappingContext(IMC_VectorPlayer, 0);
+  if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+          ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
+              GetLocalPlayer()))
+    Subsystem->AddMappingContext(IMC_VectorPlayer, 0);
 }
 
-void AVectorPlayerController::SetupInputComponent()
-{
-	Super::SetupInputComponent();
+void AVectorPlayerController::SetupInputComponent() {
+  Super::SetupInputComponent();
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent)) {
-		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AVectorPlayerController::Move);
-		EnhancedInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this, &AVectorPlayerController::Look);
-		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &AVectorPlayerController::Fire);
-		EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this, &AVectorPlayerController::Roll);
-		EnhancedInputComponent->BindAction(IA_Eat, ETriggerEvent::Triggered, this, &AVectorPlayerController::Eat);
-	}
+  if (UEnhancedInputComponent* EnhancedInputComponent =
+          Cast<UEnhancedInputComponent>(InputComponent)) {
+    EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this,
+                                       &AVectorPlayerController::Move);
+    EnhancedInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this,
+                                       &AVectorPlayerController::Look);
+    EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Triggered, this,
+                                       &AVectorPlayerController::Fire);
+    EnhancedInputComponent->BindAction(IA_Roll, ETriggerEvent::Triggered, this,
+                                       &AVectorPlayerController::Roll);
+    EnhancedInputComponent->BindAction(IA_Eat, ETriggerEvent::Triggered, this,
+                                       &AVectorPlayerController::Eat);
+  }
 }
 
-void AVectorPlayerController::Move(const FInputActionValue& Value)
-{
-	if (!ControlledCharacter)
-		ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
+void AVectorPlayerController::Move(const FInputActionValue& Value) {
+  if (!ControlledCharacter)
+    ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
 
-	if (ControlledCharacter)
-		ControlledCharacter->Move(Value);
+  if (ControlledCharacter) ControlledCharacter->Move(Value);
 }
 
-void AVectorPlayerController::Look(const FInputActionValue& Value)
-{
-	if (!ControlledCharacter)
-		ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
+void AVectorPlayerController::Look(const FInputActionValue& Value) {
+  if (!ControlledCharacter)
+    ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
 
-	if (ControlledCharacter)
-		ControlledCharacter->Look(Value);
+  if (ControlledCharacter) ControlledCharacter->Look(Value);
 }
 
+void AVectorPlayerController::Fire(const FInputActionValue& Value) {
+  if (!ControlledCharacter)
+    ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
 
-void AVectorPlayerController::Fire(const FInputActionValue& Value)
-{
-	if (!ControlledCharacter)
-		ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
-
-	if (ControlledCharacter)
-		ControlledCharacter->Fire();
+  if (ControlledCharacter) ControlledCharacter->Fire();
 }
 
+void AVectorPlayerController::Roll(const FInputActionValue& Value) {
+  if (!ControlledCharacter)
+    ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
 
-void AVectorPlayerController::Roll(const FInputActionValue& Value)
-{
-	if (!ControlledCharacter)
-		ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
-
-	if (ControlledCharacter)
-		ControlledCharacter->Roll(Value);
+  if (ControlledCharacter) ControlledCharacter->Roll(Value);
 }
 
-void AVectorPlayerController::Eat(const FInputActionValue& Value)
-{
-	if (!ControlledCharacter)
-		ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
+void AVectorPlayerController::Eat(const FInputActionValue& Value) {
+  if (!ControlledCharacter)
+    ControlledCharacter = Cast<AVectorPlayerCharacter>(GetPawn());
 
-	if (ControlledCharacter)
-		ControlledCharacter->Eat();
+  if (ControlledCharacter) ControlledCharacter->Eat();
 }

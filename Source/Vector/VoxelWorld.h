@@ -25,44 +25,9 @@ UCLASS()
 class VECTOR_API AVoxelWorld : public AActor {
   GENERATED_BODY()
 
-protected:
+public:
   AVoxelWorld();
 
-  UPROPERTY(EditAnywhere, Category = "World | Meta")
-  int32 ChunkSize = 10;
-
-  UPROPERTY(EditAnywhere, Category = "World | Meta")
-  int32 VoxelSize = 50;
-
-  UPROPERTY(EditAnywhere, Category = "World | Meta")
-  FIntVector WorldSizeInChunks = FIntVector(20, 20, 20);
-
-  UPROPERTY(EditAnywhere, Category = "World | Voxel")
-  TArray<TObjectPtr<UVoxelBlockDataAsset>> VoxelBlockDataAssets;
-
-  UPROPERTY(EditAnywhere, Category = "World | Voxel")
-  TObjectPtr<UVoxelVoidDataAsset> VoxelVoidDataAsset;
-
-  UPROPERTY(EditAnywhere, Category = "World | Voxel")
-  TObjectPtr<UVoxelBorderDataAsset> VoxelBorderDataAsset;
-
-  UPROPERTY(EditAnywhere, Category = "World | Voxel")
-  TSubclassOf<AVoxelChunk> VoxelChunk;
-
-  UPROPERTY(EditAnywhere, Category = "Voxel | Nexus")
-  float NexusRadius = 200.f;
-
-  void AddDebugVoxel(const FIntVector &VoxelCoord);
-  void RemoveDebugVoxel(const FIntVector &VoxelCoord);
-
-  UPROPERTY(EditDefaultsOnly, Category = "Voxel Debug")
-  TSubclassOf<AVoxelDebugActor> DebugActorClass;
-
-  TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;
-
-  TSet<FIntVector> DebugVoxelsBuffer;
-
-public:
   void Initialize(int32 NumberOfPlayers);
 
   UVoxelBaseDataAsset *GetVoxelData(int32 VoxelID) const;
@@ -108,7 +73,38 @@ public:
   void SetDebugVoxel(const FIntVector &NewDebugVoxel);
   void FlushDebugVoxelBuffer();
 
+protected:
+  UPROPERTY(EditAnywhere, Category = "World")
+  int32 ChunkSize = 10;
+
+  UPROPERTY(EditAnywhere, Category = "World")
+  int32 VoxelSize = 50;
+
+  UPROPERTY(EditAnywhere, Category = "World")
+  FIntVector WorldSizeInChunks = FIntVector(20, 20, 20);
+
+  UPROPERTY(EditAnywhere, Category = "Voxel Data")
+  TArray<TObjectPtr<UVoxelBlockDataAsset>> VoxelBlockDataAssets;
+
+  UPROPERTY(EditAnywhere, Category = "Voxel Data")
+  TObjectPtr<UVoxelVoidDataAsset> VoxelVoidDataAsset;
+
+  UPROPERTY(EditAnywhere, Category = "Voxel Data")
+  TObjectPtr<UVoxelBorderDataAsset> VoxelBorderDataAsset;
+
+  UPROPERTY(EditAnywhere, Category = "Chunk")
+  TSubclassOf<AVoxelChunk> VoxelChunk;
+
+  UPROPERTY(EditAnywhere, Category = "Nexus")
+  float NexusRadius = 200.f;
+
+  UPROPERTY(EditDefaultsOnly, Category = "Debug")
+  TSubclassOf<AVoxelDebugActor> DebugActorClass;
+
 private:
+  void AddDebugVoxel(const FIntVector &VoxelCoord);
+  void RemoveDebugVoxel(const FIntVector &VoxelCoord);
+
   void ProcessVoxel(const FVector &Center, float Radius,
                     const TFunction<void(const FIntVector &,
                                          TSet<FIntVector> &)> &VoxelModifier);
@@ -134,6 +130,9 @@ private:
 
   UPROPERTY()
   TArray<float> Durabilities;
+
+  TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;
+  TSet<FIntVector> DebugVoxelsBuffer;
 
   int32 WorldVolume = 0;
   FIntVector WorldSize;

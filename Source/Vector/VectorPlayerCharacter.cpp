@@ -69,25 +69,25 @@ void AVectorPlayerCharacter::Tick(const float DeltaTime) {
 }
 
 void AVectorPlayerCharacter::Move(const FInputActionValue &Value) const {
-  const FVector MoveAxisVector = Value.Get<FVector>();
+  const FVector MoveValue = Value.Get<FVector>();
 
-  const FVector ForceDirection = GetActorForwardVector() * MoveAxisVector.Y +
-                                 GetActorRightVector() * MoveAxisVector.X +
-                                 GetActorUpVector() * MoveAxisVector.Z;
+  const FVector MoveDirection = GetActorForwardVector() * MoveValue.Y +
+                                GetActorRightVector() * MoveValue.X +
+                                GetActorUpVector() * MoveValue.Z;
 
-  Collider->AddForce(ForceDirection.GetSafeNormal() * 100, NAME_None, true);
+  Collider->AddForce(MoveDirection.GetSafeNormal() * 100, NAME_None, true);
 }
 
 void AVectorPlayerCharacter::Look(const FInputActionValue &Value) {
-  const FVector2D LookAxisVector = Value.Get<FVector2D>();
+  const FVector2D LookValue = Value.Get<FVector2D>();
 
-  AddActorLocalRotation(FRotator(-LookAxisVector.Y, LookAxisVector.X, 0.f));
+  AddActorLocalRotation(FRotator(-LookValue.Y, LookValue.X, 0.f));
 }
 
 void AVectorPlayerCharacter::Roll(const FInputActionValue &Value) {
-  const float value = Value.Get<float>();
+  const float RollValue = Value.Get<float>();
 
-  AddActorLocalRotation(FRotator(0, 0, value));
+  AddActorLocalRotation(FRotator(0, 0, RollValue));
 }
 
 void AVectorPlayerCharacter::Fire() const {

@@ -15,7 +15,7 @@ class VECTOR_API AVoxelChunk : public AActor {
   AVoxelChunk();
 
   void Initialize(const FIntVector& InChunkCoord);
-  void UpdateMesh();
+  void UpdateMesh() const;
 
  protected:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -30,8 +30,8 @@ class VECTOR_API AVoxelChunk : public AActor {
  private:
   FIntVector ChunkCoord;
 
-  FVector RoundVector(const FVector& InVector, float Precision) const;
-  FVector2D CalculateUV(const FVector& Position) const;
-  FVector InterpolateVertex(const FVector& p1, const FVector& p2, float val1,
-                            float val2) const;
+  static FVector RoundVector(const FVector& InVector, float Precision);
+  static FVector2D CalculateUV(const FVector& Position);
+  FVector InterpolateVertex(const FVector& P1, const FVector& P2, float Val1,
+                            float Val2) const;
 };

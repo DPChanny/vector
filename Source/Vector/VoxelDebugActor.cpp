@@ -24,7 +24,7 @@ AVoxelDebugActor::AVoxelDebugActor() {
   Widget->SetDrawSize(FVector2D(300.f, 200.f));
 }
 
-void AVoxelDebugActor::Initialize(const FIntVector& InVoxelCoord) {
+void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord) {
   World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
       GetWorld(), AVoxelWorld::StaticClass()));
 
@@ -38,17 +38,19 @@ void AVoxelDebugActor::Initialize(const FIntVector& InVoxelCoord) {
 void AVoxelDebugActor::BeginPlay() {
   Super::BeginPlay();
 
-  if (UUserWidget* UserWidget = Widget->GetUserWidgetObject()) {
+  if (UUserWidget *UserWidget = Widget->GetUserWidgetObject()) {
     DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
   }
 }
 
 void AVoxelDebugActor::UpdateWidget() {
   if (!World.IsValid() || !DisplayWidget) {
-    if (UUserWidget* UserWidget = Widget->GetUserWidgetObject()) {
+    if (UUserWidget *UserWidget = Widget->GetUserWidgetObject()) {
       DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
     }
-    if (!DisplayWidget) return;
+    if (!DisplayWidget) {
+      return;
+    }
   }
 
   const int32 VoxelID = World->GetVoxelID(VoxelCoord);
@@ -57,9 +59,9 @@ void AVoxelDebugActor::UpdateWidget() {
   float MaxDurability = 0.f;
   float BaseDensity = 0.f;
 
-  if (const UVoxelBaseDataAsset* VoxelData = World->GetVoxelData(VoxelID)) {
+  if (const UVoxelBaseDataAsset *VoxelData = World->GetVoxelData(VoxelID)) {
     BaseDensity = VoxelData->BaseDensity;
-    if (const UVoxelBlockDataAsset* BlockData =
+    if (const UVoxelBlockDataAsset *BlockData =
             Cast<UVoxelBlockDataAsset>(VoxelData)) {
       MaxDurability = BlockData->MaxDurability;
     }

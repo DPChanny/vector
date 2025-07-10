@@ -2,13 +2,10 @@
 
 #include <Kismet/GameplayStatics.h>
 
-#include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "MarchingCubesTables.h"
-#include "Materials/MaterialInterface.h"
 #include "ProceduralMeshComponent.h"
 #include "VoxelBaseDataAsset.h"
-#include "VoxelBlockDataAsset.h"
 #include "VoxelSubstanceDataAsset.h"
 #include "VoxelWorld.h"
 
@@ -23,7 +20,7 @@ AVoxelChunk::AVoxelChunk() : ChunkCoord(FIntVector::ZeroValue) {
   Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
-void AVoxelChunk::Initialize(const FIntVector& InChunkCoord) {
+void AVoxelChunk::Initialize(const FIntVector &InChunkCoord) {
   World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
       GetWorld(), AVoxelWorld::StaticClass()));
   ChunkCoord = InChunkCoord;
@@ -31,14 +28,19 @@ void AVoxelChunk::Initialize(const FIntVector& InChunkCoord) {
   UpdateMesh();
 }
 
-FVector AVoxelChunk::InterpolateVertex(const FVector& p1, const FVector& p2,
-                                       float val1, float val2) const {
-  if (FMath::IsNearlyEqual(val1, val2)) return p1;
-  const float Mu = (World->GetSurfaceLevel() - val1) / (val2 - val1);
-  return p1 + Mu * (p2 - p1);
+FVector AVoxelChunk::InterpolateVertex(const FVector &P1, const FVector &P2,
+                                       float Val1, float Val2) const {
+  if (FMath::IsNearlyEqual(Val1, Val2)) {
+    return P1;
+  }
+  const float Mu = (World->GetSurfaceLevel() - Val1) / (Val2 - Val1);
+  return P1 + Mu * (P2 - P1);
 }
-void AVoxelChunk::UpdateMesh() {
-  if (!World) return;
+
+void AVoxelChunk::UpdateMesh() const {
+  if (!World) {
+    return;
+  }
 
   TArray<FVector> Vertices;
   TArray<int32> Triangles;
@@ -68,11 +70,14 @@ void AVoxelChunk::UpdateMesh() {
           CornerPositions[i] =
               (FVector(CornerVoxelCoord) * VoxelSize) - GetActorLocation();
 
-          if (CornerDensities[i] > World->GetSurfaceLevel())
+          if (CornerDensities[i] > World->GetSurfaceLevel()) {
             CubeIndex |= (1 << i);
+          }
         }
 
-        if (EdgeTable[CubeIndex] == 0) continue;
+        if (EdgeTable[CubeIndex] == 0) {
+          continue;
+        }
 
         FVector EdgeVertices[12];
         FLinearColor EdgeVerticeColors[12];
@@ -84,7 +89,7 @@ void AVoxelChunk::UpdateMesh() {
             EdgeVertices[i] = InterpolateVertex(
                 CornerPositions[CornerA], CornerPositions[CornerB],
                 CornerDensities[CornerA], CornerDensities[CornerB]);
-            if (const UVoxelSubstanceDataAsset* VoxelData =
+            if (const UVoxelSubstanceDataAsset *VoxelData =
                     Cast<UVoxelSubstanceDataAsset>(
                         World->GetVoxelData(World->GetVoxelID(
                             VoxelCoord +
@@ -107,7 +112,7 @@ void AVoxelChunk::UpdateMesh() {
 
           int32 VertexIndex0, VertexIndex1, VertexIndex2;
 
-          int32* ExistingIndex = VertexMap.Find(RoundedV0);
+          int32 *ExistingIndex = VertexMap.Find(RoundedV0);
           if (ExistingIndex) {
             VertexIndex0 = *ExistingIndex;
           } else {
@@ -158,12 +163,12 @@ void AVoxelChunk::UpdateMesh() {
     }
   }
 
-  for (auto& Pair : VertexNormals) {
+  for (auto &Pair : VertexNormals) {
     int32 VertexIndex = Pair.Key;
-    TArray<FVector>& FaceNormals = Pair.Value;
+    TArray<FVector> &FaceNormals = Pair.Value;
 
     FVector AverageNormal = FVector::ZeroVector;
-    for (const FVector& FaceNormal : FaceNormals) {
+    for (const FVector &FaceNormal : FaceNormals) {
       AverageNormal += FaceNormal;
     }
 
@@ -179,22 +184,21 @@ void AVoxelChunk::UpdateMesh() {
   Mesh->SetMaterial(0, Material);
 }
 
-FVector AVoxelChunk::RoundVector(const FVector& InVector,
-                                 float Precision) const {
+FVector AVoxelChunk::RoundVector(const FVector &InVector, float Precision) {
   return FVector(FMath::RoundToFloat(InVector.X / Precision) * Precision,
                  FMath::RoundToFloat(InVector.Y / Precision) * Precision,
                  FMath::RoundToFloat(InVector.Z / Precision) * Precision);
 }
 
-FVector2D AVoxelChunk::CalculateUV(const FVector& Position) const {
+FVector2D AVoxelChunk::CalculateUV(const FVector &Position) {
   FVector AbsNormal = FVector(FMath::Abs(Position.X), FMath::Abs(Position.Y),
                               FMath::Abs(Position.Z));
 
   if (AbsNormal.X >= AbsNormal.Y && AbsNormal.X >= AbsNormal.Z) {
     return FVector2D(Position.Y, Position.Z) * 0.05f;
-  } else if (AbsNormal.Y >= AbsNormal.X && AbsNormal.Y >= AbsNormal.Z) {
-    return FVector2D(Position.X, Position.Z) * 0.05f;
-  } else {
-    return FVector2D(Position.X, Position.Y) * 0.05f;
   }
+  if (AbsNormal.Y >= AbsNormal.X && AbsNormal.Y >= AbsNormal.Z) {
+    return FVector2D(Position.X, Position.Z) * 0.05f;
+  }
+  return FVector2D(Position.X, Position.Y) * 0.05f;
 }

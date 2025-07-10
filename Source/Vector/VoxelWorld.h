@@ -25,7 +25,7 @@ UCLASS()
 class VECTOR_API AVoxelWorld : public AActor {
   GENERATED_BODY()
 
- protected:
+protected:
   AVoxelWorld();
 
   UPROPERTY(EditAnywhere, Category = "World | Meta")
@@ -52,8 +52,8 @@ class VECTOR_API AVoxelWorld : public AActor {
   UPROPERTY(EditAnywhere, Category = "Voxel | Nexus")
   float NexusRadius = 200.f;
 
-  void AddDebugVoxel(const FIntVector& VoxelCoord);
-  void RemoveDebugVoxel(const FIntVector& VoxelCoord);
+  void AddDebugVoxel(const FIntVector &VoxelCoord);
+  void RemoveDebugVoxel(const FIntVector &VoxelCoord);
 
   UPROPERTY(EditDefaultsOnly, Category = "Voxel Debug")
   TSubclassOf<AVoxelDebugActor> DebugActorClass;
@@ -62,60 +62,60 @@ class VECTOR_API AVoxelWorld : public AActor {
 
   TSet<FIntVector> DebugVoxelsBuffer;
 
- public:
+public:
   void Initialize(int32 NumberOfPlayers);
 
-  UVoxelBaseDataAsset* GetVoxelData(int32 VoxelID) const;
+  UVoxelBaseDataAsset *GetVoxelData(int32 VoxelID) const;
 
-  inline const int32 GetVoidID() const { return 0; }
-  inline const int32 GetBorderID() const { return 1; }
-  inline const int32 GetDefaultBlockID() const { return 2; }
+  static int32 GetVoidID() { return 0; }
+  static int32 GetBorderID() { return 1; }
+  static int32 GetDefaultBlockID() { return 2; }
 
-  inline const float GetSurfaceLevel() const { return 0.f; }
+  static float GetSurfaceLevel() { return 0.f; }
 
-  inline const int32 GetChunkSize() const { return ChunkSize; }
-  inline const int32 GetVoxelSize() const { return VoxelSize; }
+  int32 GetChunkSize() const { return ChunkSize; }
+  int32 GetVoxelSize() const { return VoxelSize; }
 
-  const TArray<APlayerStart*>& GetPlayerStarts() const { return PlayerStarts; }
+  const TArray<APlayerStart *> &GetPlayerStarts() const { return PlayerStarts; }
 
-  const int32 GetVoxelID(const TObjectPtr<UVoxelBaseDataAsset>& VoxelDataAsset);
-  const int32 GetVoxelID(const FIntVector& VoxelCoord) const;
-  void SetVoxelID(const FIntVector& VoxelCoord, int32 NewVoxelID);
+  int32 GetVoxelID(const TObjectPtr<UVoxelBaseDataAsset> &VoxelDataAsset);
+  int32 GetVoxelID(const FIntVector &VoxelCoord) const;
+  void SetVoxelID(const FIntVector &VoxelCoord, int32 NewVoxelID);
 
-  float GetDurability(const FIntVector& VoxelCoord) const;
-  void SetDurability(const FIntVector& VoxelCoord, float NewDurability);
+  float GetDurability(const FIntVector &VoxelCoord) const;
+  void SetDurability(const FIntVector &VoxelCoord, float NewDurability);
 
-  float GetDensity(const FIntVector& VoxelCoord) const;
+  float GetDensity(const FIntVector &VoxelCoord) const;
 
-  bool IsVoxelCoordValid(const FIntVector& VoxelCoord) const;
+  bool IsVoxelCoordValid(const FIntVector &VoxelCoord) const;
 
-  int32 GetIndex(const FIntVector& VoxelCoord) const;
+  int32 GetIndex(const FIntVector &VoxelCoord) const;
 
-  void DamageVoxel(const FVector& HitPoint, float Radius, float DamageAmount);
-  void ConstructVoxel(const FVector& Center, float Radius,
+  void DamageVoxel(const FVector &Center, float Radius, float DamageAmount);
+  void ConstructVoxel(const FVector &Center, float Radius,
                       float ConstructionAmount, int32 VoxelIDToConstruct);
 
-  FIntVector WorldPosToVoxelCoord(const FVector& WorldPos) const;
-  FIntVector VoxelCoordToChunkCoord(const FIntVector& VoxelCoord);
+  FIntVector WorldPosToVoxelCoord(const FVector &WorldPos) const;
+  FIntVector VoxelCoordToChunkCoord(const FIntVector &VoxelCoord) const;
 
-  void GetVoxelCoordsInRadius(const FVector& Center, float Radius,
-                              TSet<FIntVector>& FoundVoxelCoords);
+  void GetVoxelCoordsInRadius(const FVector &Center, float Radius,
+                              TSet<FIntVector> &FoundVoxelCoords) const;
 
   void InitializeNexuses(int32 NexusCount);
-  void InitializeChunk(const FIntVector& ChunkCoord);
+  void InitializeChunk(const FIntVector &ChunkCoord);
 
-  void SetDebugVoxels(const TSet<FIntVector>& NewDebugVoxels);
-  void SetDebugVoxel(const FIntVector& NewDebugVoxel);
+  void SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels);
+  void SetDebugVoxel(const FIntVector &NewDebugVoxel);
   void FlushDebugVoxelBuffer();
 
- private:
-  void ProcessVoxel(
-      const FVector& Center, float Radius,
-      TFunction<void(const FIntVector&, TSet<FIntVector>&)> VoxelModifier);
-  void AddDirtyChunk(const FIntVector& VoxelCoord,
-                     TSet<FIntVector>& DirtyChunks);
-  void UpdateDirtyChunk(const TSet<FIntVector>& DirtyChunks);
-  bool IsSurfaceVoxel(const FIntVector& VoxelCoord) const;
+private:
+  void ProcessVoxel(const FVector &Center, float Radius,
+                    const TFunction<void(const FIntVector &,
+                                         TSet<FIntVector> &)> &VoxelModifier);
+  void AddDirtyChunk(const FIntVector &VoxelCoord,
+                     TSet<FIntVector> &DirtyChunks) const;
+  void UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunks);
+  bool IsSurfaceVoxel(const FIntVector &VoxelCoord) const;
 
   UPROPERTY()
   TArray<TObjectPtr<APlayerStart>> PlayerStarts;

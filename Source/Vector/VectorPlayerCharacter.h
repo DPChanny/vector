@@ -16,16 +16,16 @@ UCLASS()
 class VECTOR_API AVectorPlayerCharacter : public APawn {
   GENERATED_BODY()
 
- public:
+public:
   AVectorPlayerCharacter();
 
-  void Move(const FInputActionValue& Value);
-  void Look(const FInputActionValue& Value);
-  void Roll(const FInputActionValue& Value);
-  void Eat();
-  void Fire();
+  void Move(const FInputActionValue &Value) const;
+  void Look(const FInputActionValue &Value);
+  void Roll(const FInputActionValue &Value);
+  void Eat() const;
+  void Fire() const;
 
- protected:
+protected:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
   TObjectPtr<USphereComponent> Collider;
 
@@ -41,9 +41,10 @@ class VECTOR_API AVectorPlayerCharacter : public APawn {
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Poops")
   TObjectPtr<UVoxelBlockDataAsset> Poop;
 
+  UPROPERTY()
   TObjectPtr<AVoxelWorld> World;
 
- private:
+private:
   virtual void BeginPlay() override;
   virtual void Tick(float DeltaTime) override;
 };

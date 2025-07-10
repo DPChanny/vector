@@ -6,10 +6,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "VoxelWorld.h"
 
-AActor* AVectorGameMode::FindPlayerStart_Implementation(
-    AController* Player, const FString& IncomingName) {
+AActor *
+AVectorGameMode::FindPlayerStart_Implementation(AController *Player,
+                                                const FString &IncomingName) {
   if (!bVoxelWorldSetupAttempted) {
-    if (AVoxelWorld* VoxelWorld =
+    if (AVoxelWorld *VoxelWorld =
             Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
                 GetWorld(), AVoxelWorld::StaticClass()))) {
       int32 NumDesiredPlayers = GetNumPlayers();
@@ -42,7 +43,7 @@ AActor* AVectorGameMode::FindPlayerStart_Implementation(
   }
 
   if (!AvailablePlayerStarts.IsEmpty()) {
-    APlayerStart* ChosenPlayerStart = AvailablePlayerStarts[0];
+    APlayerStart *ChosenPlayerStart = AvailablePlayerStarts[0];
     AvailablePlayerStarts.RemoveAt(0);
 
     UE_LOG(LogTemp, Log, TEXT("Player %s assigned to PlayerStart at %s."),

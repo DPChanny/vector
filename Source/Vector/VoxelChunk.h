@@ -11,13 +11,13 @@ UCLASS()
 class VECTOR_API AVoxelChunk : public AActor {
   GENERATED_BODY()
 
- public:
+public:
   AVoxelChunk();
 
-  void Initialize(const FIntVector& InChunkCoord);
+  void Initialize(const FIntVector &InChunkCoord);
   void UpdateMesh() const;
 
- protected:
+protected:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
   TObjectPtr<UMaterialInterface> Material;
 
@@ -27,11 +27,11 @@ class VECTOR_API AVoxelChunk : public AActor {
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
   TObjectPtr<AVoxelWorld> World;
 
- private:
+private:
   FIntVector ChunkCoord;
 
-  static FVector RoundVector(const FVector& InVector, float Precision);
-  static FVector2D CalculateUV(const FVector& Position);
-  FVector InterpolateVertex(const FVector& P1, const FVector& P2, float Val1,
+  static FVector RoundVector(const FVector &InVector, float Precision);
+  static FVector2D GetUV(const FVector &Position);
+  FVector InterpolateVertex(const FVector &P1, const FVector &P2, float Val1,
                             float Val2) const;
 };

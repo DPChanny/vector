@@ -29,7 +29,8 @@ void AVoxelChunk::Initialize(const FIntVector &InChunkCoord) {
 }
 
 FVector AVoxelChunk::InterpolateVertex(const FVector &P1, const FVector &P2,
-                                       float Val1, float Val2) const {
+                                       const float Val1,
+                                       const float Val2) const {
   if (FMath::IsNearlyEqual(Val1, Val2)) {
     return P1;
   }
@@ -80,7 +81,7 @@ void AVoxelChunk::UpdateMesh() const {
         }
 
         FVector EdgeVertices[12];
-        FLinearColor EdgeVerticeColors[12];
+        FLinearColor EdgeVertexColors[12];
 
         for (int i = 0; i < 12; ++i) {
           if ((EdgeTable[CubeIndex] & (1 << i))) {
@@ -96,68 +97,41 @@ void AVoxelChunk::UpdateMesh() const {
                             (CornerDensities[CornerA] > CornerDensities[CornerB]
                                  ? CornerOffsets[CornerA]
                                  : CornerOffsets[CornerB]))))) {
-              EdgeVerticeColors[i] = VoxelData->VertexColor;
+              EdgeVertexColors[i] = VoxelData->VertexColor;
             }
           }
         }
 
         for (int i = 0; TriTable[CubeIndex][i] != -1; i += 3) {
-          const FVector V0 = EdgeVertices[TriTable[CubeIndex][i]];
-          const FVector V1 = EdgeVertices[TriTable[CubeIndex][i + 1]];
-          const FVector V2 = EdgeVertices[TriTable[CubeIndex][i + 2]];
-
-          FVector RoundedV0 = RoundVector(V0, 0.001f);
-          FVector RoundedV1 = RoundVector(V1, 0.001f);
-          FVector RoundedV2 = RoundVector(V2, 0.001f);
-
-          int32 VertexIndex0, VertexIndex1, VertexIndex2;
-
-          int32 *ExistingIndex = VertexMap.Find(RoundedV0);
-          if (ExistingIndex) {
-            VertexIndex0 = *ExistingIndex;
-          } else {
-            VertexIndex0 = Vertices.Add(V0);
-            Normals.Add(FVector::ZeroVector);
-            Colors.Add(EdgeVerticeColors[TriTable[CubeIndex][i]]);
-            UVs.Add(CalculateUV(V0));
-            VertexMap.Add(RoundedV0, VertexIndex0);
-            VertexNormals.Add(VertexIndex0, TArray<FVector>());
-          }
-
-          ExistingIndex = VertexMap.Find(RoundedV1);
-          if (ExistingIndex) {
-            VertexIndex1 = *ExistingIndex;
-          } else {
-            VertexIndex1 = Vertices.Add(V1);
-            Normals.Add(FVector::ZeroVector);
-            Colors.Add(EdgeVerticeColors[TriTable[CubeIndex][i + 1]]);
-            UVs.Add(CalculateUV(V1));
-            VertexMap.Add(RoundedV1, VertexIndex1);
-            VertexNormals.Add(VertexIndex1, TArray<FVector>());
-          }
-
-          ExistingIndex = VertexMap.Find(RoundedV2);
-          if (ExistingIndex) {
-            VertexIndex2 = *ExistingIndex;
-          } else {
-            VertexIndex2 = Vertices.Add(V2);
-            Normals.Add(FVector::ZeroVector);
-            Colors.Add(EdgeVerticeColors[TriTable[CubeIndex][i + 2]]);
-            UVs.Add(CalculateUV(V2));
-            VertexMap.Add(RoundedV2, VertexIndex2);
-            VertexNormals.Add(VertexIndex2, TArray<FVector>());
-          }
-
-          Triangles.Add(VertexIndex0);
-          Triangles.Add(VertexIndex1);
-          Triangles.Add(VertexIndex2);
+          const FVector TriangleVertices[3] = {
+              EdgeVertices[TriTable[CubeIndex][i]],
+              EdgeVertices[TriTable[CubeIndex][i + 1]],
+              EdgeVertices[TriTable[CubeIndex][i + 2]]};
 
           const FVector FaceNormal =
-              -FVector::CrossProduct(V1 - V0, V2 - V0).GetSafeNormal();
+              -FVector::CrossProduct(TriangleVertices[1] - TriangleVertices[0],
+                                     TriangleVertices[2] - TriangleVertices[0])
+                   .GetSafeNormal();
 
-          VertexNormals[VertexIndex0].Add(FaceNormal);
-          VertexNormals[VertexIndex1].Add(FaceNormal);
-          VertexNormals[VertexIndex2].Add(FaceNormal);
+          for (int j = 0; j < 3; ++j) {
+            const FVector RoundedVertex =
+                RoundVector(TriangleVertices[j], 0.001f);
+            int32 VertexIndex;
+
+            if (int32 *ExistingIndex = VertexMap.Find(RoundedVertex)) {
+              VertexIndex = *ExistingIndex;
+            } else {
+              VertexIndex = Vertices.Add(TriangleVertices[j]);
+              Normals.Add(FVector::ZeroVector);
+              Colors.Add(EdgeVertexColors[TriTable[CubeIndex][i + j]]);
+              UVs.Add(GetUV(TriangleVertices[j]));
+              VertexMap.Add(RoundedVertex, VertexIndex);
+              VertexNormals.Add(VertexIndex, TArray<FVector>());
+            }
+
+            Triangles.Add(VertexIndex);
+            VertexNormals[VertexIndex].Add(FaceNormal);
+          }
         }
       }
     }
@@ -184,15 +158,16 @@ void AVoxelChunk::UpdateMesh() const {
   Mesh->SetMaterial(0, Material);
 }
 
-FVector AVoxelChunk::RoundVector(const FVector &InVector, float Precision) {
+FVector AVoxelChunk::RoundVector(const FVector &InVector,
+                                 const float Precision) {
   return FVector(FMath::RoundToFloat(InVector.X / Precision) * Precision,
                  FMath::RoundToFloat(InVector.Y / Precision) * Precision,
                  FMath::RoundToFloat(InVector.Z / Precision) * Precision);
 }
 
-FVector2D AVoxelChunk::CalculateUV(const FVector &Position) {
-  FVector AbsNormal = FVector(FMath::Abs(Position.X), FMath::Abs(Position.Y),
-                              FMath::Abs(Position.Z));
+FVector2D AVoxelChunk::GetUV(const FVector &Position) {
+  const FVector AbsNormal = FVector(
+      FMath::Abs(Position.X), FMath::Abs(Position.Y), FMath::Abs(Position.Z));
 
   if (AbsNormal.X >= AbsNormal.Y && AbsNormal.X >= AbsNormal.Z) {
     return FVector2D(Position.Y, Position.Z) * 0.05f;

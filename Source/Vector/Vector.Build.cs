@@ -8,10 +8,11 @@ public class Vector : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(["Core", "CoreUObject", "Engine"]);
+		PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine" });
 
-		PrivateDependencyModuleNames.AddRange([
+		PrivateDependencyModuleNames.AddRange(new[]
+		{
 			"InputCore", "EnhancedInput", "Niagara", "ProceduralMeshComponent", "UMG", "SlateCore", "Slate"
-		]);
+		});
 	}
 }

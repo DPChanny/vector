@@ -1,7 +1,6 @@
 #include "VoxelWorld.h"
 
 #include "GameFramework/PlayerStart.h"
-#include "Materials/MaterialInterface.h"
 #include "VoxelBlockDataAsset.h"
 #include "VoxelBorderDataAsset.h"
 #include "VoxelChunk.h"
@@ -310,7 +309,7 @@ void AVoxelWorld::DamageVoxel(const FVector &Center, const float Radius,
 
 void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
                                  const float ConstructionAmount,
-                                 const int32 NewVoxelID) {
+                                 const int32 VoxelIDToConstruct) {
   auto ConstructLogic = [&](const FIntVector &VoxelCoord,
                             TSet<FIntVector> &DirtyChunks) {
     const UVoxelBlockDataAsset *VoxelData =
@@ -320,7 +319,7 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
     }
 
     const UVoxelBlockDataAsset *NewVoxelData =
-        Cast<UVoxelBlockDataAsset>(GetVoxelData(NewVoxelID));
+        Cast<UVoxelBlockDataAsset>(GetVoxelData(VoxelIDToConstruct));
     if (!NewVoxelData) {
       return;
     }
@@ -338,7 +337,7 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
         const FIntVector NeighborCoord = VoxelCoord + NeighborOffset;
         if (IsVoxelCoordValid(NeighborCoord) &&
             GetVoxelID(NeighborCoord) == GetVoidID()) {
-          SetVoxelID(NeighborCoord, NewVoxelID);
+          SetVoxelID(NeighborCoord, VoxelIDToConstruct);
 
           for (const FIntVector &CheckOffset : NeighborOffsets) {
             const FIntVector CheckCoord = NeighborCoord + CheckOffset;
@@ -479,7 +478,7 @@ void AVoxelWorld::UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunks) {
     if (CoordToUpdate.X >= 0 && CoordToUpdate.X < WorldSizeInChunks.X &&
         CoordToUpdate.Y >= 0 && CoordToUpdate.Y < WorldSizeInChunks.Y &&
         CoordToUpdate.Z >= 0 && CoordToUpdate.Z < WorldSizeInChunks.Z) {
-      if (TObjectPtr<AVoxelChunk> *FoundChunk = Chunks.Find(CoordToUpdate)) {
+      if (const TObjectPtr<AVoxelChunk> *FoundChunk = Chunks.Find(CoordToUpdate)) {
         if (*FoundChunk) {
           (*FoundChunk)->UpdateMesh();
         }

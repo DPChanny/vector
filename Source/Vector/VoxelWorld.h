@@ -122,13 +122,8 @@ private:
   UPROPERTY()
   TMap<int32, TObjectPtr<UVoxelBaseDataAsset>> VoxelDataMap;
 
-  UPROPERTY()
   TArray<FNexus> Nexuses;
-
-  UPROPERTY()
   TArray<int32> VoxelIDs;
-
-  UPROPERTY()
   TArray<float> Durabilities;
 
   TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;

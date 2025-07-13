@@ -6,6 +6,7 @@
 #include "VoxelBlockDataAsset.h"
 #include "VoxelData.h"
 #include "VoxelDebugWidget.h"
+#include "VoxelWorld.h"
 
 AVoxelDebugActor::AVoxelDebugActor() {
   PrimaryActorTick.bCanEverTick = true;
@@ -22,23 +23,22 @@ AVoxelDebugActor::AVoxelDebugActor() {
   Widget->SetDrawSize(FVector2D(300.f, 200.f));
 }
 
-void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord,
-                                  UVoxelData *InVoxelData) {
-  VoxelData = InVoxelData;
-
-  VoxelCoord = InVoxelCoord;
-
-  Box->SetBoxExtent(FVector(VoxelData->GetVoxelSize() / 2));
-
-  UpdateWidget();
-}
-
 void AVoxelDebugActor::BeginPlay() {
   Super::BeginPlay();
 
   if (UUserWidget *UserWidget = Widget->GetUserWidgetObject()) {
     DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
   }
+}
+
+void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord) {
+  VoxelData = Cast<AVoxelWorld>(GetOwner())->GetVoxelData();
+
+  VoxelCoord = InVoxelCoord;
+
+  Box->SetBoxExtent(FVector(VoxelData->GetVoxelSize() / 2));
+
+  UpdateWidget();
 }
 
 void AVoxelDebugActor::UpdateWidget() {

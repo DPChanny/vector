@@ -18,7 +18,7 @@ public:
   void FlushDebugVoxelBuffer();
 
 private:
-  void AddDebugVoxel(const FIntVector &VoxelCoord);
+  void AddDebugVoxel(const FIntVector &GlobalCoord);
   void RemoveDebugVoxel(const FIntVector &VoxelCoord);
 
   UPROPERTY()

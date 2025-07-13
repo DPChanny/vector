@@ -74,7 +74,7 @@ void UVoxelData::LoadChunk(const FIntVector &ChunkCoord) {
       NewVoxelChunk->AttachToActor(
           Owner, FAttachmentTransformRules::KeepWorldTransform);
     }
-    NewVoxelChunk->Initialize(ChunkCoord, this);
+    NewVoxelChunk->Initialize(ChunkCoord);
     NewChunk.VoxelChunk = NewVoxelChunk;
 
     Chunks.Add(ChunkCoord, MoveTemp(NewChunk));
@@ -91,7 +91,7 @@ void UVoxelData::UnloadChunk(const FIntVector &ChunkCoord) {
   }
 }
 
-const FVoxel &UVoxelData::GetVoxel(const FIntVector &GlobalCoord) const {
+FVoxel UVoxelData::GetVoxel(const FIntVector &GlobalCoord) const {
   const FIntVector ChunkCoord = GlobalToChunkCoord(GlobalCoord);
   if (const FChunk *Chunk = Chunks.Find(ChunkCoord)) {
     const FIntVector LocalCoord = GlobalToLocalCoord(GlobalCoord);

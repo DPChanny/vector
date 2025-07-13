@@ -36,7 +36,7 @@ public:
   void LoadChunk(const FIntVector &ChunkCoord);
   void UnloadChunk(const FIntVector &ChunkCoord);
 
-  const FVoxel &GetVoxel(const FIntVector &GlobalCoord) const;
+  FVoxel GetVoxel(const FIntVector &GlobalCoord) const;
   void SetVoxel(const FIntVector &GlobalCoord, const FVoxel &Voxel,
                 bool bAutoDebug = true);
 

@@ -46,8 +46,8 @@ void UVoxelDebug::FlushDebugVoxelBuffer() {
   DebugVoxelsBuffer.Reset();
 }
 
-void UVoxelDebug::AddDebugVoxel(const FIntVector &VoxelCoord) {
-  if (DebugVoxels.Contains(VoxelCoord)) {
+void UVoxelDebug::AddDebugVoxel(const FIntVector &GlobalCoord) {
+  if (DebugVoxels.Contains(GlobalCoord)) {
     return;
   }
 
@@ -56,20 +56,20 @@ void UVoxelDebug::AddDebugVoxel(const FIntVector &VoxelCoord) {
     return;
   }
 
-  const FVector SpawnLocation =
-      (FVector(VoxelCoord) * VoxelData->GetVoxelSize());
-
   UWorld *World = GetWorld();
   if (!World) {
     return;
   }
 
+  FActorSpawnParameters SpawnParams;
+  SpawnParams.Owner = Cast<AActor>(GetOuter());
   AVoxelDebugActor *NewDebugActor = World->SpawnActor<AVoxelDebugActor>(
-      DebugActorClass, SpawnLocation, FRotator::ZeroRotator);
+      DebugActorClass, VoxelData->GlobalToWorldCoord(GlobalCoord),
+      FRotator::ZeroRotator, SpawnParams);
 
   if (NewDebugActor && VoxelData) {
-    NewDebugActor->Initialize(VoxelCoord, VoxelData);
-    DebugVoxels.Add(VoxelCoord, NewDebugActor);
+    NewDebugActor->Initialize(GlobalCoord);
+    DebugVoxels.Add(GlobalCoord, NewDebugActor);
   }
 }
 

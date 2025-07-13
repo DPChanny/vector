@@ -37,13 +37,13 @@ struct FChunk {
     VoxelChunk = nullptr;
   }
 
-  void UpdateMesh() const {
+  void Update() const {
     if (VoxelChunk) {
       VoxelChunk->UpdateMesh();
     }
   }
 
-  const FVoxel &GetVoxel(const int32 Index) const {
+  FVoxel GetVoxel(const int32 Index) const {
     return Voxels.IsValidIndex(Index) ? Voxels[Index] : FVoxel();
   }
 

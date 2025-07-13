@@ -14,20 +14,19 @@ class VECTOR_API AVoxelChunk : public AActor {
 public:
   AVoxelChunk();
 
-  void Initialize(const FIntVector &InChunkCoord, UVoxelData *InVoxelData);
+  void Initialize(const FIntVector &InChunkCoord);
   void UpdateMesh() const;
 
-protected:
+private:
   UPROPERTY(EditDefaultsOnly)
   TObjectPtr<UMaterialInterface> Material;
 
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UProceduralMeshComponent> Mesh;
 
-  UPROPERTY()
-  TObjectPtr<UVoxelData> VoxelData;
+  UPROPERTY(VisibleAnywhere)
+  TObjectPtr<const UVoxelData> VoxelData;
 
-private:
   UPROPERTY(VisibleAnywhere)
   FIntVector ChunkCoord;
 

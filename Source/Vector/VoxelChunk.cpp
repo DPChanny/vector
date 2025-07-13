@@ -5,6 +5,7 @@
 #include "ProceduralMeshComponent.h"
 #include "VoxelData.h"
 #include "VoxelSubstanceDataAsset.h"
+#include "VoxelWorld.h"
 
 AVoxelChunk::AVoxelChunk() : ChunkCoord(FIntVector::ZeroValue) {
   PrimaryActorTick.bCanEverTick = false;
@@ -17,9 +18,8 @@ AVoxelChunk::AVoxelChunk() : ChunkCoord(FIntVector::ZeroValue) {
   Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
-void AVoxelChunk::Initialize(const FIntVector &InChunkCoord,
-                             UVoxelData *InVoxelData) {
-  VoxelData = InVoxelData;
+void AVoxelChunk::Initialize(const FIntVector &InChunkCoord) {
+  VoxelData = Cast<AVoxelWorld>(GetOwner())->GetVoxelData();
   ChunkCoord = InChunkCoord;
 }
 

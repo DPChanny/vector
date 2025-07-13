@@ -59,7 +59,7 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
     for (int32 y = 0; y < WorldSizeInChunks.Y; ++y) {
       for (int32 z = 0; z < WorldSizeInChunks.Z; ++z) {
         if (const FChunk *Chunk = VoxelData->GetChunk(FIntVector(x, y, z))) {
-          Chunk->UpdateMesh();
+          Chunk->Update();
         }
       }
     }

@@ -18,19 +18,20 @@ class VECTOR_API AVoxelDebugActor : public AActor {
   virtual void BeginPlay() override;
 
   FIntVector VoxelCoord;
-  TWeakObjectPtr<UVoxelData> VoxelData;
 
-protected:
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  UPROPERTY(VisibleAnywhere)
+  TObjectPtr<const UVoxelData> VoxelData;
+
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UBoxComponent> Box;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UWidgetComponent> Widget;
 
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UVoxelDebugWidget> DisplayWidget;
 
 public:
-  void Initialize(const FIntVector &InVoxelCoord, UVoxelData *InVoxelData);
+  void Initialize(const FIntVector &InVoxelCoord);
   void UpdateWidget();
 };

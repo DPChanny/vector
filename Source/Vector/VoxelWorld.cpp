@@ -58,7 +58,8 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
   for (int32 x = 0; x < WorldSizeInChunks.X; ++x) {
     for (int32 y = 0; y < WorldSizeInChunks.Y; ++y) {
       for (int32 z = 0; z < WorldSizeInChunks.Z; ++z) {
-        if (const FChunk *Chunk = VoxelData->GetChunk(FIntVector(x, y, z))) {
+        if (const FVoxelChunk *Chunk =
+                VoxelData->GetChunk(FIntVector(x, y, z))) {
           Chunk->Update();
         }
       }
@@ -336,9 +337,9 @@ void AVoxelWorld::UpdateDirtyChunk(
     if (CoordToUpdate.X >= 0 && CoordToUpdate.X < WorldSizeInChunks.X &&
         CoordToUpdate.Y >= 0 && CoordToUpdate.Y < WorldSizeInChunks.Y &&
         CoordToUpdate.Z >= 0 && CoordToUpdate.Z < WorldSizeInChunks.Z) {
-      if (const FChunk *Chunk = VoxelData->GetChunk(CoordToUpdate)) {
-        if (Chunk->VoxelChunk) {
-          Chunk->VoxelChunk->UpdateMesh();
+      if (const FVoxelChunk *Chunk = VoxelData->GetChunk(CoordToUpdate)) {
+        if (Chunk->VoxelChunkActor) {
+          Chunk->VoxelChunkActor->UpdateMesh();
         }
       }
     }

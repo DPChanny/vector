@@ -1,4 +1,4 @@
-#include "VoxelChunk.h"
+#include "VoxelChunkActor.h"
 
 #include "Engine/World.h"
 #include "MarchingCubesTables.h"
@@ -7,7 +7,7 @@
 #include "VoxelSubstanceDataAsset.h"
 #include "VoxelWorld.h"
 
-AVoxelChunk::AVoxelChunk() : ChunkCoord(FIntVector::ZeroValue) {
+AVoxelChunkActor::AVoxelChunkActor() : ChunkCoord(FIntVector::ZeroValue) {
   PrimaryActorTick.bCanEverTick = false;
 
   Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Mesh"));
@@ -18,13 +18,14 @@ AVoxelChunk::AVoxelChunk() : ChunkCoord(FIntVector::ZeroValue) {
   Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
-void AVoxelChunk::Initialize(const FIntVector &InChunkCoord) {
+void AVoxelChunkActor::Initialize(const FIntVector &InChunkCoord) {
   VoxelData = Cast<AVoxelWorld>(GetOwner())->GetVoxelData();
   ChunkCoord = InChunkCoord;
 }
 
-FVector AVoxelChunk::InterpolateVertex(const FVector &P1, const FVector &P2,
-                                       const float Val1, const float Val2) {
+FVector AVoxelChunkActor::InterpolateVertex(const FVector &P1,
+                                            const FVector &P2, const float Val1,
+                                            const float Val2) {
   if (FMath::IsNearlyEqual(Val1, Val2)) {
     return P1;
   }
@@ -32,7 +33,7 @@ FVector AVoxelChunk::InterpolateVertex(const FVector &P1, const FVector &P2,
   return P1 + Mu * (P2 - P1);
 }
 
-void AVoxelChunk::UpdateMesh() const {
+void AVoxelChunkActor::UpdateMesh() const {
   if (!VoxelData) {
     return;
   }
@@ -149,14 +150,14 @@ void AVoxelChunk::UpdateMesh() const {
   Mesh->SetMaterial(0, Material);
 }
 
-FVector AVoxelChunk::RoundVector(const FVector &InVector,
-                                 const float Precision) {
+FVector AVoxelChunkActor::RoundVector(const FVector &InVector,
+                                      const float Precision) {
   return FVector(FMath::RoundToFloat(InVector.X / Precision) * Precision,
                  FMath::RoundToFloat(InVector.Y / Precision) * Precision,
                  FMath::RoundToFloat(InVector.Z / Precision) * Precision);
 }
 
-FVector2D AVoxelChunk::GetUV(const FVector &Position) {
+FVector2D AVoxelChunkActor::GetUV(const FVector &Position) {
   const FVector AbsNormal = FVector(
       FMath::Abs(Position.X), FMath::Abs(Position.Y), FMath::Abs(Position.Z));
 

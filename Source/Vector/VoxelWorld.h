@@ -12,7 +12,7 @@ class UVoxelVoidDataAsset;
 class UVoxelBorderDataAsset;
 class UVoxelDebug;
 class UVoxelData;
-class AVoxelChunk;
+class AVoxelChunkActor;
 
 USTRUCT()
 struct FNexus {
@@ -68,7 +68,7 @@ private:
   TObjectPtr<UVoxelBorderDataAsset> VoxelBorderDataAsset;
 
   UPROPERTY(EditDefaultsOnly, Category = "Chunk")
-  TSubclassOf<AVoxelChunk> VoxelChunk;
+  TSubclassOf<AVoxelChunkActor> VoxelChunk;
 
   UPROPERTY(EditDefaultsOnly, Category = "Nexus")
   float NexusRadius = 200.f;

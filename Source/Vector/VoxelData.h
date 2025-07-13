@@ -1,18 +1,17 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Voxel.h"
-#include "VoxelBaseDataAsset.h"
-#include "VoxelBlockDataAsset.h"
-#include "VoxelBorderDataAsset.h"
-#include "VoxelVoidDataAsset.h"
+#include "VoxelChunk.h"
 
 // clang-format off
 #include "VoxelData.generated.h"
 // clang-format on
 
+class UVoxelBorderDataAsset;
+class UVoxelVoidDataAsset;
+class UVoxelBlockDataAsset;
 class UVoxelBaseDataAsset;
-class AVoxelChunk;
+class AVoxelChunkActor;
 class UVoxelDebug;
 
 UCLASS()
@@ -28,7 +27,7 @@ public:
 
   void Initialize(
       const FIntVector &InWorldSizeInChunks, int32 InChunkSize,
-      int32 InVoxelSize, const TSubclassOf<AVoxelChunk> &InVoxelChunk,
+      int32 InVoxelSize, const TSubclassOf<AVoxelChunkActor> &InVoxelChunk,
       const TArray<TObjectPtr<UVoxelBlockDataAsset>> &InVoxelBlockDataAssets,
       const TObjectPtr<UVoxelVoidDataAsset> &InVoxelVoidDataAsset,
       const TObjectPtr<UVoxelBorderDataAsset> &InVoxelBorderDataAsset);
@@ -36,7 +35,7 @@ public:
   void LoadChunk(const FIntVector &ChunkCoord);
   void UnloadChunk(const FIntVector &ChunkCoord);
   inline bool IsChunk(const FIntVector &ChunkCoord) const;
-  FChunk *GetChunk(const FIntVector &ChunkCoord);
+  FVoxelChunk *GetChunk(const FIntVector &ChunkCoord);
 
   FVoxel GetVoxel(const FIntVector &GlobalCoord) const;
   void SetVoxel(const FIntVector &GlobalCoord, const FVoxel &Voxel,
@@ -69,11 +68,11 @@ public:
   inline int32 LocalCoordToIndex(const FIntVector &LocalCoord) const;
 
 private:
-  TMap<FIntVector, FChunk> Chunks;
+  TMap<FIntVector, FVoxelChunk> Chunks;
   TMap<int32, TObjectPtr<UVoxelBaseDataAsset>> VoxelDataAssets;
 
   UPROPERTY()
-  TSubclassOf<AVoxelChunk> VoxelChunk;
+  TSubclassOf<AVoxelChunkActor> VoxelChunk;
   int32 VoxelSize;
 
   FIntVector WorldSizeInChunks;

@@ -1,6 +1,10 @@
 ﻿#include "VoxelData.h"
+#include "Voxel.h"
 #include "VoxelBaseDataAsset.h"
+#include "VoxelBlockDataAsset.h"
+#include "VoxelBorderDataAsset.h"
 #include "VoxelDebug.h"
+#include "VoxelVoidDataAsset.h"
 #include "VoxelWorld.h"
 
 int32 UVoxelData::GetVoxelID(
@@ -15,7 +19,7 @@ int32 UVoxelData::GetVoxelID(
 
 void UVoxelData::Initialize(
     const FIntVector &InWorldSizeInChunks, const int32 InChunkSize,
-    const int32 InVoxelSize, const TSubclassOf<AVoxelChunk> &InVoxelChunk,
+    const int32 InVoxelSize, const TSubclassOf<AVoxelChunkActor> &InVoxelChunk,
     const TArray<TObjectPtr<UVoxelBlockDataAsset>> &InVoxelBlockDataAssets,
     const TObjectPtr<UVoxelVoidDataAsset> &InVoxelVoidDataAsset,
     const TObjectPtr<UVoxelBorderDataAsset> &InVoxelBorderDataAsset) {
@@ -53,7 +57,7 @@ void UVoxelData::LoadChunk(const FIntVector &ChunkCoord) {
     return;
   }
 
-  FChunk NewChunk;
+  FVoxelChunk NewChunk;
   NewChunk.Initialize(ChunkVolume);
 
   UWorld *World = GetWorld();
@@ -66,7 +70,7 @@ void UVoxelData::LoadChunk(const FIntVector &ChunkCoord) {
   const FVector ChunkWorldLocation =
       FVector(ChunkCoord) * ChunkSize * VoxelSize;
 
-  AVoxelChunk *NewVoxelChunk = World->SpawnActor<AVoxelChunk>(
+  AVoxelChunkActor *NewVoxelChunk = World->SpawnActor<AVoxelChunkActor>(
       VoxelChunk, ChunkWorldLocation, FRotator::ZeroRotator, SpawnParams);
 
   if (NewVoxelChunk) {
@@ -75,17 +79,17 @@ void UVoxelData::LoadChunk(const FIntVector &ChunkCoord) {
           Owner, FAttachmentTransformRules::KeepWorldTransform);
     }
     NewVoxelChunk->Initialize(ChunkCoord);
-    NewChunk.VoxelChunk = NewVoxelChunk;
+    NewChunk.VoxelChunkActor = NewVoxelChunk;
 
     Chunks.Add(ChunkCoord, MoveTemp(NewChunk));
   }
 }
 
 void UVoxelData::UnloadChunk(const FIntVector &ChunkCoord) {
-  if (FChunk *Chunk = Chunks.Find(ChunkCoord)) {
-    if (Chunk->VoxelChunk) {
-      Chunk->VoxelChunk->Destroy();
-      Chunk->VoxelChunk = nullptr;
+  if (FVoxelChunk *Chunk = Chunks.Find(ChunkCoord)) {
+    if (Chunk->VoxelChunkActor) {
+      Chunk->VoxelChunkActor->Destroy();
+      Chunk->VoxelChunkActor = nullptr;
     }
     Chunks.Remove(ChunkCoord);
   }
@@ -93,7 +97,7 @@ void UVoxelData::UnloadChunk(const FIntVector &ChunkCoord) {
 
 FVoxel UVoxelData::GetVoxel(const FIntVector &GlobalCoord) const {
   const FIntVector ChunkCoord = GlobalToChunkCoord(GlobalCoord);
-  if (const FChunk *Chunk = Chunks.Find(ChunkCoord)) {
+  if (const FVoxelChunk *Chunk = Chunks.Find(ChunkCoord)) {
     const FIntVector LocalCoord = GlobalToLocalCoord(GlobalCoord);
     const int32 Index = LocalCoordToIndex(LocalCoord);
     return Chunk->GetVoxel(Index);
@@ -104,7 +108,7 @@ FVoxel UVoxelData::GetVoxel(const FIntVector &GlobalCoord) const {
 void UVoxelData::SetVoxel(const FIntVector &GlobalCoord, const FVoxel &Voxel,
                           const bool bAutoDebug) {
   const FIntVector ChunkCoord = GlobalToChunkCoord(GlobalCoord);
-  if (FChunk *Chunk = Chunks.Find(ChunkCoord)) {
+  if (FVoxelChunk *Chunk = Chunks.Find(ChunkCoord)) {
     const FIntVector LocalCoord = GlobalToLocalCoord(GlobalCoord);
     const int32 Index = LocalCoordToIndex(LocalCoord);
     Chunk->SetVoxel(Index, Voxel);
@@ -167,7 +171,7 @@ bool UVoxelData::IsChunk(const FIntVector &ChunkCoord) const {
   return Chunks.Contains(ChunkCoord);
 }
 
-FChunk *UVoxelData::GetChunk(const FIntVector &ChunkCoord) {
+FVoxelChunk *UVoxelData::GetChunk(const FIntVector &ChunkCoord) {
   return Chunks.Find(ChunkCoord);
 }
 

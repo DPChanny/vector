@@ -1,37 +1,41 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Voxel.h"
+#include "VoxelChunkActor.h"
+
+// clang-format off
 #include "VoxelChunk.generated.h"
+// clang-format on
 
-class UProceduralMeshComponent;
-class UVoxelData;
+class AVoxelChunkActor;
 
-UCLASS()
-class VECTOR_API AVoxelChunk : public AActor {
+USTRUCT()
+struct FVoxelChunk {
   GENERATED_BODY()
 
-public:
-  AVoxelChunk();
+  TArray<FVoxel> Voxels;
+  UPROPERTY()
+  TObjectPtr<AVoxelChunkActor> VoxelChunkActor;
 
-  void Initialize(const FIntVector &InChunkCoord);
-  void UpdateMesh() const;
+  void Initialize(const int32 ChunkVolume) {
+    Voxels.Init(FVoxel(), ChunkVolume);
+    VoxelChunkActor = nullptr;
+  }
 
-private:
-  UPROPERTY(EditDefaultsOnly)
-  TObjectPtr<UMaterialInterface> Material;
+  void Update() const {
+    if (VoxelChunkActor) {
+      VoxelChunkActor->UpdateMesh();
+    }
+  }
 
-  UPROPERTY(VisibleAnywhere)
-  TObjectPtr<UProceduralMeshComponent> Mesh;
+  FVoxel GetVoxel(const int32 Index) const {
+    return Voxels.IsValidIndex(Index) ? Voxels[Index] : FVoxel();
+  }
 
-  UPROPERTY(VisibleAnywhere)
-  TObjectPtr<const UVoxelData> VoxelData;
-
-  UPROPERTY(VisibleAnywhere)
-  FIntVector ChunkCoord;
-
-  static FVector RoundVector(const FVector &InVector, float Precision);
-  static FVector2D GetUV(const FVector &Position);
-  static FVector InterpolateVertex(const FVector &P1, const FVector &P2,
-                                   float Val1, float Val2);
+  void SetVoxel(const int32 Index, const FVoxel &Voxel) {
+    if (Voxels.IsValidIndex(Index)) {
+      Voxels[Index] = Voxel;
+    }
+  }
 };

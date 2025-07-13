@@ -158,6 +158,10 @@ UVoxelData::GetVoxelDataAsset(const int32 VoxelID) const {
   }
   return VoxelDataAssets.FindRef(GetVoidID());
 }
+TObjectPtr<UVoxelBaseDataAsset>
+UVoxelData::GetVoxelDataAsset(const FIntVector GlobalCoord) const {
+  return GetVoxelDataAsset(GetVoxelID(GlobalCoord));
+}
 
 bool UVoxelData::IsChunk(const FIntVector &ChunkCoord) const {
   return Chunks.Contains(ChunkCoord);

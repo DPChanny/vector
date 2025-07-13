@@ -35,6 +35,8 @@ public:
 
   void LoadChunk(const FIntVector &ChunkCoord);
   void UnloadChunk(const FIntVector &ChunkCoord);
+  inline bool IsChunk(const FIntVector &ChunkCoord) const;
+  FChunk *GetChunk(const FIntVector &ChunkCoord);
 
   FVoxel GetVoxel(const FIntVector &GlobalCoord) const;
   void SetVoxel(const FIntVector &GlobalCoord, const FVoxel &Voxel,
@@ -42,17 +44,16 @@ public:
 
   int32 GetVoxelID(const FIntVector &GlobalCoord) const;
   int32 GetVoxelID(const TObjectPtr<UVoxelBaseDataAsset> &VoxelDataAsset);
-
   void SetVoxelID(const FIntVector &GlobalCoord, int32 NewVoxelID);
 
   float GetDurability(const FIntVector &GlobalCoord) const;
   void SetDurability(const FIntVector &GlobalVoxelCoord, float NewDurability);
 
   float GetDensity(const FIntVector &GlobalCoord) const;
-  TObjectPtr<UVoxelBaseDataAsset> GetVoxelDataAsset(int32 VoxelID) const;
 
-  inline bool IsChunk(const FIntVector &ChunkCoord) const;
-  FChunk *GetChunk(const FIntVector &ChunkCoord);
+  TObjectPtr<UVoxelBaseDataAsset> GetVoxelDataAsset(int32 VoxelID) const;
+  TObjectPtr<UVoxelBaseDataAsset>
+  GetVoxelDataAsset(FIntVector GlobalCoord) const;
 
   int32 GetChunkSize() const { return ChunkSize; }
   int32 GetVoxelSize() const { return VoxelSize; }

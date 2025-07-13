@@ -129,27 +129,13 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
       continue;
     }
 
-    FIntVector MinAffectedGrid =
-        FIntVector(FVector(NewRoom.Center - NewRoom.Radius) / VoxelSize);
-    FIntVector MaxAffectedGrid =
-        FIntVector(FVector(NewRoom.Center + NewRoom.Radius) / VoxelSize);
+    TSet<FIntVector> GlobalCoordsInRadius;
+    GetGlobalCoordsInRadius(NewRoom.Center, NewRoom.Radius,
+                            GlobalCoordsInRadius);
 
-    for (int32 z = FMath::Max(0, MinAffectedGrid.Z);
-         z < FMath::Min(WorldSize.Z, MaxAffectedGrid.Z + 1); ++z) {
-      for (int32 y = FMath::Max(0, MinAffectedGrid.Y);
-           y < FMath::Min(WorldSize.Y, MaxAffectedGrid.Y + 1); ++y) {
-        for (int32 x = FMath::Max(0, MinAffectedGrid.X);
-             x < FMath::Min(WorldSize.X, MaxAffectedGrid.X + 1); ++x) {
-          const FIntVector GlobalCoord(x, y, z);
-          const FVector WorldCoord = FVector(GlobalCoord) * VoxelSize;
-
-          if (FVector::DistSquared(WorldCoord, NewRoom.Center) <
-              FMath::Square(NewRoom.Radius)) {
-            VoxelData->SetVoxel(GlobalCoord,
-                                FVoxel(UVoxelData::GetVoidID(), 0.f), false);
-          }
-        }
-      }
+    for (const FIntVector &GlobalCoord : GlobalCoordsInRadius) {
+      VoxelData->SetVoxel(GlobalCoord, FVoxel(UVoxelData::GetVoidID(), 0.f),
+                          false);
     }
 
     FTransform SpawnTransform(FRotator::ZeroRotator, NewRoom.Center);
@@ -157,16 +143,8 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
         APlayerStart::StaticClass(), SpawnTransform);
     if (NewPlayerStart) {
       PlayerStarts.Add(NewPlayerStart);
-      UE_LOG(LogTemp, Log, TEXT("Generated PlayerStart at: %s"),
-             *NewPlayerStart->GetActorLocation().ToString());
-    } else {
-      UE_LOG(LogTemp, Error,
-             TEXT("Failed to spawn PlayerStart for room %d at %s"), i,
-             *NewRoom.Center.ToString());
     }
   }
-  UE_LOG(LogTemp, Log, TEXT("VoxelWorld: Generated %d PlayerStarts."),
-         PlayerStarts.Num());
 }
 
 void AVoxelWorld::DamageVoxel(const FVector &Center, const float Radius,
@@ -177,8 +155,7 @@ void AVoxelWorld::DamageVoxel(const FVector &Center, const float Radius,
       return;
     }
 
-    if (!Cast<UVoxelBlockDataAsset>(
-            VoxelData->GetVoxelDataAsset(VoxelData->GetVoxelID(VoxelCoord)))) {
+    if (!Cast<UVoxelBlockDataAsset>(VoxelData->GetVoxelDataAsset(VoxelCoord))) {
       return;
     }
 
@@ -206,8 +183,8 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
       return;
     }
 
-    const UVoxelBlockDataAsset *VoxelDataAsset = Cast<UVoxelBlockDataAsset>(
-        VoxelData->GetVoxelDataAsset(VoxelData->GetVoxelID(GlobalCoord)));
+    const UVoxelBlockDataAsset *VoxelDataAsset =
+        Cast<UVoxelBlockDataAsset>(VoxelData->GetVoxelDataAsset(GlobalCoord));
     if (!VoxelDataAsset) {
       return;
     }
@@ -221,7 +198,7 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
     const float NewDurability =
         VoxelData->GetDurability(GlobalCoord) + ConstructionAmount;
 
-    if (NewDurability >= VoxelDataAsset->MaxDurability) {
+    if (NewDurability > VoxelDataAsset->MaxDurability) {
       VoxelData->SetDurability(GlobalCoord, VoxelDataAsset->MaxDurability);
 
       const TArray NeighborOffsets = {
@@ -229,11 +206,11 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
           FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
 
       for (const FIntVector &NeighborOffset : NeighborOffsets) {
-        const FIntVector NeighborGlobalCoord = GlobalCoord + NeighborOffset;
-        if (VoxelData->GetVoxelID(NeighborGlobalCoord) ==
+        if (const FIntVector NeighborGlobalCoord = GlobalCoord + NeighborOffset;
+            VoxelData->GetVoxelID(NeighborGlobalCoord) ==
             UVoxelData::GetVoidID()) {
           VoxelData->SetVoxel(NeighborGlobalCoord,
-                              FVoxel(VoxelIDToConstruct, 0.f));
+                              FVoxel(VoxelIDToConstruct, ConstructionAmount));
 
           for (const FIntVector &CheckOffset : NeighborOffsets) {
             const FIntVector CheckGlobalCoord =
@@ -243,12 +220,12 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
               continue;
             }
 
-            if (const UVoxelBlockDataAsset *EnclosedBlockData =
-                    Cast<UVoxelBlockDataAsset>(VoxelData->GetVoxelDataAsset(
-                        VoxelData->GetVoxelID(CheckGlobalCoord)))) {
+            if (const UVoxelBlockDataAsset *CheckBlockDataAsset =
+                    Cast<UVoxelBlockDataAsset>(
+                        VoxelData->GetVoxelDataAsset(CheckGlobalCoord))) {
               if (!IsSurfaceVoxel(CheckGlobalCoord)) {
                 VoxelData->SetDurability(CheckGlobalCoord,
-                                         EnclosedBlockData->MaxDurability);
+                                         CheckBlockDataAsset->MaxDurability);
                 AddDirtyChunk(CheckGlobalCoord, DirtyChunks);
               }
             }
@@ -272,7 +249,7 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
   ProcessVoxel(Center, Radius, ConstructLogic);
 }
 
-void AVoxelWorld::GetVoxelCoordsInRadius(
+void AVoxelWorld::GetGlobalCoordsInRadius(
     const FVector &Center, const float Radius,
     TSet<FIntVector> &FoundGlobalCoords) const {
   const FIntVector CenterGlobalCoord = VoxelData->WorldToGlobalCoord(Center);
@@ -304,7 +281,7 @@ void AVoxelWorld::ProcessVoxel(
         &VoxelModifier) const {
   TSet<FIntVector> GlobalCoordsInRadius;
   TSet<FIntVector> GlobalCoordsToProcess;
-  GetVoxelCoordsInRadius(Center, Radius, GlobalCoordsInRadius);
+  GetGlobalCoordsInRadius(Center, Radius, GlobalCoordsInRadius);
 
   TSet<FIntVector> DirtyChunkCoords;
 

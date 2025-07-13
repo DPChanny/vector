@@ -84,13 +84,10 @@ void AVoxelChunk::UpdateMesh() const {
                 CornerDensities[CornerA], CornerDensities[CornerB]);
             if (const UVoxelSubstanceDataAsset *VoxelAsset =
                     Cast<UVoxelSubstanceDataAsset>(VoxelData->GetVoxelDataAsset(
-                        VoxelData
-                            ->GetVoxel(GlobalCoord +
-                                       (CornerDensities[CornerA] >
-                                                CornerDensities[CornerB]
-                                            ? CornerOffsets[CornerA]
-                                            : CornerOffsets[CornerB]))
-                            .ID))) {
+                        GlobalCoord +
+                        (CornerDensities[CornerA] > CornerDensities[CornerB]
+                             ? CornerOffsets[CornerA]
+                             : CornerOffsets[CornerB])))) {
               EdgeVertexColors[i] = VoxelAsset->VertexColor;
             }
           }

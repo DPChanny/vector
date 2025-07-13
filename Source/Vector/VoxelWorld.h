@@ -30,51 +30,52 @@ public:
   const TObjectPtr<UVoxelData> &GetVoxelData() const { return VoxelData; }
   const TObjectPtr<UVoxelDebug> &GetVoxelDebug() const { return VoxelDebug; }
 
-  AVoxelWorld();
-
   void Initialize(int32 NumberOfPlayers);
 
-  const TArray<APlayerStart *> &GetPlayerStarts() const { return PlayerStarts; }
+  const TArray<TObjectPtr<APlayerStart>> &GetPlayerStarts() const {
+    return PlayerStarts;
+  }
 
   void DamageVoxel(const FVector &Center, float Radius,
                    float DamageAmount) const;
   void ConstructVoxel(const FVector &Center, float Radius,
                       float ConstructionAmount, int32 VoxelIDToConstruct) const;
 
-  void GetVoxelCoordsInRadius(const FVector &Center, float Radius,
-                              TSet<FIntVector> &FoundGlobalCoords) const;
-
+private:
   void InitializeNexuses(int32 NexusCount);
 
-protected:
-  UPROPERTY(EditAnywhere, Category = "World")
+  void GetGlobalCoordsInRadius(const FVector &Center, float Radius,
+                               TSet<FIntVector> &FoundGlobalCoords) const;
+
+  AVoxelWorld();
+
+  UPROPERTY(EditDefaultsOnly, Category = "World")
   int32 ChunkSize = 10;
 
-  UPROPERTY(EditAnywhere, Category = "World")
+  UPROPERTY(EditDefaultsOnly, Category = "World")
   int32 VoxelSize = 50;
 
-  UPROPERTY(EditAnywhere, Category = "World")
+  UPROPERTY(EditDefaultsOnly, Category = "World")
   FIntVector WorldSizeInChunks = FIntVector(20, 20, 20);
 
-  UPROPERTY(EditAnywhere, Category = "Voxel Data")
+  UPROPERTY(EditDefaultsOnly, Category = "Data")
   TArray<TObjectPtr<UVoxelBlockDataAsset>> VoxelBlockDataAssets;
 
-  UPROPERTY(EditAnywhere, Category = "Voxel Data")
+  UPROPERTY(EditDefaultsOnly, Category = "Data")
   TObjectPtr<UVoxelVoidDataAsset> VoxelVoidDataAsset;
 
-  UPROPERTY(EditAnywhere, Category = "Voxel Data")
+  UPROPERTY(EditDefaultsOnly, Category = "Data")
   TObjectPtr<UVoxelBorderDataAsset> VoxelBorderDataAsset;
 
-  UPROPERTY(EditAnywhere, Category = "Chunk")
+  UPROPERTY(EditDefaultsOnly, Category = "Chunk")
   TSubclassOf<AVoxelChunk> VoxelChunk;
 
-  UPROPERTY(EditAnywhere, Category = "Nexus")
+  UPROPERTY(EditDefaultsOnly, Category = "Nexus")
   float NexusRadius = 200.f;
 
   UPROPERTY(EditDefaultsOnly, Category = "Debug")
   TSubclassOf<AVoxelDebugActor> VoxelDebugActor;
 
-private:
   void
   ProcessVoxel(const FVector &Center, float Radius,
                const TFunction<void(const FIntVector &, TSet<FIntVector> &)>

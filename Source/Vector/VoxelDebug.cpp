@@ -43,7 +43,7 @@ void UVoxelDebug::FlushDebugVoxelBuffer() {
     AddDebugVoxel(VoxelToAdd);
   }
 
-  DebugVoxelsBuffer.Reset();
+  DebugVoxelsBuffer.Empty();
 }
 
 void UVoxelDebug::AddDebugVoxel(const FIntVector &GlobalCoord) {

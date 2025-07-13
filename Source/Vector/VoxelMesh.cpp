@@ -53,5 +53,5 @@ void UVoxelMesh::FlushDirtyChunks() {
       }
     }
   }
-  DirtyChunkCoords.Reset();
+  DirtyChunkCoords.Empty();
 }

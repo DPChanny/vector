@@ -7,7 +7,7 @@ void UVoxelMesh::Initialize() {
   VoxelData = Cast<AVoxelWorld>(GetOuter())->GetVoxelData();
 }
 
-void UVoxelMesh::AddDirtyChunk(const FIntVector &GlobalCoord) {
+void UVoxelMesh::SetDirtyChunk(const FIntVector &GlobalCoord) {
   if (!VoxelData) {
     return;
   }

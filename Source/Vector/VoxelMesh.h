@@ -12,7 +12,7 @@ class VECTOR_API UVoxelMesh : public UObject {
 public:
   void Initialize();
 
-  void AddDirtyChunk(const FIntVector &GlobalCoord);
+  void SetDirtyChunk(const FIntVector &GlobalCoord);
   void FlushDirtyChunks();
 
 private:

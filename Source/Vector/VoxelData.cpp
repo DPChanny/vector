@@ -121,7 +121,7 @@ void UVoxelData::SetVoxel(const FIntVector &GlobalCoord, const FVoxel &Voxel,
     }
 
     if (VoxelMesh) {
-      VoxelMesh->AddDirtyChunk(GlobalCoord);
+      VoxelMesh->SetDirtyChunk(GlobalCoord);
     }
   }
 }
@@ -194,8 +194,7 @@ FIntVector UVoxelData::ChunkToGlobalCoord(const FIntVector &ChunkCoord) const {
 }
 
 FIntVector UVoxelData::GlobalToLocalCoord(const FIntVector &GlobalCoord) const {
-  return FIntVector(GlobalCoord.X % ChunkSize, GlobalCoord.Y % ChunkSize,
-                    GlobalCoord.Z % ChunkSize);
+  return GlobalCoord % ChunkSize;
 }
 
 FIntVector UVoxelData::LocalToGlobalCoord(const FIntVector &LocalCoord,

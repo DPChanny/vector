@@ -49,18 +49,18 @@ void AVoxelChunk::UpdateMesh() const {
   for (int32 x = 0; x < VoxelData->GetChunkSize(); ++x) {
     for (int32 y = 0; y < VoxelData->GetChunkSize(); ++y) {
       for (int32 z = 0; z < VoxelData->GetChunkSize(); ++z) {
-        const FIntVector VoxelCoord =
-            (ChunkCoord * VoxelData->GetChunkSize()) + FIntVector(x, y, z);
+        const FIntVector GlobalCoord =
+            VoxelData->LocalToGlobalCoord(FIntVector(x, y, z), ChunkCoord);
 
         float CornerDensities[8]{};
         FVector CornerPositions[8];
         int32 CubeIndex = 0;
         for (int i = 0; i < 8; ++i) {
-          const FIntVector CornerVoxelCoord = VoxelCoord + CornerOffsets[i];
+          const FIntVector CornerGlobalCoord = GlobalCoord + CornerOffsets[i];
 
-          CornerDensities[i] = VoxelData->GetDensity(CornerVoxelCoord);
+          CornerDensities[i] = VoxelData->GetDensity(CornerGlobalCoord);
           CornerPositions[i] =
-              (FVector(CornerVoxelCoord) * VoxelData->GetVoxelSize()) -
+              (FVector(CornerGlobalCoord) * VoxelData->GetVoxelSize()) -
               GetActorLocation();
 
           if (CornerDensities[i] > UVoxelData::GetSurfaceLevel()) {
@@ -85,7 +85,7 @@ void AVoxelChunk::UpdateMesh() const {
             if (const UVoxelSubstanceDataAsset *VoxelAsset =
                     Cast<UVoxelSubstanceDataAsset>(VoxelData->GetVoxelDataAsset(
                         VoxelData
-                            ->GetVoxel(VoxelCoord +
+                            ->GetVoxel(GlobalCoord +
                                        (CornerDensities[CornerA] >
                                                 CornerDensities[CornerB]
                                             ? CornerOffsets[CornerA]

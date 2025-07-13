@@ -14,12 +14,12 @@ class UVoxelDebug;
 class UVoxelData;
 class AVoxelChunk;
 
-USTRUCT(BlueprintType)
+USTRUCT()
 struct FNexus {
   GENERATED_BODY()
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FVector Center;
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly) float Radius;
+  UPROPERTY(VisibleAnywhere) FVector Center;
+  UPROPERTY(VisibleAnywhere) float Radius;
 };
 
 UCLASS()
@@ -27,8 +27,8 @@ class VECTOR_API AVoxelWorld : public AActor {
   GENERATED_BODY()
 
 public:
-  UVoxelData *GetVoxelData() const { return VoxelData; }
-  UVoxelDebug *GetVoxelDebug() const { return VoxelDebug; }
+  const TObjectPtr<UVoxelData> &GetVoxelData() const { return VoxelData; }
+  const TObjectPtr<UVoxelDebug> &GetVoxelDebug() const { return VoxelDebug; }
 
   AVoxelWorld();
 
@@ -41,11 +41,8 @@ public:
   void ConstructVoxel(const FVector &Center, float Radius,
                       float ConstructionAmount, int32 VoxelIDToConstruct) const;
 
-  FIntVector WorldPosToVoxelCoord(const FVector &WorldPos) const;
-  FIntVector VoxelCoordToChunkCoord(const FIntVector &VoxelCoord) const;
-
   void GetVoxelCoordsInRadius(const FVector &Center, float Radius,
-                              TSet<FIntVector> &FoundVoxelCoords) const;
+                              TSet<FIntVector> &FoundGlobalCoords) const;
 
   void InitializeNexuses(int32 NexusCount);
 
@@ -82,9 +79,9 @@ private:
   ProcessVoxel(const FVector &Center, float Radius,
                const TFunction<void(const FIntVector &, TSet<FIntVector> &)>
                    &VoxelModifier) const;
-  void AddDirtyChunk(const FIntVector &VoxelCoord,
-                     TSet<FIntVector> &DirtyChunks) const;
-  void UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunks) const;
+  void AddDirtyChunk(const FIntVector &GlobalCoord,
+                     TSet<FIntVector> &DirtyChunkCoords) const;
+  void UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunkCoords) const;
   bool IsSurfaceVoxel(const FIntVector &VoxelCoord) const;
 
   UPROPERTY()

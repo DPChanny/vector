@@ -43,7 +43,7 @@ struct FChunk {
     }
   }
 
-  FVoxel GetVoxel(const int32 Index) const {
+  const FVoxel &GetVoxel(const int32 Index) const {
     return Voxels.IsValidIndex(Index) ? Voxels[Index] : FVoxel();
   }
 

@@ -1,6 +1,7 @@
 ﻿#include "VoxelData.h"
 #include "VoxelBaseDataAsset.h"
 #include "VoxelDebug.h"
+#include "VoxelWorld.h"
 
 int32 UVoxelData::GetVoxelID(
     const TObjectPtr<UVoxelBaseDataAsset> &VoxelDataAsset) {
@@ -17,14 +18,13 @@ void UVoxelData::Initialize(
     const int32 InVoxelSize, const TSubclassOf<AVoxelChunk> &InVoxelChunk,
     const TArray<TObjectPtr<UVoxelBlockDataAsset>> &InVoxelBlockDataAssets,
     const TObjectPtr<UVoxelVoidDataAsset> &InVoxelVoidDataAsset,
-    const TObjectPtr<UVoxelBorderDataAsset> &InVoxelBorderDataAsset,
-    UVoxelDebug *InVoxelDebug) {
+    const TObjectPtr<UVoxelBorderDataAsset> &InVoxelBorderDataAsset) {
+  VoxelDebug = Cast<AVoxelWorld>(GetOuter())->GetVoxelDebug();
   WorldSizeInChunks = InWorldSizeInChunks;
   ChunkSize = InChunkSize;
   VoxelSize = InVoxelSize;
   ChunkVolume = ChunkSize * ChunkSize * ChunkSize;
   VoxelChunk = InVoxelChunk;
-  VoxelDebug = InVoxelDebug;
 
   VoxelDataAssets.Empty();
   if (const TObjectPtr<UVoxelBaseDataAsset> VoidDataAsset =
@@ -91,43 +91,43 @@ void UVoxelData::UnloadChunk(const FIntVector &ChunkCoord) {
   }
 }
 
-FVoxel UVoxelData::GetVoxel(const FIntVector &GlobalVoxelCoord) const {
-  const FIntVector ChunkCoord = GlobalToChunkCoord(GlobalVoxelCoord);
+const FVoxel &UVoxelData::GetVoxel(const FIntVector &GlobalCoord) const {
+  const FIntVector ChunkCoord = GlobalToChunkCoord(GlobalCoord);
   if (const FChunk *Chunk = Chunks.Find(ChunkCoord)) {
-    const FIntVector LocalCoord = GlobalToLocalCoord(GlobalVoxelCoord);
+    const FIntVector LocalCoord = GlobalToLocalCoord(GlobalCoord);
     const int32 Index = LocalCoordToIndex(LocalCoord);
     return Chunk->GetVoxel(Index);
   }
   return FVoxel(GetVoidID(), 0.f);
 }
 
-void UVoxelData::SetVoxel(const FIntVector &GlobalVoxelCoord,
-                          const FVoxel &Voxel, const bool bAutoDebug) {
-  const FIntVector ChunkCoord = GlobalToChunkCoord(GlobalVoxelCoord);
+void UVoxelData::SetVoxel(const FIntVector &GlobalCoord, const FVoxel &Voxel,
+                          const bool bAutoDebug) {
+  const FIntVector ChunkCoord = GlobalToChunkCoord(GlobalCoord);
   if (FChunk *Chunk = Chunks.Find(ChunkCoord)) {
-    const FIntVector LocalCoord = GlobalToLocalCoord(GlobalVoxelCoord);
+    const FIntVector LocalCoord = GlobalToLocalCoord(GlobalCoord);
     const int32 Index = LocalCoordToIndex(LocalCoord);
     Chunk->SetVoxel(Index, Voxel);
 
     if (VoxelDebug && bAutoDebug) {
-      VoxelDebug->SetDebugVoxel(GlobalVoxelCoord);
+      VoxelDebug->SetDebugVoxel(GlobalCoord);
     }
   }
 }
 
-int32 UVoxelData::GetVoxelID(const FIntVector &GlobalVoxelCoord) const {
-  return GetVoxel(GlobalVoxelCoord).ID;
+int32 UVoxelData::GetVoxelID(const FIntVector &GlobalCoord) const {
+  return GetVoxel(GlobalCoord).ID;
 }
 
-void UVoxelData::SetVoxelID(const FIntVector &GlobalVoxelCoord,
+void UVoxelData::SetVoxelID(const FIntVector &GlobalCoord,
                             const int32 NewVoxelID) {
-  FVoxel CurrentVoxel = GetVoxel(GlobalVoxelCoord);
+  FVoxel CurrentVoxel = GetVoxel(GlobalCoord);
   CurrentVoxel.ID = NewVoxelID;
-  SetVoxel(GlobalVoxelCoord, CurrentVoxel);
+  SetVoxel(GlobalCoord, CurrentVoxel);
 }
 
-float UVoxelData::GetDurability(const FIntVector &GlobalVoxelCoord) const {
-  return GetVoxel(GlobalVoxelCoord).Durability;
+float UVoxelData::GetDurability(const FIntVector &GlobalCoord) const {
+  return GetVoxel(GlobalCoord).Durability;
 }
 
 void UVoxelData::SetDurability(const FIntVector &GlobalVoxelCoord,
@@ -137,8 +137,8 @@ void UVoxelData::SetDurability(const FIntVector &GlobalVoxelCoord,
   SetVoxel(GlobalVoxelCoord, CurrentVoxel);
 }
 
-float UVoxelData::GetDensity(const FIntVector &GlobalVoxelCoord) const {
-  const FVoxel Voxel = GetVoxel(GlobalVoxelCoord);
+float UVoxelData::GetDensity(const FIntVector &GlobalCoord) const {
+  const FVoxel Voxel = GetVoxel(GlobalCoord);
   if (const UVoxelBaseDataAsset *VoxelAsset = GetVoxelDataAsset(Voxel.ID)) {
     const float BaseDensity = VoxelAsset->BaseDensity;
     if (const UVoxelBlockDataAsset *BlockData =
@@ -150,15 +150,16 @@ float UVoxelData::GetDensity(const FIntVector &GlobalVoxelCoord) const {
   return -1.f;
 }
 
-UVoxelBaseDataAsset *UVoxelData::GetVoxelDataAsset(const int32 VoxelID) const {
-  if (const TObjectPtr<UVoxelBaseDataAsset> FoundData =
+TObjectPtr<UVoxelBaseDataAsset>
+UVoxelData::GetVoxelDataAsset(const int32 VoxelID) const {
+  if (const TObjectPtr<UVoxelBaseDataAsset> &FoundData =
           VoxelDataAssets.FindRef(VoxelID)) {
     return FoundData;
   }
   return VoxelDataAssets.FindRef(GetVoidID());
 }
 
-bool UVoxelData::IsChunkLoaded(const FIntVector &ChunkCoord) const {
+bool UVoxelData::IsChunk(const FIntVector &ChunkCoord) const {
   return Chunks.Contains(ChunkCoord);
 }
 
@@ -166,22 +167,38 @@ FChunk *UVoxelData::GetChunk(const FIntVector &ChunkCoord) {
   return Chunks.Find(ChunkCoord);
 }
 
-FIntVector
-UVoxelData::GlobalToChunkCoord(const FIntVector &GlobalVoxelCoord) const {
+FIntVector UVoxelData::GlobalToChunkCoord(const FIntVector &GlobalCoord) const {
   return FIntVector(
-      FMath::FloorToInt(static_cast<float>(GlobalVoxelCoord.X) / ChunkSize),
-      FMath::FloorToInt(static_cast<float>(GlobalVoxelCoord.Y) / ChunkSize),
-      FMath::FloorToInt(static_cast<float>(GlobalVoxelCoord.Z) / ChunkSize));
+      FMath::FloorToInt(static_cast<float>(GlobalCoord.X) / ChunkSize),
+      FMath::FloorToInt(static_cast<float>(GlobalCoord.Y) / ChunkSize),
+      FMath::FloorToInt(static_cast<float>(GlobalCoord.Z) / ChunkSize));
 }
 
-FIntVector
-UVoxelData::GlobalToLocalCoord(const FIntVector &GlobalVoxelCoord) const {
-  return FIntVector(GlobalVoxelCoord.X % ChunkSize,
-                    GlobalVoxelCoord.Y % ChunkSize,
-                    GlobalVoxelCoord.Z % ChunkSize);
+FIntVector UVoxelData::ChunkToGlobalCoord(const FIntVector &ChunkCoord) const {
+  return ChunkCoord * ChunkSize;
 }
 
-int32 UVoxelData::LocalCoordToIndex(const FIntVector &LocalVoxelCoord) const {
-  return LocalVoxelCoord.X + (LocalVoxelCoord.Y * ChunkSize) +
-         (LocalVoxelCoord.Z * ChunkSize * ChunkSize);
+FIntVector UVoxelData::GlobalToLocalCoord(const FIntVector &GlobalCoord) const {
+  return FIntVector(GlobalCoord.X % ChunkSize, GlobalCoord.Y % ChunkSize,
+                    GlobalCoord.Z % ChunkSize);
+}
+
+FIntVector UVoxelData::LocalToGlobalCoord(const FIntVector &LocalCoord,
+                                          const FIntVector &ChunkCoord) const {
+  return ChunkToGlobalCoord(ChunkCoord) + LocalCoord;
+}
+
+FIntVector UVoxelData::WorldToGlobalCoord(const FVector &WorldCoord) const {
+  return FIntVector(FMath::RoundToInt(WorldCoord.X / VoxelSize),
+                    FMath::RoundToInt(WorldCoord.Y / VoxelSize),
+                    FMath::RoundToInt(WorldCoord.Z / VoxelSize));
+}
+
+FVector UVoxelData::GlobalToWorldCoord(const FIntVector &GlobalCoord) const {
+  return FVector(GlobalCoord) * VoxelSize;
+}
+
+int32 UVoxelData::LocalCoordToIndex(const FIntVector &LocalCoord) const {
+  return LocalCoord.X + LocalCoord.Y * ChunkSize +
+         LocalCoord.Z * ChunkSize * ChunkSize;
 }

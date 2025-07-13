@@ -31,38 +31,43 @@ public:
       int32 InVoxelSize, const TSubclassOf<AVoxelChunk> &InVoxelChunk,
       const TArray<TObjectPtr<UVoxelBlockDataAsset>> &InVoxelBlockDataAssets,
       const TObjectPtr<UVoxelVoidDataAsset> &InVoxelVoidDataAsset,
-      const TObjectPtr<UVoxelBorderDataAsset> &InVoxelBorderDataAsset,
-      UVoxelDebug *InVoxelDebug);
+      const TObjectPtr<UVoxelBorderDataAsset> &InVoxelBorderDataAsset);
 
   void LoadChunk(const FIntVector &ChunkCoord);
   void UnloadChunk(const FIntVector &ChunkCoord);
 
-  FVoxel GetVoxel(const FIntVector &GlobalVoxelCoord) const;
-  void SetVoxel(const FIntVector &GlobalVoxelCoord, const FVoxel &Voxel,
+  const FVoxel &GetVoxel(const FIntVector &GlobalCoord) const;
+  void SetVoxel(const FIntVector &GlobalCoord, const FVoxel &Voxel,
                 bool bAutoDebug = true);
 
-  int32 GetVoxelID(const FIntVector &GlobalVoxelCoord) const;
+  int32 GetVoxelID(const FIntVector &GlobalCoord) const;
   int32 GetVoxelID(const TObjectPtr<UVoxelBaseDataAsset> &VoxelDataAsset);
 
-  void SetVoxelID(const FIntVector &GlobalVoxelCoord, int32 NewVoxelID);
+  void SetVoxelID(const FIntVector &GlobalCoord, int32 NewVoxelID);
 
-  float GetDurability(const FIntVector &GlobalVoxelCoord) const;
+  float GetDurability(const FIntVector &GlobalCoord) const;
   void SetDurability(const FIntVector &GlobalVoxelCoord, float NewDurability);
 
-  float GetDensity(const FIntVector &GlobalVoxelCoord) const;
-  UVoxelBaseDataAsset *GetVoxelDataAsset(int32 VoxelID) const;
+  float GetDensity(const FIntVector &GlobalCoord) const;
+  TObjectPtr<UVoxelBaseDataAsset> GetVoxelDataAsset(int32 VoxelID) const;
 
-  bool IsChunkLoaded(const FIntVector &ChunkCoord) const;
+  inline bool IsChunk(const FIntVector &ChunkCoord) const;
   FChunk *GetChunk(const FIntVector &ChunkCoord);
 
   int32 GetChunkSize() const { return ChunkSize; }
   int32 GetVoxelSize() const { return VoxelSize; }
 
-private:
-  FIntVector GlobalToChunkCoord(const FIntVector &GlobalVoxelCoord) const;
-  FIntVector GlobalToLocalCoord(const FIntVector &GlobalVoxelCoord) const;
-  int32 LocalCoordToIndex(const FIntVector &LocalVoxelCoord) const;
+  inline FIntVector GlobalToChunkCoord(const FIntVector &GlobalCoord) const;
+  inline FIntVector ChunkToGlobalCoord(const FIntVector &ChunkCoord) const;
+  inline FIntVector GlobalToLocalCoord(const FIntVector &GlobalCoord) const;
+  inline FIntVector LocalToGlobalCoord(const FIntVector &LocalCoord,
+                                       const FIntVector &ChunkCoord) const;
+  inline FIntVector WorldToGlobalCoord(const FVector &WorldCoord) const;
+  inline FVector GlobalToWorldCoord(const FIntVector &GlobalCoord) const;
 
+  inline int32 LocalCoordToIndex(const FIntVector &LocalCoord) const;
+
+private:
   TMap<FIntVector, FChunk> Chunks;
   TMap<int32, TObjectPtr<UVoxelBaseDataAsset>> VoxelDataAssets;
 

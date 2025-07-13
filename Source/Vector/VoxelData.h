@@ -7,6 +7,7 @@
 #include "VoxelData.generated.h"
 // clang-format on
 
+class UVoxelMesh;
 class UVoxelBorderDataAsset;
 class UVoxelVoidDataAsset;
 class UVoxelBlockDataAsset;
@@ -81,4 +82,7 @@ private:
 
   UPROPERTY()
   TObjectPtr<UVoxelDebug> VoxelDebug;
+
+  UPROPERTY()
+  TObjectPtr<UVoxelMesh> VoxelMesh;
 };

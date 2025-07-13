@@ -4,6 +4,7 @@
 #include "VoxelBlockDataAsset.h"
 #include "VoxelBorderDataAsset.h"
 #include "VoxelDebug.h"
+#include "VoxelMesh.h"
 #include "VoxelVoidDataAsset.h"
 #include "VoxelWorld.h"
 
@@ -23,7 +24,9 @@ void UVoxelData::Initialize(
     const TArray<TObjectPtr<UVoxelBlockDataAsset>> &InVoxelBlockDataAssets,
     const TObjectPtr<UVoxelVoidDataAsset> &InVoxelVoidDataAsset,
     const TObjectPtr<UVoxelBorderDataAsset> &InVoxelBorderDataAsset) {
-  VoxelDebug = Cast<AVoxelWorld>(GetOuter())->GetVoxelDebug();
+  const AVoxelWorld *VoxelWorld = Cast<AVoxelWorld>(GetOuter());
+  VoxelDebug = VoxelWorld->GetVoxelDebug();
+  VoxelMesh = VoxelWorld->GetVoxelMesh();
   WorldSizeInChunks = InWorldSizeInChunks;
   ChunkSize = InChunkSize;
   VoxelSize = InVoxelSize;
@@ -115,6 +118,10 @@ void UVoxelData::SetVoxel(const FIntVector &GlobalCoord, const FVoxel &Voxel,
 
     if (VoxelDebug && bAutoDebug) {
       VoxelDebug->SetDebugVoxel(GlobalCoord);
+    }
+
+    if (VoxelMesh) {
+      VoxelMesh->AddDirtyChunk(GlobalCoord);
     }
   }
 }

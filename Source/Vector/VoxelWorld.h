@@ -12,6 +12,8 @@ class UVoxelVoidDataAsset;
 class UVoxelBorderDataAsset;
 class UVoxelDebug;
 class UVoxelData;
+class UVoxelBuild;
+class UVoxelMesh;
 class AVoxelChunkActor;
 
 USTRUCT()
@@ -29,6 +31,8 @@ class VECTOR_API AVoxelWorld : public AActor {
 public:
   const TObjectPtr<UVoxelData> &GetVoxelData() const { return VoxelData; }
   const TObjectPtr<UVoxelDebug> &GetVoxelDebug() const { return VoxelDebug; }
+  const TObjectPtr<UVoxelBuild> &GetVoxelBuild() const { return VoxelBuild; }
+  const TObjectPtr<UVoxelMesh> &GetVoxelMesh() const { return VoxelMesh; }
 
   void Initialize(int32 NumberOfPlayers);
 
@@ -36,16 +40,8 @@ public:
     return PlayerStarts;
   }
 
-  void DamageVoxel(const FVector &Center, float Radius,
-                   float DamageAmount) const;
-  void ConstructVoxel(const FVector &Center, float Radius,
-                      float ConstructionAmount, int32 VoxelIDToConstruct) const;
-
 private:
   void InitializeNexuses(int32 NexusCount);
-
-  void GetGlobalCoordsInRadius(const FVector &Center, float Radius,
-                               TSet<FIntVector> &FoundGlobalCoords) const;
 
   AVoxelWorld();
 
@@ -76,15 +72,6 @@ private:
   UPROPERTY(EditDefaultsOnly, Category = "Debug")
   TSubclassOf<AVoxelDebugActor> VoxelDebugActor;
 
-  void
-  ProcessVoxel(const FVector &Center, float Radius,
-               const TFunction<void(const FIntVector &, TSet<FIntVector> &)>
-                   &VoxelModifier) const;
-  void AddDirtyChunk(const FIntVector &GlobalCoord,
-                     TSet<FIntVector> &DirtyChunkCoords) const;
-  void UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunkCoords) const;
-  bool IsSurfaceVoxel(const FIntVector &VoxelCoord) const;
-
   UPROPERTY()
   TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 
@@ -93,6 +80,12 @@ private:
 
   UPROPERTY()
   TObjectPtr<UVoxelDebug> VoxelDebug;
+
+  UPROPERTY()
+  TObjectPtr<UVoxelBuild> VoxelBuild;
+
+  UPROPERTY()
+  TObjectPtr<UVoxelMesh> VoxelMesh;
 
   TArray<FNexus> Nexuses;
 };

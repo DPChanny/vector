@@ -10,6 +10,7 @@
 #include "GameFramework/PlayerController.h"
 #include "VoxelBaseDataAsset.h"
 #include "VoxelBlockDataAsset.h"
+#include "VoxelBuild.h"
 #include "VoxelData.h"
 #include "VoxelDebug.h"
 
@@ -109,8 +110,9 @@ void AVectorPlayerCharacter::Fire() const {
   if (bHit) {
     if (const TObjectPtr<UVoxelBaseDataAsset> BaseDataAsset =
             Cast<UVoxelBaseDataAsset>(Poop)) {
-      World->ConstructVoxel(HitResult.ImpactPoint, 100, 25,
-                            World->GetVoxelData()->GetVoxelID(BaseDataAsset));
+      World->GetVoxelBuild()->ConstructVoxel(
+          HitResult.ImpactPoint, 100, 25,
+          World->GetVoxelData()->GetVoxelID(BaseDataAsset));
     }
     World->GetVoxelDebug()->FlushDebugVoxelBuffer();
   }
@@ -129,7 +131,7 @@ void AVectorPlayerCharacter::Eat() const {
       HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
 
   if (bHit) {
-    World->DamageVoxel(HitResult.ImpactPoint, 100, 25);
+    World->GetVoxelBuild()->DamageVoxel(HitResult.ImpactPoint, 100, 25);
     World->GetVoxelDebug()->FlushDebugVoxelBuffer();
   }
 }

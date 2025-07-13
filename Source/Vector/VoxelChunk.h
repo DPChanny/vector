@@ -23,12 +23,6 @@ struct FVoxelChunk {
     VoxelChunkActor = nullptr;
   }
 
-  void Update() const {
-    if (VoxelChunkActor) {
-      VoxelChunkActor->UpdateMesh();
-    }
-  }
-
   FVoxel GetVoxel(const int32 Index) const {
     return Voxels.IsValidIndex(Index) ? Voxels[Index] : FVoxel();
   }

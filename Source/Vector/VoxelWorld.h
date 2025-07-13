@@ -2,16 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "VoxelBaseDataAsset.h"
 #include "VoxelWorld.generated.h"
 
-class AVoxelChunk;
 class AVoxelDebugActor;
 class APlayerStart;
 class UMaterialInterface;
 class UVoxelBlockDataAsset;
 class UVoxelVoidDataAsset;
 class UVoxelBorderDataAsset;
+class UVoxelDebug;
+class UVoxelData;
+class AVoxelChunk;
 
 USTRUCT(BlueprintType)
 struct FNexus {
@@ -26,39 +27,19 @@ class VECTOR_API AVoxelWorld : public AActor {
   GENERATED_BODY()
 
 public:
+  UVoxelData *GetVoxelData() const { return VoxelData; }
+  UVoxelDebug *GetVoxelDebug() const { return VoxelDebug; }
+
   AVoxelWorld();
 
   void Initialize(int32 NumberOfPlayers);
 
-  UVoxelBaseDataAsset *GetVoxelData(int32 VoxelID) const;
-
-  static int32 GetVoidID() { return 0; }
-  static int32 GetBorderID() { return 1; }
-  static int32 GetDefaultBlockID() { return 2; }
-
-  static float GetSurfaceLevel() { return 0.f; }
-
-  int32 GetChunkSize() const { return ChunkSize; }
-  int32 GetVoxelSize() const { return VoxelSize; }
-
   const TArray<APlayerStart *> &GetPlayerStarts() const { return PlayerStarts; }
 
-  int32 GetVoxelID(const TObjectPtr<UVoxelBaseDataAsset> &VoxelDataAsset);
-  int32 GetVoxelID(const FIntVector &VoxelCoord) const;
-  void SetVoxelID(const FIntVector &VoxelCoord, int32 NewVoxelID);
-
-  float GetDurability(const FIntVector &VoxelCoord) const;
-  void SetDurability(const FIntVector &VoxelCoord, float NewDurability);
-
-  float GetDensity(const FIntVector &VoxelCoord) const;
-
-  bool IsVoxelCoordValid(const FIntVector &VoxelCoord) const;
-
-  int32 GetIndex(const FIntVector &VoxelCoord) const;
-
-  void DamageVoxel(const FVector &Center, float Radius, float DamageAmount);
+  void DamageVoxel(const FVector &Center, float Radius,
+                   float DamageAmount) const;
   void ConstructVoxel(const FVector &Center, float Radius,
-                      float ConstructionAmount, int32 VoxelIDToConstruct);
+                      float ConstructionAmount, int32 VoxelIDToConstruct) const;
 
   FIntVector WorldPosToVoxelCoord(const FVector &WorldPos) const;
   FIntVector VoxelCoordToChunkCoord(const FIntVector &VoxelCoord) const;
@@ -67,11 +48,6 @@ public:
                               TSet<FIntVector> &FoundVoxelCoords) const;
 
   void InitializeNexuses(int32 NexusCount);
-  void InitializeChunk(const FIntVector &ChunkCoord);
-
-  void SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels);
-  void SetDebugVoxel(const FIntVector &NewDebugVoxel);
-  void FlushDebugVoxelBuffer();
 
 protected:
   UPROPERTY(EditAnywhere, Category = "World")
@@ -99,36 +75,26 @@ protected:
   float NexusRadius = 200.f;
 
   UPROPERTY(EditDefaultsOnly, Category = "Debug")
-  TSubclassOf<AVoxelDebugActor> DebugActorClass;
+  TSubclassOf<AVoxelDebugActor> VoxelDebugActor;
 
 private:
-  void AddDebugVoxel(const FIntVector &VoxelCoord);
-  void RemoveDebugVoxel(const FIntVector &VoxelCoord);
-
-  void ProcessVoxel(const FVector &Center, float Radius,
-                    const TFunction<void(const FIntVector &,
-                                         TSet<FIntVector> &)> &VoxelModifier);
+  void
+  ProcessVoxel(const FVector &Center, float Radius,
+               const TFunction<void(const FIntVector &, TSet<FIntVector> &)>
+                   &VoxelModifier) const;
   void AddDirtyChunk(const FIntVector &VoxelCoord,
                      TSet<FIntVector> &DirtyChunks) const;
-  void UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunks);
+  void UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunks) const;
   bool IsSurfaceVoxel(const FIntVector &VoxelCoord) const;
 
   UPROPERTY()
   TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 
   UPROPERTY()
-  TMap<FIntVector, TObjectPtr<AVoxelChunk>> Chunks;
+  TObjectPtr<UVoxelData> VoxelData;
 
   UPROPERTY()
-  TMap<int32, TObjectPtr<UVoxelBaseDataAsset>> VoxelDataMap;
+  TObjectPtr<UVoxelDebug> VoxelDebug;
 
   TArray<FNexus> Nexuses;
-  TArray<int32> VoxelIDs;
-  TArray<float> Durabilities;
-
-  TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;
-  TSet<FIntVector> DebugVoxelsBuffer;
-
-  int32 WorldVolume = 0;
-  FIntVector WorldSize;
 };

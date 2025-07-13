@@ -1,13 +1,11 @@
 #include "VoxelDebugActor.h"
 
-#include <Kismet/GameplayStatics.h>
-
 #include "Components/BoxComponent.h"
 #include "Components/WidgetComponent.h"
 #include "VoxelBaseDataAsset.h"
 #include "VoxelBlockDataAsset.h"
+#include "VoxelData.h"
 #include "VoxelDebugWidget.h"
-#include "VoxelWorld.h"
 
 AVoxelDebugActor::AVoxelDebugActor() {
   PrimaryActorTick.bCanEverTick = true;
@@ -24,13 +22,13 @@ AVoxelDebugActor::AVoxelDebugActor() {
   Widget->SetDrawSize(FVector2D(300.f, 200.f));
 }
 
-void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord) {
-  World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
-      GetWorld(), AVoxelWorld::StaticClass()));
+void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord,
+                                  UVoxelData *InVoxelData) {
+  VoxelData = InVoxelData;
 
   VoxelCoord = InVoxelCoord;
 
-  Box->SetBoxExtent(FVector(World->GetVoxelSize() / 2));
+  Box->SetBoxExtent(FVector(VoxelData->GetVoxelSize() / 2));
 
   UpdateWidget();
 }
@@ -44,7 +42,7 @@ void AVoxelDebugActor::BeginPlay() {
 }
 
 void AVoxelDebugActor::UpdateWidget() {
-  if (!World.IsValid() || !DisplayWidget) {
+  if (!DisplayWidget) {
     if (UUserWidget *UserWidget = Widget->GetUserWidgetObject()) {
       DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
     }
@@ -53,16 +51,17 @@ void AVoxelDebugActor::UpdateWidget() {
     }
   }
 
-  const int32 VoxelID = World->GetVoxelID(VoxelCoord);
-  const float CurrentDurability = World->GetDurability(VoxelCoord);
-  const float CurrentDensity = World->GetDensity(VoxelCoord);
+  const int32 VoxelID = VoxelData->GetVoxelID(VoxelCoord);
+  const float CurrentDurability = VoxelData->GetDurability(VoxelCoord);
+  const float CurrentDensity = VoxelData->GetDensity(VoxelCoord);
   float MaxDurability = 0.f;
   float BaseDensity = 0.f;
 
-  if (const UVoxelBaseDataAsset *VoxelData = World->GetVoxelData(VoxelID)) {
-    BaseDensity = VoxelData->BaseDensity;
+  if (const UVoxelBaseDataAsset *VoxelDataAsset =
+          VoxelData->GetVoxelDataAsset(VoxelID)) {
+    BaseDensity = VoxelDataAsset->BaseDensity;
     if (const UVoxelBlockDataAsset *BlockData =
-            Cast<UVoxelBlockDataAsset>(VoxelData)) {
+            Cast<UVoxelBlockDataAsset>(VoxelDataAsset)) {
       MaxDurability = BlockData->MaxDurability;
     }
   }

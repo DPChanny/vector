@@ -1,13 +1,10 @@
 #include "VoxelChunk.h"
 
-#include <Kismet/GameplayStatics.h>
-
 #include "Engine/World.h"
 #include "MarchingCubesTables.h"
 #include "ProceduralMeshComponent.h"
-#include "VoxelBaseDataAsset.h"
+#include "VoxelData.h"
 #include "VoxelSubstanceDataAsset.h"
-#include "VoxelWorld.h"
 
 AVoxelChunk::AVoxelChunk() : ChunkCoord(FIntVector::ZeroValue) {
   PrimaryActorTick.bCanEverTick = false;
@@ -20,26 +17,23 @@ AVoxelChunk::AVoxelChunk() : ChunkCoord(FIntVector::ZeroValue) {
   Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
-void AVoxelChunk::Initialize(const FIntVector &InChunkCoord) {
-  World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
-      GetWorld(), AVoxelWorld::StaticClass()));
+void AVoxelChunk::Initialize(const FIntVector &InChunkCoord,
+                             UVoxelData *InVoxelData) {
+  VoxelData = InVoxelData;
   ChunkCoord = InChunkCoord;
-
-  UpdateMesh();
 }
 
 FVector AVoxelChunk::InterpolateVertex(const FVector &P1, const FVector &P2,
-                                       const float Val1,
-                                       const float Val2) const {
+                                       const float Val1, const float Val2) {
   if (FMath::IsNearlyEqual(Val1, Val2)) {
     return P1;
   }
-  const float Mu = (World->GetSurfaceLevel() - Val1) / (Val2 - Val1);
+  const float Mu = (UVoxelData::GetSurfaceLevel() - Val1) / (Val2 - Val1);
   return P1 + Mu * (P2 - P1);
 }
 
 void AVoxelChunk::UpdateMesh() const {
-  if (!World) {
+  if (!VoxelData) {
     return;
   }
 
@@ -52,14 +46,11 @@ void AVoxelChunk::UpdateMesh() const {
   TMap<FVector, int32> VertexMap;
   TMap<int32, TArray<FVector>> VertexNormals;
 
-  const int32 ChunkSize = World->GetChunkSize();
-  const int32 VoxelSize = World->GetVoxelSize();
-
-  for (int32 x = 0; x < ChunkSize; ++x) {
-    for (int32 y = 0; y < ChunkSize; ++y) {
-      for (int32 z = 0; z < ChunkSize; ++z) {
+  for (int32 x = 0; x < VoxelData->GetChunkSize(); ++x) {
+    for (int32 y = 0; y < VoxelData->GetChunkSize(); ++y) {
+      for (int32 z = 0; z < VoxelData->GetChunkSize(); ++z) {
         const FIntVector VoxelCoord =
-            (ChunkCoord * ChunkSize) + FIntVector(x, y, z);
+            (ChunkCoord * VoxelData->GetChunkSize()) + FIntVector(x, y, z);
 
         float CornerDensities[8]{};
         FVector CornerPositions[8];
@@ -67,11 +58,12 @@ void AVoxelChunk::UpdateMesh() const {
         for (int i = 0; i < 8; ++i) {
           const FIntVector CornerVoxelCoord = VoxelCoord + CornerOffsets[i];
 
-          CornerDensities[i] = World->GetDensity(CornerVoxelCoord);
+          CornerDensities[i] = VoxelData->GetDensity(CornerVoxelCoord);
           CornerPositions[i] =
-              (FVector(CornerVoxelCoord) * VoxelSize) - GetActorLocation();
+              (FVector(CornerVoxelCoord) * VoxelData->GetVoxelSize()) -
+              GetActorLocation();
 
-          if (CornerDensities[i] > World->GetSurfaceLevel()) {
+          if (CornerDensities[i] > UVoxelData::GetSurfaceLevel()) {
             CubeIndex |= (1 << i);
           }
         }
@@ -90,14 +82,16 @@ void AVoxelChunk::UpdateMesh() const {
             EdgeVertices[i] = InterpolateVertex(
                 CornerPositions[CornerA], CornerPositions[CornerB],
                 CornerDensities[CornerA], CornerDensities[CornerB]);
-            if (const UVoxelSubstanceDataAsset *VoxelData =
-                    Cast<UVoxelSubstanceDataAsset>(
-                        World->GetVoxelData(World->GetVoxelID(
-                            VoxelCoord +
-                            (CornerDensities[CornerA] > CornerDensities[CornerB]
-                                 ? CornerOffsets[CornerA]
-                                 : CornerOffsets[CornerB]))))) {
-              EdgeVertexColors[i] = VoxelData->VertexColor;
+            if (const UVoxelSubstanceDataAsset *VoxelAsset =
+                    Cast<UVoxelSubstanceDataAsset>(VoxelData->GetVoxelDataAsset(
+                        VoxelData
+                            ->GetVoxel(VoxelCoord +
+                                       (CornerDensities[CornerA] >
+                                                CornerDensities[CornerB]
+                                            ? CornerOffsets[CornerA]
+                                            : CornerOffsets[CornerB]))
+                            .ID))) {
+              EdgeVertexColors[i] = VoxelAsset->VertexColor;
             }
           }
         }

@@ -5,7 +5,7 @@
 #include "VoxelChunk.generated.h"
 
 class UProceduralMeshComponent;
-class AVoxelWorld;
+class UVoxelData;
 
 UCLASS()
 class VECTOR_API AVoxelChunk : public AActor {
@@ -14,24 +14,25 @@ class VECTOR_API AVoxelChunk : public AActor {
 public:
   AVoxelChunk();
 
-  void Initialize(const FIntVector &InChunkCoord);
+  void Initialize(const FIntVector &InChunkCoord, UVoxelData *InVoxelData);
   void UpdateMesh() const;
 
 protected:
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+  UPROPERTY(EditDefaultsOnly)
   TObjectPtr<UMaterialInterface> Material;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UProceduralMeshComponent> Mesh;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-  TObjectPtr<AVoxelWorld> World;
+  UPROPERTY()
+  TObjectPtr<UVoxelData> VoxelData;
 
 private:
+  UPROPERTY(VisibleAnywhere)
   FIntVector ChunkCoord;
 
   static FVector RoundVector(const FVector &InVector, float Precision);
   static FVector2D GetUV(const FVector &Position);
-  FVector InterpolateVertex(const FVector &P1, const FVector &P2, float Val1,
-                            float Val2) const;
+  static FVector InterpolateVertex(const FVector &P1, const FVector &P2,
+                                   float Val1, float Val2);
 };

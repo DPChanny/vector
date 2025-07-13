@@ -4,7 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "VoxelDebugActor.generated.h"
 
-class AVoxelWorld;
+class UVoxelData;
 class UBoxComponent;
 class UWidgetComponent;
 class UVoxelDebugWidget;
@@ -13,15 +13,14 @@ UCLASS()
 class VECTOR_API AVoxelDebugActor : public AActor {
   GENERATED_BODY()
 
- private:
   AVoxelDebugActor();
 
   virtual void BeginPlay() override;
 
   FIntVector VoxelCoord;
-  TWeakObjectPtr<AVoxelWorld> World;
+  TWeakObjectPtr<UVoxelData> VoxelData;
 
- protected:
+protected:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
   TObjectPtr<UBoxComponent> Box;
 
@@ -31,7 +30,7 @@ class VECTOR_API AVoxelDebugActor : public AActor {
   UPROPERTY()
   TObjectPtr<UVoxelDebugWidget> DisplayWidget;
 
- public:
-  void Initialize(const FIntVector& InVoxelCoord);
+public:
+  void Initialize(const FIntVector &InVoxelCoord, UVoxelData *InVoxelData);
   void UpdateWidget();
 };

@@ -2,46 +2,38 @@
 
 #include "GameFramework/PlayerStart.h"
 #include "VoxelBlockDataAsset.h"
-#include "VoxelBorderDataAsset.h"
-#include "VoxelChunk.h"
-#include "VoxelDebugActor.h"
-#include "VoxelVoidDataAsset.h"
+#include "VoxelData.h"
+#include "VoxelDebug.h"
 
-AVoxelWorld::AVoxelWorld() {
-  PrimaryActorTick.bCanEverTick = false;
-
-  WorldSize = WorldSizeInChunks * ChunkSize;
-  WorldVolume = WorldSize.X * WorldSize.Y * WorldSize.Z;
-}
+AVoxelWorld::AVoxelWorld() { PrimaryActorTick.bCanEverTick = false; }
 
 void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
-  VoxelDataMap.Empty();
-  if (const TObjectPtr<UVoxelBaseDataAsset> VoidDataAsset =
-          Cast<UVoxelBaseDataAsset>(VoxelVoidDataAsset)) {
-    VoxelDataMap.Add(GetVoidID(), VoidDataAsset);
-  }
-  if (const TObjectPtr<UVoxelBaseDataAsset> BorderDataAsset =
-          Cast<UVoxelBaseDataAsset>(VoxelBorderDataAsset)) {
-    VoxelDataMap.Add(GetBorderID(), BorderDataAsset);
-  }
-  for (int32 i = 0; i < VoxelBlockDataAssets.Num(); ++i) {
-    if (VoxelBlockDataAssets[i]) {
-      VoxelDataMap.Add(i + GetDefaultBlockID(), VoxelBlockDataAssets[i]);
-    }
-  }
+  VoxelDebug = NewObject<UVoxelDebug>(this);
+  VoxelData = NewObject<UVoxelData>(this);
 
-  VoxelIDs.SetNumZeroed(WorldVolume);
-  Durabilities.SetNumZeroed(WorldVolume);
+  VoxelDebug->Initialize(VoxelDebugActor);
+  VoxelData->Initialize(WorldSizeInChunks, ChunkSize, VoxelSize, VoxelChunk,
+                        VoxelBlockDataAssets, VoxelVoidDataAsset,
+                        VoxelBorderDataAsset, VoxelDebug);
 
   float DefaultBlockMaxDurability;
-  UVoxelBlockDataAsset *DefaultBlockData =
-      Cast<UVoxelBlockDataAsset>(GetVoxelData(GetDefaultBlockID()));
+  const UVoxelBlockDataAsset *DefaultBlockData = Cast<UVoxelBlockDataAsset>(
+      VoxelData->GetVoxelDataAsset(VoxelData->GetDefaultBlockID()));
   if (DefaultBlockData) {
     DefaultBlockMaxDurability = DefaultBlockData->MaxDurability;
   } else {
     DefaultBlockMaxDurability = 100.f;
   }
 
+  for (int32 x = 0; x < WorldSizeInChunks.X; ++x) {
+    for (int32 y = 0; y < WorldSizeInChunks.Y; ++y) {
+      for (int32 z = 0; z < WorldSizeInChunks.Z; ++z) {
+        VoxelData->LoadChunk(FIntVector(x, y, z));
+      }
+    }
+  }
+
+  const FIntVector WorldSize = WorldSizeInChunks * ChunkSize;
   for (int32 x = 0; x < WorldSize.X; ++x) {
     for (int32 y = 0; y < WorldSize.Y; ++y) {
       for (int32 z = 0; z < WorldSize.Z; ++z) {
@@ -49,10 +41,13 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
 
         if (!x || !y || !z || x == WorldSize.X - 1 || y == WorldSize.Y - 1 ||
             z == WorldSize.Z - 1) {
-          VoxelIDs[GetIndex(VoxelCoord)] = GetBorderID();
+          VoxelData->SetVoxel(VoxelCoord,
+                              FVoxel(UVoxelData::GetBorderID(), 0.f), false);
         } else {
-          VoxelIDs[GetIndex(VoxelCoord)] = GetDefaultBlockID();
-          Durabilities[GetIndex(VoxelCoord)] = DefaultBlockMaxDurability;
+          VoxelData->SetVoxel(VoxelCoord,
+                              FVoxel(UVoxelData::GetDefaultBlockID(),
+                                     DefaultBlockMaxDurability),
+                              false);
         }
       }
     }
@@ -63,7 +58,9 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
   for (int32 x = 0; x < WorldSizeInChunks.X; ++x) {
     for (int32 y = 0; y < WorldSizeInChunks.Y; ++y) {
       for (int32 z = 0; z < WorldSizeInChunks.Z; ++z) {
-        InitializeChunk(FIntVector(x, y, z));
+        if (const FChunk *Chunk = VoxelData->GetChunk(FIntVector(x, y, z))) {
+          Chunk->UpdateMesh();
+        }
       }
     }
   }
@@ -78,6 +75,7 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
   }
   PlayerStarts.Empty();
 
+  const FIntVector WorldSize = WorldSizeInChunks * ChunkSize;
   const FVector WorldMaxBounds = FVector(WorldSize) * VoxelSize;
   const FVector WorldMinBounds = FVector::ZeroVector;
 
@@ -147,8 +145,8 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
 
           if (FVector::DistSquared(WorldPosOfBlock, NewRoom.Center) <
               FMath::Square(NewRoom.Radius)) {
-            SetVoxelID(GlobalBlockCoord, GetVoidID());
-            SetDurability(GlobalBlockCoord, 0.0f);
+            VoxelData->SetVoxel(GlobalBlockCoord,
+                                FVoxel(VoxelData->GetVoidID(), 0.f), false);
           }
         }
       }
@@ -171,134 +169,22 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
          PlayerStarts.Num());
 }
 
-void AVoxelWorld::InitializeChunk(const FIntVector &ChunkCoord) {
-  if (!Chunks.Contains(ChunkCoord)) {
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = this;
-    FVector ChunkWorldLocation = FVector(ChunkCoord) * ChunkSize * VoxelSize;
-    AVoxelChunk *NewChunk = GetWorld()->SpawnActor<AVoxelChunk>(
-        VoxelChunk, ChunkWorldLocation, FRotator::ZeroRotator, SpawnParams);
-    NewChunk->AttachToActor(this,
-                            FAttachmentTransformRules::KeepWorldTransform);
-    if (NewChunk) {
-      NewChunk->Initialize(ChunkCoord);
-      Chunks.Add(ChunkCoord, NewChunk);
-    }
-  }
-}
-
-UVoxelBaseDataAsset *AVoxelWorld::GetVoxelData(int32 VoxelID) const {
-  if (const TObjectPtr<UVoxelBaseDataAsset> FoundData =
-          VoxelDataMap.FindRef(VoxelID)) {
-    return FoundData;
-  }
-  return VoxelDataMap.FindRef(GetVoidID());
-}
-
-bool AVoxelWorld::IsVoxelCoordValid(const FIntVector &VoxelCoord) const {
-  return VoxelCoord.X >= 0 && VoxelCoord.X < WorldSize.X && VoxelCoord.Y >= 0 &&
-         VoxelCoord.Y < WorldSize.Y && VoxelCoord.Z >= 0 &&
-         VoxelCoord.Z < WorldSize.Z;
-}
-
-int32 AVoxelWorld::GetIndex(const FIntVector &VoxelCoord) const {
-  return VoxelCoord.X + (VoxelCoord.Y * WorldSize.X) +
-         (VoxelCoord.Z * WorldSize.X * WorldSize.Y);
-}
-
-int32 AVoxelWorld::GetVoxelID(
-    const TObjectPtr<UVoxelBaseDataAsset> &VoxelDataAsset) {
-  for (const auto &Pair : VoxelDataMap) {
-    if (Pair.Value == VoxelDataAsset) {
-      return Pair.Key;
-    }
-  }
-  return GetVoidID();
-}
-
-int32 AVoxelWorld::GetVoxelID(const FIntVector &VoxelCoord) const {
-  if (!IsVoxelCoordValid(VoxelCoord)) {
-    return GetVoidID();
-  }
-
-  if (const int32 Index = GetIndex(VoxelCoord); VoxelIDs.IsValidIndex(Index)) {
-    return VoxelIDs[Index];
-  }
-
-  return GetVoidID();
-}
-
-void AVoxelWorld::SetVoxelID(const FIntVector &VoxelCoord, int32 NewVoxelID) {
-  if (!IsVoxelCoordValid(VoxelCoord)) {
-    return;
-  }
-
-  const int32 Index = GetIndex(VoxelCoord);
-
-  if (VoxelIDs.IsValidIndex(Index)) {
-    VoxelIDs[Index] = NewVoxelID;
-  }
-
-  SetDebugVoxel(VoxelCoord);
-}
-
-float AVoxelWorld::GetDurability(const FIntVector &VoxelCoord) const {
-  if (!IsVoxelCoordValid(VoxelCoord)) {
-    return 0.f;
-  }
-
-  const int32 Index = GetIndex(VoxelCoord);
-
-  if (Durabilities.IsValidIndex(Index)) {
-    return Durabilities[Index];
-  }
-
-  return 0.f;
-}
-
-void AVoxelWorld::SetDurability(const FIntVector &VoxelCoord,
-                                float NewDurability) {
-  if (!IsVoxelCoordValid(VoxelCoord)) {
-    return;
-  }
-
-  const int32 Index = GetIndex(VoxelCoord);
-  if (Durabilities.IsValidIndex(Index)) {
-    Durabilities[Index] = NewDurability;
-  }
-
-  SetDebugVoxel(VoxelCoord);
-}
-
-float AVoxelWorld::GetDensity(const FIntVector &VoxelCoord) const {
-  if (const UVoxelBaseDataAsset *VoxelData =
-          GetVoxelData(GetVoxelID(VoxelCoord))) {
-    const float BaseDensity = VoxelData->BaseDensity;
-    if (const UVoxelBlockDataAsset *BlockData =
-            Cast<UVoxelBlockDataAsset>(VoxelData)) {
-      return BaseDensity * GetDurability(VoxelCoord) / BlockData->MaxDurability;
-    }
-    return BaseDensity;
-  }
-
-  return -1.f;
-}
-
 void AVoxelWorld::DamageVoxel(const FVector &Center, const float Radius,
-                              const float DamageAmount) {
+                              const float DamageAmount) const {
   auto DamageLogic = [&](const FIntVector &VoxelCoord,
                          TSet<FIntVector> &DirtyChunks) {
-    if (!Cast<UVoxelBlockDataAsset>(GetVoxelData(GetVoxelID(VoxelCoord)))) {
+    if (!Cast<UVoxelBlockDataAsset>(
+            VoxelData->GetVoxelDataAsset(VoxelData->GetVoxelID(VoxelCoord)))) {
       return;
     }
 
-    const float NewDurability = GetDurability(VoxelCoord) - DamageAmount;
+    const float NewDurability =
+        VoxelData->GetDurability(VoxelCoord) - DamageAmount;
 
     if (NewDurability <= 0) {
-      SetVoxelID(VoxelCoord, GetVoidID());
-      SetDurability(VoxelCoord, 0.f);
+      VoxelData->SetVoxel(VoxelCoord, FVoxel(VoxelData->GetVoidID(), 0.f));
     } else {
-      SetDurability(VoxelCoord, NewDurability);
+      VoxelData->SetDurability(VoxelCoord, NewDurability);
     }
 
     AddDirtyChunk(VoxelCoord, DirtyChunks);
@@ -309,25 +195,26 @@ void AVoxelWorld::DamageVoxel(const FVector &Center, const float Radius,
 
 void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
                                  const float ConstructionAmount,
-                                 const int32 VoxelIDToConstruct) {
+                                 const int32 VoxelIDToConstruct) const {
   auto ConstructLogic = [&](const FIntVector &VoxelCoord,
                             TSet<FIntVector> &DirtyChunks) {
-    const UVoxelBlockDataAsset *VoxelData =
-        Cast<UVoxelBlockDataAsset>(GetVoxelData(GetVoxelID(VoxelCoord)));
+    const UVoxelBlockDataAsset *VoxelDataAsset = Cast<UVoxelBlockDataAsset>(
+        VoxelData->GetVoxelDataAsset(VoxelData->GetVoxelID(VoxelCoord)));
     if (!VoxelData) {
       return;
     }
 
-    const UVoxelBlockDataAsset *NewVoxelData =
-        Cast<UVoxelBlockDataAsset>(GetVoxelData(VoxelIDToConstruct));
+    const UVoxelBlockDataAsset *NewVoxelData = Cast<UVoxelBlockDataAsset>(
+        VoxelData->GetVoxelDataAsset(VoxelIDToConstruct));
     if (!NewVoxelData) {
       return;
     }
 
-    const float NewDurability = GetDurability(VoxelCoord) + ConstructionAmount;
+    const float NewDurability =
+        VoxelData->GetDurability(VoxelCoord) + ConstructionAmount;
 
-    if (NewDurability >= VoxelData->MaxDurability) {
-      SetDurability(VoxelCoord, VoxelData->MaxDurability);
+    if (NewDurability >= VoxelDataAsset->MaxDurability) {
+      VoxelData->SetDurability(VoxelCoord, VoxelDataAsset->MaxDurability);
 
       const TArray<FIntVector> NeighborOffsets = {
           FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
@@ -335,9 +222,8 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
 
       for (const FIntVector &NeighborOffset : NeighborOffsets) {
         const FIntVector NeighborCoord = VoxelCoord + NeighborOffset;
-        if (IsVoxelCoordValid(NeighborCoord) &&
-            GetVoxelID(NeighborCoord) == GetVoidID()) {
-          SetVoxelID(NeighborCoord, VoxelIDToConstruct);
+        if (VoxelData->GetVoxelID(NeighborCoord) == VoxelData->GetVoidID()) {
+          VoxelData->SetVoxel(NeighborCoord, FVoxel(VoxelIDToConstruct, 0.f));
 
           for (const FIntVector &CheckOffset : NeighborOffsets) {
             const FIntVector CheckCoord = NeighborCoord + CheckOffset;
@@ -347,24 +233,26 @@ void AVoxelWorld::ConstructVoxel(const FVector &Center, const float Radius,
             }
 
             if (const UVoxelBlockDataAsset *EnclosedBlockData =
-                    Cast<UVoxelBlockDataAsset>(
-                        GetVoxelData(GetVoxelID(CheckCoord)))) {
+                    Cast<UVoxelBlockDataAsset>(VoxelData->GetVoxelDataAsset(
+                        VoxelData->GetVoxelID(CheckCoord)))) {
               if (!IsSurfaceVoxel(CheckCoord)) {
-                SetDurability(CheckCoord, EnclosedBlockData->MaxDurability);
+                VoxelData->SetDurability(CheckCoord,
+                                         EnclosedBlockData->MaxDurability);
                 AddDirtyChunk(CheckCoord, DirtyChunks);
               }
             }
           }
 
           if (!IsSurfaceVoxel(NeighborCoord)) {
-            SetDurability(NeighborCoord, NewVoxelData->MaxDurability);
+            VoxelData->SetDurability(NeighborCoord,
+                                     NewVoxelData->MaxDurability);
           }
 
           AddDirtyChunk(NeighborCoord, DirtyChunks);
         }
       }
     } else {
-      SetDurability(VoxelCoord, NewDurability);
+      VoxelData->SetDurability(VoxelCoord, NewDurability);
     }
 
     AddDirtyChunk(VoxelCoord, DirtyChunks);
@@ -402,10 +290,6 @@ void AVoxelWorld::GetVoxelCoordsInRadius(
            x <= CenterVoxelCoord.X + RadiusInVoxels; ++x) {
         const FIntVector VoxelCoord(x, y, z);
 
-        if (!IsVoxelCoordValid(VoxelCoord)) {
-          continue;
-        }
-
         const FVector VoxelWorldPos =
             FVector(VoxelCoord) * VoxelSize + (FVector(VoxelSize) * 0.5f);
         if (FVector::DistSquared(VoxelWorldPos, Center) >= RadiusSquared) {
@@ -421,7 +305,7 @@ void AVoxelWorld::GetVoxelCoordsInRadius(
 void AVoxelWorld::ProcessVoxel(
     const FVector &Center, const float Radius,
     const TFunction<void(const FIntVector &, TSet<FIntVector> &)>
-        &VoxelModifier) {
+        &VoxelModifier) const {
   TSet<FIntVector> VoxelCoordsInRadius;
   TSet<FIntVector> VoxelCoordsToProcess;
   GetVoxelCoordsInRadius(Center, Radius, VoxelCoordsInRadius);
@@ -429,7 +313,7 @@ void AVoxelWorld::ProcessVoxel(
   TSet<FIntVector> DirtyChunkCoords;
 
   for (const FIntVector &VoxelCoord : VoxelCoordsInRadius) {
-    if (GetVoxelID(VoxelCoord) == GetVoidID()) {
+    if (VoxelData->GetVoxelID(VoxelCoord) == VoxelData->GetVoidID()) {
       continue;
     }
 
@@ -473,14 +357,14 @@ void AVoxelWorld::AddDirtyChunk(const FIntVector &VoxelCoord,
   }
 }
 
-void AVoxelWorld::UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunks) {
+void AVoxelWorld::UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunks) const {
   for (const FIntVector &CoordToUpdate : DirtyChunks) {
     if (CoordToUpdate.X >= 0 && CoordToUpdate.X < WorldSizeInChunks.X &&
         CoordToUpdate.Y >= 0 && CoordToUpdate.Y < WorldSizeInChunks.Y &&
         CoordToUpdate.Z >= 0 && CoordToUpdate.Z < WorldSizeInChunks.Z) {
-      if (const TObjectPtr<AVoxelChunk> *FoundChunk = Chunks.Find(CoordToUpdate)) {
-        if (*FoundChunk) {
-          (*FoundChunk)->UpdateMesh();
+      if (const FChunk *Chunk = VoxelData->GetChunk(CoordToUpdate)) {
+        if (Chunk->VoxelChunk) {
+          Chunk->VoxelChunk->UpdateMesh();
         }
       }
     }
@@ -488,83 +372,15 @@ void AVoxelWorld::UpdateDirtyChunk(const TSet<FIntVector> &DirtyChunks) {
 }
 
 bool AVoxelWorld::IsSurfaceVoxel(const FIntVector &VoxelCoord) const {
-  const TArray<FIntVector> NeighborOffsets = {
-      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
-      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
+  const TArray NeighborOffsets = {FIntVector(1, 0, 0), FIntVector(-1, 0, 0),
+                                  FIntVector(0, 1, 0), FIntVector(0, -1, 0),
+                                  FIntVector(0, 0, 1), FIntVector(0, 0, -1)};
 
   for (const FIntVector &Offset : NeighborOffsets) {
-    if (!IsVoxelCoordValid(VoxelCoord + Offset) ||
-        GetVoxelID(VoxelCoord + Offset) == GetVoidID()) {
+    if (VoxelData->GetVoxelID(VoxelCoord + Offset) == VoxelData->GetVoidID()) {
       return true;
     }
   }
 
   return false;
-}
-
-void AVoxelWorld::SetDebugVoxel(const FIntVector &NewDebugVoxel) {
-  DebugVoxelsBuffer.Add(NewDebugVoxel);
-}
-
-void AVoxelWorld::SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels) {
-  DebugVoxelsBuffer.Append(NewDebugVoxels);
-}
-
-void AVoxelWorld::FlushDebugVoxelBuffer() {
-  TSet<FIntVector> CurrentDebugVoxels;
-  DebugVoxels.GetKeys(CurrentDebugVoxels);
-
-  const TSet<FIntVector> VoxelsToRemove =
-      CurrentDebugVoxels.Difference(DebugVoxelsBuffer);
-  for (const FIntVector &VoxelToRemove : VoxelsToRemove) {
-    RemoveDebugVoxel(VoxelToRemove);
-  }
-
-  const TSet<FIntVector> VoxelsToUpdate =
-      CurrentDebugVoxels.Difference(VoxelsToRemove);
-  for (const FIntVector &VoxelToUpdate : VoxelsToUpdate) {
-    if (const TObjectPtr<AVoxelDebugActor> *FoundActor =
-            DebugVoxels.Find(VoxelToUpdate)) {
-      (*FoundActor)->UpdateWidget();
-    }
-  }
-
-  const TSet<FIntVector> VoxelsToAdd =
-      DebugVoxelsBuffer.Difference(CurrentDebugVoxels);
-  for (const FIntVector &VoxelToAdd : VoxelsToAdd) {
-    AddDebugVoxel(VoxelToAdd);
-  }
-
-  DebugVoxelsBuffer.Reset();
-}
-
-void AVoxelWorld::AddDebugVoxel(const FIntVector &VoxelCoord) {
-  if (DebugVoxels.Contains(VoxelCoord)) {
-    return;
-  }
-
-  if (!DebugActorClass) {
-    UE_LOG(LogTemp, Warning, TEXT("DebugActorClass is not set in VoxelWorld."));
-    return;
-  }
-
-  const FVector SpawnLocation = (FVector(VoxelCoord) * VoxelSize);
-
-  AVoxelDebugActor *NewDebugActor = GetWorld()->SpawnActor<AVoxelDebugActor>(
-      DebugActorClass, SpawnLocation, FRotator::ZeroRotator);
-
-  if (NewDebugActor) {
-    NewDebugActor->Initialize(VoxelCoord);
-    DebugVoxels.Add(VoxelCoord, NewDebugActor);
-  }
-}
-
-void AVoxelWorld::RemoveDebugVoxel(const FIntVector &VoxelCoord) {
-  if (TObjectPtr<AVoxelDebugActor> FoundActor =
-          DebugVoxels.FindRef(VoxelCoord)) {
-    if (FoundActor) {
-      FoundActor->Destroy();
-    }
-    DebugVoxels.Remove(VoxelCoord);
-  }
 }

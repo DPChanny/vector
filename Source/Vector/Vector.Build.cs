@@ -4,15 +4,10 @@ using UnrealBuildTool;
 
 public class Vector : ModuleRules
 {
-	public Vector(ReadOnlyTargetRules Target) : base(Target)
+	public Vector(ReadOnlyTargetRules target) : base(target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine" });
-
-		PrivateDependencyModuleNames.AddRange(new[]
-		{
-			"InputCore", "EnhancedInput", "Niagara", "ProceduralMeshComponent", "UMG", "SlateCore", "Slate"
-		});
+		PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Voxel", "Engine", "Player" });
 	}
 }

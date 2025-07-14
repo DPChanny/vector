@@ -1,10 +1,11 @@
 #include "VectorGameMode.h"
 
+#include "Actors/VoxelWorld.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
-#include "VoxelWorld.h"
+#include "UObject/ObjectPtr.h"
 
 AActor *
 AVectorGameMode::FindPlayerStart_Implementation(AController *Player,

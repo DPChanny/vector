@@ -10,45 +10,22 @@ AActor *
 AVectorGameMode::FindPlayerStart_Implementation(AController *Player,
                                                 const FString &IncomingName) {
   if (!bVoxelWorldSetupAttempted) {
-    if (AVoxelWorld *VoxelWorld =
+    if (const TObjectPtr<AVoxelWorld> VoxelWorld =
             Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
                 GetWorld(), AVoxelWorld::StaticClass()))) {
-      int32 NumDesiredPlayers = GetNumPlayers();
-      if (NumDesiredPlayers == 0) {
-        NumDesiredPlayers = 1;
-        UE_LOG(LogTemp, Warning,
-               TEXT("AVectorGameMode::FindPlayerStart_Implementation: No "
-                    "players currently. Requesting VoxelWorld to generate 1 "
-                    "player start."));
-      }
+      const int32 NumDesiredPlayers = GetNumPlayers();
       VoxelWorld->Initialize(NumDesiredPlayers);
-      UE_LOG(LogTemp, Log,
-             TEXT("AVectorGameMode::FindPlayerStart_Implementation: Requested "
-                  "VoxelWorld initialization. Number of players: %d"),
-             NumDesiredPlayers);
 
       AvailablePlayerStarts.Empty();
       AvailablePlayerStarts.Append(VoxelWorld->GetPlayerStarts());
-
-      UE_LOG(LogTemp, Log,
-             TEXT("AVectorGameMode::FindPlayerStart_Implementation: Directly "
-                  "retrieved %d PlayerStarts from VoxelWorld."),
-             AvailablePlayerStarts.Num());
-    } else {
-      UE_LOG(LogTemp, Error,
-             TEXT("AVectorGameMode::FindPlayerStart_Implementation: Found "
-                  "actor is not AVoxelWorld."));
     }
     bVoxelWorldSetupAttempted = true;
   }
 
   if (!AvailablePlayerStarts.IsEmpty()) {
-    APlayerStart *ChosenPlayerStart = AvailablePlayerStarts[0];
+    const TObjectPtr<APlayerStart> ChosenPlayerStart = AvailablePlayerStarts[0];
     AvailablePlayerStarts.RemoveAt(0);
 
-    UE_LOG(LogTemp, Log, TEXT("Player %s assigned to PlayerStart at %s."),
-           *Player->GetName(),
-           *ChosenPlayerStart->GetActorLocation().ToString());
     return ChosenPlayerStart;
   }
 

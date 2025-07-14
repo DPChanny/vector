@@ -8,12 +8,13 @@ UCLASS()
 class VECTOR_API AVectorGameMode : public AGameModeBase {
   GENERATED_BODY()
 
- protected:
-  virtual AActor* FindPlayerStart_Implementation(
-      AController* Player, const FString& IncomingName) override;
+protected:
+  virtual AActor *
+  FindPlayerStart_Implementation(AController *Player,
+                                 const FString &IncomingName) override;
 
   UPROPERTY()
-  TArray<APlayerStart*> AvailablePlayerStarts;
+  TArray<TObjectPtr<APlayerStart>> AvailablePlayerStarts;
 
   bool bVoxelWorldSetupAttempted = false;
 };

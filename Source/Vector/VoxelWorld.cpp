@@ -22,13 +22,11 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
   VoxelBuild->Initialize();
   VoxelMesh->Initialize();
 
-  float DefaultBlockMaxDurability;
-  const UVoxelBlockDataAsset *DefaultBlockData = Cast<UVoxelBlockDataAsset>(
-      VoxelData->GetVoxelDataAsset(UVoxelData::GetDefaultBlockID()));
-  if (DefaultBlockData) {
-    DefaultBlockMaxDurability = DefaultBlockData->MaxDurability;
-  } else {
-    DefaultBlockMaxDurability = 100.f;
+  const TObjectPtr<UVoxelBlockDataAsset> DefaultBlockData =
+      VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(
+          UVoxelData::GetDefaultBlockID());
+  if (!DefaultBlockData) {
+    return;
   }
 
   for (int32 x = 0; x < WorldSizeInChunks.X; ++x) {
@@ -52,7 +50,7 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
         } else {
           VoxelData->SetVoxel(VoxelCoord,
                               FVoxel(UVoxelData::GetDefaultBlockID(),
-                                     DefaultBlockMaxDurability),
+                                     DefaultBlockData->MaxDurability),
                               false);
         }
       }
@@ -66,7 +64,7 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
 
 void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
   Nexuses.Empty();
-  for (APlayerStart *StartPoint : PlayerStarts) {
+  for (TObjectPtr StartPoint : PlayerStarts) {
     if (StartPoint) {
       StartPoint->Destroy();
     }
@@ -104,10 +102,8 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
       NewRoom.Center = CenterLocation;
 
       bool bOverlaps = false;
-      for (const FNexus &ExistingRoom : Nexuses) {
-        float DistanceBetweenCenters =
-            FVector::Dist(NewRoom.Center, ExistingRoom.Center);
-        if (DistanceBetweenCenters < (NewRoom.Radius + ExistingRoom.Radius)) {
+      for (const auto &[Center, Radius] : Nexuses) {
+        if (FVector::Dist(NewRoom.Center, Center) < NewRoom.Radius + Radius) {
           bOverlaps = true;
           break;
         }
@@ -137,8 +133,9 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
     }
 
     FTransform SpawnTransform(FRotator::ZeroRotator, NewRoom.Center);
-    APlayerStart *NewPlayerStart = GetWorld()->SpawnActor<APlayerStart>(
-        APlayerStart::StaticClass(), SpawnTransform);
+    TObjectPtr<APlayerStart> NewPlayerStart =
+        GetWorld()->SpawnActor<APlayerStart>(APlayerStart::StaticClass(),
+                                             SpawnTransform);
     if (NewPlayerStart) {
       PlayerStarts.Add(NewPlayerStart);
     }

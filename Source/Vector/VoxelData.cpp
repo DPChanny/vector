@@ -89,10 +89,9 @@ void UVoxelData::LoadChunk(const FIntVector &ChunkCoord) {
 }
 
 void UVoxelData::UnloadChunk(const FIntVector &ChunkCoord) {
-  if (FVoxelChunk *Chunk = Chunks.Find(ChunkCoord)) {
+  if (const FVoxelChunk *Chunk = Chunks.Find(ChunkCoord)) {
     if (Chunk->VoxelChunkActor) {
       Chunk->VoxelChunkActor->Destroy();
-      Chunk->VoxelChunkActor = nullptr;
     }
     Chunks.Remove(ChunkCoord);
   }
@@ -150,7 +149,8 @@ void UVoxelData::SetDurability(const FIntVector &GlobalVoxelCoord,
 
 float UVoxelData::GetDensity(const FIntVector &GlobalCoord) const {
   const FVoxel Voxel = GetVoxel(GlobalCoord);
-  if (const UVoxelBaseDataAsset *VoxelAsset = GetVoxelDataAsset(Voxel.ID)) {
+  if (const UVoxelBaseDataAsset *VoxelAsset =
+          GetVoxelDataAsset<UVoxelBaseDataAsset>(Voxel.ID)) {
     const float BaseDensity = VoxelAsset->BaseDensity;
     if (const UVoxelBlockDataAsset *BlockData =
             Cast<UVoxelBlockDataAsset>(VoxelAsset)) {
@@ -159,19 +159,6 @@ float UVoxelData::GetDensity(const FIntVector &GlobalCoord) const {
     return BaseDensity;
   }
   return -1.f;
-}
-
-TObjectPtr<UVoxelBaseDataAsset>
-UVoxelData::GetVoxelDataAsset(const int32 VoxelID) const {
-  if (const TObjectPtr<UVoxelBaseDataAsset> &FoundData =
-          VoxelDataAssets.FindRef(VoxelID)) {
-    return FoundData;
-  }
-  return VoxelDataAssets.FindRef(GetVoidID());
-}
-TObjectPtr<UVoxelBaseDataAsset>
-UVoxelData::GetVoxelDataAsset(const FIntVector GlobalCoord) const {
-  return GetVoxelDataAsset(GetVoxelID(GlobalCoord));
 }
 
 bool UVoxelData::IsChunk(const FIntVector &ChunkCoord) const {

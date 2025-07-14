@@ -26,13 +26,17 @@ AVoxelDebugActor::AVoxelDebugActor() {
 void AVoxelDebugActor::BeginPlay() {
   Super::BeginPlay();
 
-  if (UUserWidget *UserWidget = Widget->GetUserWidgetObject()) {
+  if (const TObjectPtr<UUserWidget> UserWidget =
+          Widget->GetUserWidgetObject()) {
     DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
   }
 }
 
 void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord) {
-  VoxelData = Cast<AVoxelWorld>(GetOwner())->GetVoxelData();
+  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
+          Cast<AVoxelWorld>(GetOwner())) {
+    VoxelData = VoxelWorld->GetVoxelData();
+  }
 
   VoxelCoord = InVoxelCoord;
 
@@ -41,14 +45,9 @@ void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord) {
   UpdateWidget();
 }
 
-void AVoxelDebugActor::UpdateWidget() {
-  if (!DisplayWidget) {
-    if (UUserWidget *UserWidget = Widget->GetUserWidgetObject()) {
-      DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
-    }
-    if (!DisplayWidget) {
-      return;
-    }
+void AVoxelDebugActor::UpdateWidget() const {
+  if (!VoxelData || !DisplayWidget) {
+    return;
   }
 
   const int32 VoxelID = VoxelData->GetVoxelID(VoxelCoord);
@@ -57,10 +56,10 @@ void AVoxelDebugActor::UpdateWidget() {
   float MaxDurability = 0.f;
   float BaseDensity = 0.f;
 
-  if (const UVoxelBaseDataAsset *VoxelDataAsset =
-          VoxelData->GetVoxelDataAsset(VoxelID)) {
+  if (const TObjectPtr<UVoxelBaseDataAsset> VoxelDataAsset =
+          VoxelData->GetVoxelDataAsset<UVoxelBaseDataAsset>(VoxelID)) {
     BaseDensity = VoxelDataAsset->BaseDensity;
-    if (const UVoxelBlockDataAsset *BlockData =
+    if (const TObjectPtr<UVoxelBlockDataAsset> BlockData =
             Cast<UVoxelBlockDataAsset>(VoxelDataAsset)) {
       MaxDurability = BlockData->MaxDurability;
     }

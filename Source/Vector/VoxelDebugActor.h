@@ -33,5 +33,5 @@ class VECTOR_API AVoxelDebugActor : public AActor {
 
 public:
   void Initialize(const FIntVector &InVoxelCoord);
-  void UpdateWidget();
+  void UpdateWidget() const;
 };

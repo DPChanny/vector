@@ -5,19 +5,21 @@
 #include "VoxelWorld.h"
 
 void UVoxelBuild::Initialize() {
-  const AVoxelWorld *VoxelWorld = Cast<AVoxelWorld>(GetOuter());
-  VoxelData = VoxelWorld->GetVoxelData();
-  VoxelMesh = VoxelWorld->GetVoxelMesh();
+  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
+          Cast<AVoxelWorld>(GetOuter())) {
+    VoxelData = VoxelWorld->GetVoxelData();
+    VoxelMesh = VoxelWorld->GetVoxelMesh();
+  }
 }
 
 void UVoxelBuild::DamageVoxel(const FVector &Center, const float Radius,
                               const float DamageAmount) const {
   auto DamageLogic = [&](const FIntVector &VoxelCoord) {
-    if (!VoxelData || !VoxelMesh) {
+    if (!VoxelData) {
       return;
     }
 
-    if (!Cast<UVoxelBlockDataAsset>(VoxelData->GetVoxelDataAsset(VoxelCoord))) {
+    if (!VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(VoxelCoord)) {
       return;
     }
 
@@ -38,18 +40,18 @@ void UVoxelBuild::ConstructVoxel(const FVector &Center, const float Radius,
                                  const float ConstructionAmount,
                                  const int32 VoxelIDToConstruct) const {
   auto ConstructLogic = [&](const FIntVector &GlobalCoord) {
-    if (!VoxelData || !VoxelMesh) {
+    if (!VoxelData) {
       return;
     }
 
-    const UVoxelBlockDataAsset *VoxelDataAsset =
-        Cast<UVoxelBlockDataAsset>(VoxelData->GetVoxelDataAsset(GlobalCoord));
+    const TObjectPtr<UVoxelBlockDataAsset> VoxelDataAsset =
+        VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(GlobalCoord);
     if (!VoxelDataAsset) {
       return;
     }
 
-    const UVoxelBlockDataAsset *NewVoxelData = Cast<UVoxelBlockDataAsset>(
-        VoxelData->GetVoxelDataAsset(VoxelIDToConstruct));
+    const TObjectPtr<UVoxelBlockDataAsset> NewVoxelData =
+        VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(VoxelIDToConstruct);
     if (!NewVoxelData) {
       return;
     }
@@ -78,9 +80,9 @@ void UVoxelBuild::ConstructVoxel(const FVector &Center, const float Radius,
               continue;
             }
 
-            if (const UVoxelBlockDataAsset *CheckBlockDataAsset =
-                    Cast<UVoxelBlockDataAsset>(
-                        VoxelData->GetVoxelDataAsset(CheckGlobalCoord))) {
+            if (const TObjectPtr<UVoxelBlockDataAsset> CheckBlockDataAsset =
+                    VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(
+                        CheckGlobalCoord)) {
               if (!IsSurfaceVoxel(CheckGlobalCoord)) {
                 VoxelData->SetDurability(CheckGlobalCoord,
                                          CheckBlockDataAsset->MaxDurability);

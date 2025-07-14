@@ -19,7 +19,10 @@ AVoxelChunkActor::AVoxelChunkActor() : ChunkCoord(FIntVector::ZeroValue) {
 }
 
 void AVoxelChunkActor::Initialize(const FIntVector &InChunkCoord) {
-  VoxelData = Cast<AVoxelWorld>(GetOwner())->GetVoxelData();
+  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
+          Cast<AVoxelWorld>(GetOwner())) {
+    VoxelData = VoxelWorld->GetVoxelData();
+  }
   ChunkCoord = InChunkCoord;
 }
 
@@ -83,12 +86,12 @@ void AVoxelChunkActor::UpdateMesh() const {
             EdgeVertices[i] = InterpolateVertex(
                 CornerPositions[CornerA], CornerPositions[CornerB],
                 CornerDensities[CornerA], CornerDensities[CornerB]);
-            if (const UVoxelSubstanceDataAsset *VoxelAsset =
-                    Cast<UVoxelSubstanceDataAsset>(VoxelData->GetVoxelDataAsset(
+            if (const TObjectPtr<UVoxelSubstanceDataAsset> VoxelAsset =
+                    VoxelData->GetVoxelDataAsset<UVoxelSubstanceDataAsset>(
                         GlobalCoord +
                         (CornerDensities[CornerA] > CornerDensities[CornerB]
                              ? CornerOffsets[CornerA]
-                             : CornerOffsets[CornerB])))) {
+                             : CornerOffsets[CornerB]))) {
               EdgeVertexColors[i] = VoxelAsset->VertexColor;
             }
           }

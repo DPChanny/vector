@@ -51,9 +51,19 @@ public:
 
   float GetDensity(const FIntVector &GlobalCoord) const;
 
-  TObjectPtr<UVoxelBaseDataAsset> GetVoxelDataAsset(int32 VoxelID) const;
-  TObjectPtr<UVoxelBaseDataAsset>
-  GetVoxelDataAsset(FIntVector GlobalCoord) const;
+  template <typename T>
+  TObjectPtr<T> GetVoxelDataAsset(const int32 VoxelID) const {
+    if (const TObjectPtr<UVoxelBaseDataAsset> FoundData =
+            VoxelDataAssets.FindRef(VoxelID)) {
+      return Cast<T>(FoundData);
+    }
+    return Cast<T>(VoxelDataAssets.FindRef(GetVoidID()));
+  }
+
+  template <typename T>
+  TObjectPtr<T> GetVoxelDataAsset(const FIntVector GlobalCoord) const {
+    return GetVoxelDataAsset<T>(GetVoxelID(GlobalCoord));
+  }
 
   int32 GetChunkSize() const { return ChunkSize; }
   int32 GetVoxelSize() const { return VoxelSize; }

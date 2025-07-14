@@ -4,7 +4,10 @@
 #include "VoxelWorld.h"
 
 void UVoxelMesh::Initialize() {
-  VoxelData = Cast<AVoxelWorld>(GetOuter())->GetVoxelData();
+  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
+          Cast<AVoxelWorld>(GetOuter())) {
+    VoxelData = VoxelWorld->GetVoxelData();
+  }
 }
 
 void UVoxelMesh::SetDirtyChunk(const FIntVector &GlobalCoord) {

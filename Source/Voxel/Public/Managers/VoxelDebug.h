@@ -13,8 +13,10 @@ class VOXEL_API UVoxelDebug : public UObject {
 public:
   void Initialize(const TSubclassOf<AVoxelDebugActor> &InDebugActorClass);
 
-  void SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels);
-  void SetDebugVoxel(const FIntVector &NewDebugVoxel);
+  void SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels,
+                      const FColor &Color = FColor::Green);
+  void SetDebugVoxel(const FIntVector &NewDebugVoxel,
+                     const FColor &Color = FColor::Green);
   void FlushDebugVoxelBuffer();
 
 private:
@@ -28,5 +30,5 @@ private:
   TObjectPtr<UVoxelData> VoxelData;
 
   TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;
-  TSet<FIntVector> DebugVoxelsBuffer;
+  TMap<FIntVector, FColor> DebugVoxelsBuffer;
 };

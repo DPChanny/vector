@@ -8,7 +8,7 @@
 #include "VoxelDebugWidget.h"
 
 AVoxelDebugActor::AVoxelDebugActor() {
-  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bCanEverTick = false;
 
   Box = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
   RootComponent = Box;
@@ -31,7 +31,8 @@ void AVoxelDebugActor::BeginPlay() {
   }
 }
 
-void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord) {
+void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord,
+                                  const FColor &Color) {
   if (const TObjectPtr<AVoxelWorld> VoxelWorld =
           Cast<AVoxelWorld>(GetOwner())) {
     VoxelData = VoxelWorld->GetVoxelData();
@@ -39,12 +40,12 @@ void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord) {
 
   VoxelCoord = InVoxelCoord;
 
-  Box->SetBoxExtent(FVector(VoxelData->GetVoxelSize() / 2));
+  Box->SetBoxExtent(FVector(VoxelData->GetVoxelSize() / 2 * .85f));
 
-  UpdateWidget();
+  UpdateActor(Color);
 }
 
-void AVoxelDebugActor::UpdateWidget() const {
+void AVoxelDebugActor::UpdateActor(const FColor &Color) const {
   if (!VoxelData || !DisplayWidget) {
     return;
   }
@@ -64,6 +65,9 @@ void AVoxelDebugActor::UpdateWidget() const {
     }
   }
 
-  DisplayWidget->UpdateInfo(VoxelCoord, VoxelID, CurrentDurability,
-                            MaxDurability, CurrentDensity, BaseDensity);
+  DisplayWidget->UpdateWidget(VoxelCoord, VoxelID, CurrentDurability,
+                              MaxDurability, CurrentDensity, BaseDensity);
+
+  Box->ShapeColor = Color;
+  Box->MarkRenderStateDirty();
 }

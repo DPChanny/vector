@@ -5,6 +5,11 @@
 
 class UVoxelData;
 class UVoxelMesh;
+class UVoxelDebug;
+
+const TArray NeighborOffsets = {FIntVector(1, 0, 0), FIntVector(-1, 0, 0),
+                                FIntVector(0, 1, 0), FIntVector(0, -1, 0),
+                                FIntVector(0, 0, 1), FIntVector(0, 0, -1)};
 
 UCLASS()
 class VOXEL_API UVoxelBuild : public UObject {
@@ -13,18 +18,20 @@ class VOXEL_API UVoxelBuild : public UObject {
 public:
   void Initialize();
 
-  void DamageVoxel(const FVector &Center, float Radius,
-                   float DamageAmount) const;
-  void ConstructVoxel(const FVector &Center, float Radius,
-                      float ConstructionAmount, int32 VoxelIDToConstruct) const;
+  void DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord, float Radius,
+                            float DamageAmount) const;
+  void ConstructVoxelsInRadius(const FIntVector &CenterGlobalCoord,
+                               float Radius, float ConstructionAmount,
+                               int32 VoxelIDToConstruct) const;
 
-  void GetGlobalCoordsInRadius(const FVector &Center, float Radius,
+  void GetGlobalCoordsInRadius(const FIntVector &CenterGlobalCoord,
+                               float Radius,
                                TSet<FIntVector> &FoundGlobalCoords) const;
 
 private:
-  void
-  ProcessVoxel(const FVector &Center, float Radius,
-               const TFunction<void(const FIntVector &)> &VoxelModifier) const;
+  void ProcessVoxelsInRadius(
+      const FIntVector &CenterGlobalCoord, float Radius,
+      const TFunction<void(const FIntVector &)> &VoxelModifier) const;
   bool IsSurfaceVoxel(const FIntVector &VoxelCoord) const;
 
   UPROPERTY()

@@ -32,6 +32,6 @@ class VOXEL_API AVoxelDebugActor : public AActor {
   TObjectPtr<UVoxelDebugWidget> DisplayWidget;
 
 public:
-  void Initialize(const FIntVector &InVoxelCoord);
-  void UpdateWidget() const;
+  void Initialize(const FIntVector &InVoxelCoord, const FColor &Color);
+  void UpdateActor(const FColor &Color) const;
 };

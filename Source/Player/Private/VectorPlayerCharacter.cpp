@@ -109,11 +109,16 @@ void AVectorPlayerCharacter::Fire() const {
   if (bHit) {
     if (const TObjectPtr<UVoxelBaseDataAsset> BaseDataAsset =
             Cast<UVoxelBaseDataAsset>(Poop)) {
-      World->GetVoxelBuild()->ConstructVoxel(
-          HitResult.ImpactPoint, 100, 25,
+      const FIntVector CenterGlobalCoord =
+          World->GetVoxelData()->WorldToGlobalCoord(HitResult.ImpactPoint);
+
+      World->GetVoxelBuild()->ConstructVoxelsInRadius(
+          CenterGlobalCoord, 100, 25,
           World->GetVoxelData()->GetVoxelID(BaseDataAsset));
+
+      World->GetVoxelDebug()->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
+      World->GetVoxelDebug()->FlushDebugVoxelBuffer();
     }
-    World->GetVoxelDebug()->FlushDebugVoxelBuffer();
   }
 }
 
@@ -130,7 +135,11 @@ void AVectorPlayerCharacter::Eat() const {
       HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
 
   if (bHit) {
-    World->GetVoxelBuild()->DamageVoxel(HitResult.ImpactPoint, 100, 25);
+    const FIntVector CenterGlobalCoord =
+        World->GetVoxelData()->WorldToGlobalCoord(HitResult.ImpactPoint);
+    World->GetVoxelBuild()->DamageVoxelsInRadius(CenterGlobalCoord, 100, 25);
+
+    World->GetVoxelDebug()->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
     World->GetVoxelDebug()->FlushDebugVoxelBuffer();
   }
 }

@@ -13,37 +13,41 @@ void UVoxelDebug::Initialize(
   }
 }
 
-void UVoxelDebug::SetDebugVoxel(const FIntVector &NewDebugVoxel) {
-  DebugVoxelsBuffer.Add(NewDebugVoxel);
+void UVoxelDebug::SetDebugVoxel(const FIntVector &NewDebugVoxel,
+                                const FColor &Color) {
+  DebugVoxelsBuffer.Emplace(NewDebugVoxel, Color);
 }
 
-void UVoxelDebug::SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels) {
-  DebugVoxelsBuffer.Append(NewDebugVoxels);
+void UVoxelDebug::SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels,
+                                 const FColor &Color) {
+  for (const FIntVector &NewDebugVoxel : NewDebugVoxels) {
+    SetDebugVoxel(NewDebugVoxel, Color);
+  }
 }
 
 void UVoxelDebug::FlushDebugVoxelBuffer() {
   TSet<FIntVector> CurrentDebugVoxels;
   DebugVoxels.GetKeys(CurrentDebugVoxels);
 
-  const TSet<FIntVector> VoxelsToRemove =
-      CurrentDebugVoxels.Difference(DebugVoxelsBuffer);
-  for (const FIntVector &VoxelToRemove : VoxelsToRemove) {
+  TSet<FIntVector> BufferVoxels;
+  DebugVoxelsBuffer.GetKeys(BufferVoxels);
+
+  for (const FIntVector &VoxelToAdd :
+       BufferVoxels.Difference(CurrentDebugVoxels)) {
+    AddDebugVoxel(VoxelToAdd);
+  }
+
+  for (const FIntVector &VoxelToRemove :
+       CurrentDebugVoxels.Difference(BufferVoxels)) {
     RemoveDebugVoxel(VoxelToRemove);
   }
 
-  const TSet<FIntVector> VoxelsToUpdate =
-      CurrentDebugVoxels.Difference(VoxelsToRemove);
-  for (const FIntVector &VoxelToUpdate : VoxelsToUpdate) {
+  for (const FIntVector &VoxelToUpdate :
+       CurrentDebugVoxels.Intersect(BufferVoxels)) {
     if (const TObjectPtr<AVoxelDebugActor> FoundActor =
             DebugVoxels.FindRef(VoxelToUpdate)) {
-      FoundActor->UpdateWidget();
+      FoundActor->UpdateActor(DebugVoxelsBuffer[VoxelToUpdate]);
     }
-  }
-
-  const TSet<FIntVector> VoxelsToAdd =
-      DebugVoxelsBuffer.Difference(CurrentDebugVoxels);
-  for (const FIntVector &VoxelToAdd : VoxelsToAdd) {
-    AddDebugVoxel(VoxelToAdd);
   }
 
   DebugVoxelsBuffer.Empty();
@@ -65,7 +69,7 @@ void UVoxelDebug::AddDebugVoxel(const FIntVector &GlobalCoord) {
           FRotator::ZeroRotator, SpawnParams);
 
   if (NewDebugActor) {
-    NewDebugActor->Initialize(GlobalCoord);
+    NewDebugActor->Initialize(GlobalCoord, DebugVoxelsBuffer[GlobalCoord]);
     DebugVoxels.Add(GlobalCoord, NewDebugActor);
   }
 }

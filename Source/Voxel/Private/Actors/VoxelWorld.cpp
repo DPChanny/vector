@@ -124,8 +124,9 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
     }
 
     TSet<FIntVector> GlobalCoordsInRadius;
-    VoxelBuild->GetGlobalCoordsInRadius(NewRoom.Center, NewRoom.Radius,
-                                        GlobalCoordsInRadius);
+    VoxelBuild->GetGlobalCoordsInRadius(
+        VoxelData->WorldToGlobalCoord(NewRoom.Center), NewRoom.Radius,
+        GlobalCoordsInRadius);
 
     for (const FIntVector &GlobalCoord : GlobalCoordsInRadius) {
       VoxelData->SetVoxel(GlobalCoord, FVoxel(UVoxelData::GetVoidID(), 0.f),

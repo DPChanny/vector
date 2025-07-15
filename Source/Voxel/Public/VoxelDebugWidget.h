@@ -10,7 +10,7 @@ class VOXEL_API UVoxelDebugWidget : public UUserWidget {
 
 public:
   UFUNCTION(BlueprintImplementableEvent, Category = "Voxel Debug")
-  void UpdateInfo(const FIntVector &VoxelCoord, int32 VoxelID,
-                  float CurrentDurability, float MaxDurability,
-                  float CurrentDensity, float BaseDensity);
+  void UpdateWidget(const FIntVector &VoxelCoord, int32 VoxelID,
+                    float CurrentDurability, float MaxDurability,
+                    float CurrentDensity, float BaseDensity);
 };

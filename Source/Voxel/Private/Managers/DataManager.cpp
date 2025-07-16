@@ -69,8 +69,7 @@ void UDataManager::UnloadChunk(const FIntVector &ChunkCoord) {
 const FVoxelBaseData *
 UDataManager::GetVoxelData(const FIntVector &GlobalCoord) const {
   if (const FVoxelChunk *Chunk = Chunks.Find(GlobalToChunkCoord(GlobalCoord))) {
-    return Chunk->GetVoxelData(
-        LocalCoordToIndex(GlobalToLocalCoord(GlobalCoord)));
+    return Chunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord));
   }
   return new FVoxelVoidData();
 }
@@ -79,8 +78,7 @@ void UDataManager::ModifyVoxelData(
     const FIntVector &GlobalCoord,
     const TFunction<void(FVoxelBaseData *)> &Modifier, const bool bAutoDebug) {
   if (const FVoxelChunk *Chunk = Chunks.Find(GlobalToChunkCoord(GlobalCoord))) {
-    Modifier(Chunk->GetVoxelData(
-        LocalCoordToIndex(GlobalToLocalCoord(GlobalCoord))));
+    Modifier(Chunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord)));
 
     if (DebugManager && bAutoDebug) {
       DebugManager->SetDebugVoxel(GlobalCoord);
@@ -96,8 +94,7 @@ void UDataManager::SetVoxelData(const FIntVector &GlobalCoord,
                                 FVoxelBaseData *VoxelData,
                                 const bool bAutoDebug) {
   if (const FVoxelChunk *Chunk = Chunks.Find(GlobalToChunkCoord(GlobalCoord))) {
-    Chunk->SetVoxelData(LocalCoordToIndex(GlobalToLocalCoord(GlobalCoord)),
-                        VoxelData);
+    Chunk->SetVoxelData(GlobalCoordToIndex(GlobalCoord), VoxelData);
 
     if (DebugManager && bAutoDebug) {
       DebugManager->SetDebugVoxel(GlobalCoord);
@@ -133,6 +130,10 @@ UDataManager::ChunkToGlobalCoord(const FIntVector &ChunkCoord) const {
 FIntVector
 UDataManager::GlobalToLocalCoord(const FIntVector &GlobalCoord) const {
   return GlobalCoord % ChunkSize;
+}
+
+int32 UDataManager::GlobalCoordToIndex(const FIntVector &GlobalCoord) const {
+  return LocalCoordToIndex(GlobalToLocalCoord(GlobalCoord));
 }
 
 FIntVector

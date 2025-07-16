@@ -23,10 +23,9 @@ void UBuildManager::DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord,
       return;
     }
 
-    const FVoxelBlockData *VoxelBlockData =
-        dynamic_cast<const FVoxelBlockData *>(
-            DataManager->GetVoxelData(GlobalCoord));
-    if (!VoxelBlockData) {
+    const FVoxelBlockData *BlockData = dynamic_cast<const FVoxelBlockData *>(
+        DataManager->GetVoxelData(GlobalCoord));
+    if (!BlockData) {
       return;
     }
 
@@ -36,7 +35,7 @@ void UBuildManager::DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord,
               DamageAmount;
         });
 
-    if (VoxelBlockData->Durability <= 0) {
+    if (BlockData->Durability <= 0) {
       DataManager->SetVoxelData(GlobalCoord, new FVoxelVoidData());
     }
   };
@@ -53,13 +52,12 @@ void UBuildManager::ConstructVoxelsInRadius(
       return;
     }
 
-    const FVoxelBaseData *VoxelBaseData =
-        DataManager->GetVoxelData(GlobalCoord);
+    const FVoxelBaseData *VoxelData = DataManager->GetVoxelData(GlobalCoord);
 
-    const FVoxelBlockData *VoxelBlockData =
-        dynamic_cast<const FVoxelBlockData *>(VoxelBaseData);
+    const FVoxelBlockData *BlockData =
+        dynamic_cast<const FVoxelBlockData *>(VoxelData);
 
-    if (VoxelBlockData) {
+    if (BlockData) {
       DataManager->ModifyVoxelData(
           GlobalCoord, [ConstructionAmount](FVoxelBaseData *ModifierBaseData) {
             dynamic_cast<FVoxelBlockData *>(ModifierBaseData)->Durability +=
@@ -67,12 +65,11 @@ void UBuildManager::ConstructVoxelsInRadius(
           });
     }
 
-    if ((VoxelBlockData &&
-         VoxelBlockData->Durability >
-             VoxelBlockData->GetBlockDataAsset()->MaxDurability) ||
-        FVoxelBorderData::IsBorder(VoxelBaseData)) {
+    if ((BlockData && BlockData->Durability >
+                          BlockData->GetBlockDataAsset()->MaxDurability) ||
+        FVoxelBorderData::IsBorder(VoxelData)) {
 
-      if (VoxelBlockData) {
+      if (BlockData) {
         DataManager->ModifyVoxelData(
             GlobalCoord, [&](FVoxelBaseData *ModifierBaseData) {
               FVoxelBlockData *ModifierBlockData =
@@ -100,9 +97,9 @@ void UBuildManager::ConstructVoxelsInRadius(
 
             if (!IsSurfaceVoxel(CheckGlobalCoord)) {
               DataManager->ModifyVoxelData(
-                  CheckGlobalCoord, [&](FVoxelBaseData *CheckBaseData) {
+                  CheckGlobalCoord, [&](FVoxelBaseData *CheckVoxelData) {
                     if (FVoxelBlockData *CheckBlockData =
-                            dynamic_cast<FVoxelBlockData *>(CheckBaseData)) {
+                            dynamic_cast<FVoxelBlockData *>(CheckVoxelData)) {
                       CheckBlockData->Durability =
                           CheckBlockData->GetBlockDataAsset()->MaxDurability;
                     }
@@ -112,9 +109,9 @@ void UBuildManager::ConstructVoxelsInRadius(
 
           if (!IsSurfaceVoxel(NeighborGlobalCoord)) {
             DataManager->ModifyVoxelData(
-                NeighborGlobalCoord, [&](FVoxelBaseData *NeighborBaseData) {
+                NeighborGlobalCoord, [&](FVoxelBaseData *NeighborVoxelData) {
                   if (FVoxelBlockData *NeighborBlockData =
-                          dynamic_cast<FVoxelBlockData *>(NeighborBaseData)) {
+                          dynamic_cast<FVoxelBlockData *>(NeighborVoxelData)) {
                     NeighborBlockData->Durability =
                         NeighborBlockData->GetBlockDataAsset()->MaxDurability;
                   }

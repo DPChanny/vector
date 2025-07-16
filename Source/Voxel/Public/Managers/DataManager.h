@@ -48,6 +48,7 @@ public:
   inline FIntVector GlobalToChunkCoord(const FIntVector &GlobalCoord) const;
   inline FIntVector ChunkToGlobalCoord(const FIntVector &ChunkCoord) const;
   inline FIntVector GlobalToLocalCoord(const FIntVector &GlobalCoord) const;
+  inline int32 GlobalCoordToIndex(const FIntVector &GlobalCoord) const;
   inline FIntVector LocalToGlobalCoord(const FIntVector &LocalCoord,
                                        const FIntVector &ChunkCoord) const;
   inline FIntVector WorldToGlobalCoord(const FVector &WorldCoord) const;

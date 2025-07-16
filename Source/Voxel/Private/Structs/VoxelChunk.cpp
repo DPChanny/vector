@@ -11,7 +11,7 @@ FVoxelChunk::FVoxelChunk(const int32 InChunkSize) {
 }
 
 FVoxelBaseData *FVoxelChunk::GetVoxelData(const int32 Index) const {
-  if (Index >= 0 && Index < VoxelCount && VoxelDataArray) {
+  if (Index >= 0 && Index < VoxelCount) {
     return VoxelDataArray[Index];
   }
   return new FVoxelVoidData();
@@ -19,7 +19,7 @@ FVoxelBaseData *FVoxelChunk::GetVoxelData(const int32 Index) const {
 
 void FVoxelChunk::SetVoxelData(const int32 Index,
                                FVoxelBaseData *VoxelBaseData) const {
-  if (Index >= 0 && Index < VoxelCount && VoxelDataArray && VoxelBaseData) {
+  if (Index >= 0 && Index < VoxelCount && VoxelBaseData) {
     if (VoxelDataArray[Index] != VoxelBaseData) {
       delete VoxelDataArray[Index];
     }

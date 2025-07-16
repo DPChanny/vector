@@ -67,8 +67,8 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
   PlayerStarts.Empty();
 
   const FIntVector WorldSize = WorldSizeInChunks * ChunkSize;
-  const FVector WorldMaxBounds = FVector(WorldSize) * VoxelSize;
-  const FVector WorldMinBounds = FVector::ZeroVector;
+  const FVector WorldMaxBounds = FVector(WorldSize) * VoxelSize - 1;
+  const FVector WorldMinBounds = FVector::ZeroVector + 1;
 
   for (int32 i = 0; i < NexusCount; ++i) {
     constexpr int32 MaxPlacementAttempts = 100;

@@ -21,10 +21,6 @@ struct FVoxelSubstanceData : public FVoxelBaseData {
 
   FVoxelSubstanceData() = default;
 
-  static bool IsSubstance(const FVoxelBaseData *VoxelBaseData) {
-    return dynamic_cast<const FVoxelSubstanceData *>(VoxelBaseData) != nullptr;
-  }
-
   TObjectPtr<UVoxelSubstanceDataAsset> GetSubstanceDataAsset() const {
     return Cast<UVoxelSubstanceDataAsset>(DataAsset);
   }

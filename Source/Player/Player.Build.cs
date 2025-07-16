@@ -6,6 +6,8 @@ public class Player : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+		bUseRTTI = true;
+
 		PublicDependencyModuleNames.AddRange(
 			new[]
 			{

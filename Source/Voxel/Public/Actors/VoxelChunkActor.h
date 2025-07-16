@@ -5,7 +5,7 @@
 #include "VoxelChunkActor.generated.h"
 
 class UProceduralMeshComponent;
-class UVoxelData;
+class UDataManager;
 
 UCLASS()
 class VOXEL_API AVoxelChunkActor : public AActor {
@@ -25,7 +25,7 @@ private:
   TObjectPtr<UProceduralMeshComponent> Mesh;
 
   UPROPERTY(VisibleAnywhere)
-  TObjectPtr<const UVoxelData> VoxelData;
+  TObjectPtr<const UDataManager> DataManager;
 
   UPROPERTY(VisibleAnywhere)
   FIntVector ChunkCoord;

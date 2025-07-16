@@ -3,8 +3,9 @@
 #include "Actors/VoxelWorld.h"
 #include "Components/BoxComponent.h"
 #include "Components/WidgetComponent.h"
+#include "DataAssets/VoxelBaseDataAsset.h"
 #include "DataAssets/VoxelBlockDataAsset.h"
-#include "Managers/VoxelData.h"
+#include "Managers/DataManager.h"
 #include "VoxelDebugWidget.h"
 
 AVoxelDebugActor::AVoxelDebugActor() {
@@ -35,38 +36,43 @@ void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord,
                                   const FColor &Color) {
   if (const TObjectPtr<AVoxelWorld> VoxelWorld =
           Cast<AVoxelWorld>(GetOwner())) {
-    VoxelData = VoxelWorld->GetVoxelData();
+    DataManager = VoxelWorld->GetDataManager();
   }
 
   VoxelCoord = InVoxelCoord;
 
-  Box->SetBoxExtent(FVector(VoxelData->GetVoxelSize() / 2 * .85f));
+  Box->SetBoxExtent(FVector(DataManager->GetVoxelSize() / 2 * .85f));
 
   UpdateActor(Color);
 }
 
 void AVoxelDebugActor::UpdateActor(const FColor &Color) const {
-  if (!VoxelData || !DisplayWidget) {
+  if (!DataManager || !DisplayWidget) {
     return;
   }
 
-  const int32 VoxelID = VoxelData->GetVoxelID(VoxelCoord);
-  const float CurrentDurability = VoxelData->GetDurability(VoxelCoord);
-  const float CurrentDensity = VoxelData->GetDensity(VoxelCoord);
-  float MaxDurability = 0.f;
-  float BaseDensity = 0.f;
-
-  if (const TObjectPtr<UVoxelBaseDataAsset> VoxelDataAsset =
-          VoxelData->GetVoxelDataAsset<UVoxelBaseDataAsset>(VoxelID)) {
-    BaseDensity = VoxelDataAsset->BaseDensity;
-    if (const TObjectPtr<UVoxelBlockDataAsset> BlockData =
-            Cast<UVoxelBlockDataAsset>(VoxelDataAsset)) {
-      MaxDurability = BlockData->MaxDurability;
-    }
+  const FVoxelBaseData *VoxelData = DataManager->GetVoxelData(VoxelCoord);
+  if (!VoxelData) {
+    return;
   }
 
-  DisplayWidget->UpdateWidget(VoxelCoord, VoxelID, CurrentDurability,
-                              MaxDurability, CurrentDensity, BaseDensity);
+  FString Text;
+
+  Text += FString::Printf(TEXT("%d %d %d\n"), VoxelCoord.X, VoxelCoord.Y,
+                          VoxelCoord.Z);
+
+  Text += FString::Printf(TEXT("Name: %s\n"), *VoxelData->DataAsset->VoxelName);
+
+  Text += FString::Printf(TEXT("Density: %f\n"), VoxelData->GetDensity());
+
+  if (const FVoxelBlockData *VoxelBlockData =
+          dynamic_cast<const FVoxelBlockData *>(VoxelData)) {
+    Text += FString::Printf(TEXT("Durability: %f / %f\n"),
+                            VoxelBlockData->Durability,
+                            VoxelBlockData->GetBlockDataAsset()->MaxDurability);
+  }
+
+  DisplayWidget->UpdateText(Text);
 
   Box->ShapeColor = Color;
   Box->MarkRenderStateDirty();

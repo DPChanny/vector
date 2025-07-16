@@ -4,7 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "VoxelDebugActor.generated.h"
 
-class UVoxelData;
+class UDataManager;
 class UBoxComponent;
 class UWidgetComponent;
 class UVoxelDebugWidget;
@@ -20,7 +20,7 @@ class VOXEL_API AVoxelDebugActor : public AActor {
   FIntVector VoxelCoord;
 
   UPROPERTY(VisibleAnywhere)
-  TObjectPtr<const UVoxelData> VoxelData;
+  TObjectPtr<const UDataManager> DataManager;
 
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UBoxComponent> Box;

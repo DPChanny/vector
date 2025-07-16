@@ -3,7 +3,7 @@
 #include "Actors/VoxelWorld.h"
 #include "DataAssets/VoxelSubstanceDataAsset.h"
 #include "Engine/World.h"
-#include "Managers/VoxelData.h"
+#include "Managers/DataManager.h"
 #include "MarchingCubesTables.h"
 #include "ProceduralMeshComponent.h"
 
@@ -21,7 +21,7 @@ AVoxelChunkActor::AVoxelChunkActor() : ChunkCoord(FIntVector::ZeroValue) {
 void AVoxelChunkActor::Initialize(const FIntVector &InChunkCoord) {
   if (const TObjectPtr<AVoxelWorld> VoxelWorld =
           Cast<AVoxelWorld>(GetOwner())) {
-    VoxelData = VoxelWorld->GetVoxelData();
+    DataManager = VoxelWorld->GetDataManager();
   }
   ChunkCoord = InChunkCoord;
 }
@@ -32,12 +32,12 @@ FVector AVoxelChunkActor::InterpolateVertex(const FVector &P1,
   if (FMath::IsNearlyEqual(Val1, Val2)) {
     return P1;
   }
-  const float Mu = (UVoxelData::GetSurfaceLevel() - Val1) / (Val2 - Val1);
+  const float Mu = (UDataManager::GetSurfaceLevel() - Val1) / (Val2 - Val1);
   return P1 + Mu * (P2 - P1);
 }
 
 void AVoxelChunkActor::UpdateMesh() const {
-  if (!VoxelData) {
+  if (!DataManager) {
     return;
   }
 
@@ -50,11 +50,11 @@ void AVoxelChunkActor::UpdateMesh() const {
   TMap<FVector, int32> VertexMap;
   TMap<int32, TArray<FVector>> VertexNormals;
 
-  for (int32 x = 0; x < VoxelData->GetChunkSize(); ++x) {
-    for (int32 y = 0; y < VoxelData->GetChunkSize(); ++y) {
-      for (int32 z = 0; z < VoxelData->GetChunkSize(); ++z) {
+  for (int32 x = 0; x < DataManager->GetChunkSize(); ++x) {
+    for (int32 y = 0; y < DataManager->GetChunkSize(); ++y) {
+      for (int32 z = 0; z < DataManager->GetChunkSize(); ++z) {
         const FIntVector GlobalCoord =
-            VoxelData->LocalToGlobalCoord(FIntVector(x, y, z), ChunkCoord);
+            DataManager->LocalToGlobalCoord(FIntVector(x, y, z), ChunkCoord);
 
         float CornerDensities[8]{};
         FVector CornerPositions[8];
@@ -62,12 +62,13 @@ void AVoxelChunkActor::UpdateMesh() const {
         for (int i = 0; i < 8; ++i) {
           const FIntVector CornerGlobalCoord = GlobalCoord + CornerOffsets[i];
 
-          CornerDensities[i] = VoxelData->GetDensity(CornerGlobalCoord);
+          CornerDensities[i] =
+              DataManager->GetVoxelData(CornerGlobalCoord)->GetDensity();
           CornerPositions[i] =
-              (FVector(CornerGlobalCoord) * VoxelData->GetVoxelSize()) -
+              DataManager->GlobalToWorldCoord(CornerGlobalCoord) -
               GetActorLocation();
 
-          if (CornerDensities[i] > UVoxelData::GetSurfaceLevel()) {
+          if (CornerDensities[i] > UDataManager::GetSurfaceLevel()) {
             CubeIndex |= (1 << i);
           }
         }
@@ -86,13 +87,18 @@ void AVoxelChunkActor::UpdateMesh() const {
             EdgeVertices[i] = InterpolateVertex(
                 CornerPositions[CornerA], CornerPositions[CornerB],
                 CornerDensities[CornerA], CornerDensities[CornerB]);
-            if (const TObjectPtr<UVoxelSubstanceDataAsset> VoxelAsset =
-                    VoxelData->GetVoxelDataAsset<UVoxelSubstanceDataAsset>(
-                        GlobalCoord +
-                        (CornerDensities[CornerA] > CornerDensities[CornerB]
-                             ? CornerOffsets[CornerA]
-                             : CornerOffsets[CornerB]))) {
-              EdgeVertexColors[i] = VoxelAsset->VertexColor;
+            if (const FVoxelBaseData *VoxelData = DataManager->GetVoxelData(
+                    GlobalCoord +
+                    (CornerDensities[CornerA] > CornerDensities[CornerB]
+                         ? CornerOffsets[CornerA]
+                         : CornerOffsets[CornerB]))) {
+              if (const FVoxelSubstanceData *VoxelSubstanceData =
+                      dynamic_cast<const FVoxelSubstanceData *>(VoxelData)) {
+                if (VoxelSubstanceData->GetSubstanceDataAsset()) {
+                  EdgeVertexColors[i] =
+                      VoxelSubstanceData->GetSubstanceDataAsset()->VertexColor;
+                }
+              }
             }
           }
         }

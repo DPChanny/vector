@@ -1,12 +1,12 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "VoxelMesh.generated.h"
+#include "MeshManager.generated.h"
 
-class UVoxelData;
+class UDataManager;
 
 UCLASS()
-class VOXEL_API UVoxelMesh : public UObject {
+class VOXEL_API UMeshManager : public UObject {
   GENERATED_BODY()
 
 public:
@@ -17,7 +17,7 @@ public:
 
 private:
   UPROPERTY()
-  TObjectPtr<UVoxelData> VoxelData;
+  TObjectPtr<UDataManager> DataManager;
 
   UPROPERTY()
   TSet<FIntVector> DirtyChunkCoords;

@@ -1,18 +1,22 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "VoxelBuild.generated.h"
 
-class UVoxelData;
-class UVoxelMesh;
-class UVoxelDebug;
+// clang-format off
+#include "BuildManager.generated.h"
+// clang-format on
+
+class UVoxelBlockDataAsset;
+class UDataManager;
+class UMeshManager;
+class UDebugManager;
 
 const TArray NeighborOffsets = {FIntVector(1, 0, 0), FIntVector(-1, 0, 0),
                                 FIntVector(0, 1, 0), FIntVector(0, -1, 0),
                                 FIntVector(0, 0, 1), FIntVector(0, 0, -1)};
 
 UCLASS()
-class VOXEL_API UVoxelBuild : public UObject {
+class VOXEL_API UBuildManager : public UObject {
   GENERATED_BODY()
 
 public:
@@ -20,9 +24,10 @@ public:
 
   void DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord, float Radius,
                             float DamageAmount) const;
-  void ConstructVoxelsInRadius(const FIntVector &CenterGlobalCoord,
-                               float Radius, float ConstructionAmount,
-                               int32 VoxelIDToConstruct) const;
+  void ConstructVoxelsInRadius(
+      const FIntVector &CenterGlobalCoord, float Radius,
+      float ConstructionAmount,
+      const TObjectPtr<UVoxelBlockDataAsset> &NewVoxelBlockDataAsset) const;
 
   void GetGlobalCoordsInRadius(const FIntVector &CenterGlobalCoord,
                                float Radius,
@@ -35,8 +40,8 @@ private:
   bool IsSurfaceVoxel(const FIntVector &VoxelCoord) const;
 
   UPROPERTY()
-  TObjectPtr<UVoxelData> VoxelData;
+  TObjectPtr<UDataManager> DataManager;
 
   UPROPERTY()
-  TObjectPtr<UVoxelMesh> VoxelMesh;
+  TObjectPtr<UMeshManager> MeshManager;
 };

@@ -11,3 +11,20 @@ class VOXEL_API UVoxelVoidDataAsset : public UVoxelBaseDataAsset {
 public:
   UVoxelVoidDataAsset();
 };
+
+USTRUCT()
+struct FVoxelVoidData : public FVoxelBaseData {
+  GENERATED_BODY()
+
+  static bool IsVoid(const FVoxelBaseData *VoxelBaseData) {
+    return dynamic_cast<const FVoxelVoidData *>(VoxelBaseData) != nullptr;
+  }
+
+  TObjectPtr<UVoxelVoidDataAsset> GetVoidDataAsset() const {
+    return Cast<UVoxelVoidDataAsset>(DataAsset);
+  }
+
+  explicit FVoxelVoidData()
+      : FVoxelBaseData(UVoxelVoidDataAsset::StaticClass()
+                           ->GetDefaultObject<UVoxelVoidDataAsset>()) {}
+};

@@ -1,31 +1,31 @@
-﻿#include "Managers/VoxelDebug.h"
+﻿#include "Managers/DebugManager.h"
 
 #include "Actors/VoxelDebugActor.h"
 #include "Actors/VoxelWorld.h"
-#include "Managers/VoxelData.h"
+#include "Managers/DataManager.h"
 
-void UVoxelDebug::Initialize(
+void UDebugManager::Initialize(
     const TSubclassOf<AVoxelDebugActor> &InDebugActorClass) {
   DebugActorClass = InDebugActorClass;
   if (const TObjectPtr<AVoxelWorld> VoxelWorld =
           Cast<AVoxelWorld>(GetOuter())) {
-    VoxelData = VoxelWorld->GetVoxelData();
+    DataManager = VoxelWorld->GetDataManager();
   }
 }
 
-void UVoxelDebug::SetDebugVoxel(const FIntVector &NewDebugVoxel,
-                                const FColor &Color) {
+void UDebugManager::SetDebugVoxel(const FIntVector &NewDebugVoxel,
+                                  const FColor &Color) {
   DebugVoxelsBuffer.Emplace(NewDebugVoxel, Color);
 }
 
-void UVoxelDebug::SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels,
-                                 const FColor &Color) {
+void UDebugManager::SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels,
+                                   const FColor &Color) {
   for (const FIntVector &NewDebugVoxel : NewDebugVoxels) {
     SetDebugVoxel(NewDebugVoxel, Color);
   }
 }
 
-void UVoxelDebug::FlushDebugVoxelBuffer() {
+void UDebugManager::FlushDebugVoxelBuffer() {
   TSet<FIntVector> CurrentDebugVoxels;
   DebugVoxels.GetKeys(CurrentDebugVoxels);
 
@@ -53,10 +53,10 @@ void UVoxelDebug::FlushDebugVoxelBuffer() {
   DebugVoxelsBuffer.Empty();
 }
 
-void UVoxelDebug::AddDebugVoxel(const FIntVector &GlobalCoord) {
+void UDebugManager::AddDebugVoxel(const FIntVector &GlobalCoord) {
   const TObjectPtr<UWorld> World = GetWorld();
 
-  if (DebugVoxels.Contains(GlobalCoord) || !VoxelData || !DebugActorClass ||
+  if (DebugVoxels.Contains(GlobalCoord) || !DataManager || !DebugActorClass ||
       !World) {
     return;
   }
@@ -65,7 +65,7 @@ void UVoxelDebug::AddDebugVoxel(const FIntVector &GlobalCoord) {
   SpawnParams.Owner = Cast<AActor>(GetOuter());
   const TObjectPtr<AVoxelDebugActor> NewDebugActor =
       World->SpawnActor<AVoxelDebugActor>(
-          DebugActorClass, VoxelData->GlobalToWorldCoord(GlobalCoord),
+          DebugActorClass, DataManager->GlobalToWorldCoord(GlobalCoord),
           FRotator::ZeroRotator, SpawnParams);
 
   if (NewDebugActor) {
@@ -74,7 +74,7 @@ void UVoxelDebug::AddDebugVoxel(const FIntVector &GlobalCoord) {
   }
 }
 
-void UVoxelDebug::RemoveDebugVoxel(const FIntVector &VoxelCoord) {
+void UDebugManager::RemoveDebugVoxel(const FIntVector &VoxelCoord) {
   const TObjectPtr<AVoxelDebugActor> FoundActor =
       DebugVoxels.FindRef(VoxelCoord);
   if (FoundActor) {

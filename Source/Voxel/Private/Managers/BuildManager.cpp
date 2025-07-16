@@ -1,74 +1,77 @@
-﻿#include "Managers/VoxelBuild.h"
+﻿#include "Managers/BuildManager.h"
 #include "Actors/VoxelWorld.h"
 #include "DataAssets/VoxelBlockDataAsset.h"
-#include "Managers/VoxelData.h"
-#include "Managers/VoxelMesh.h"
+#include "DataAssets/VoxelBorderDataAsset.h"
+#include "DataAssets/VoxelVoidDataAsset.h"
+#include "Managers/DataManager.h"
+#include "Managers/MeshManager.h"
 
-void UVoxelBuild::Initialize() {
+void UBuildManager::Initialize() {
   if (const TObjectPtr<AVoxelWorld> VoxelWorld =
           Cast<AVoxelWorld>(GetOuter())) {
-    VoxelData = VoxelWorld->GetVoxelData();
-    VoxelMesh = VoxelWorld->GetVoxelMesh();
+    DataManager = VoxelWorld->GetDataManager();
+    MeshManager = VoxelWorld->GetMeshManager();
   }
 }
 
-void UVoxelBuild::DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord,
-                                       const float Radius,
-                                       const float DamageAmount) const {
+void UBuildManager::DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord,
+                                         const float Radius,
+                                         const float DamageAmount) const {
   auto DamageLogic = [&](const FIntVector &VoxelCoord) {
-    if (!VoxelData) {
+    if (!DataManager) {
       return;
     }
 
-    if (!VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(VoxelCoord)) {
+    FVoxelBlockData *VoxelBlockData =
+        dynamic_cast<FVoxelBlockData *>(DataManager->GetVoxelData(VoxelCoord));
+    if (!VoxelBlockData) {
       return;
     }
 
-    const float NewDurability =
-        VoxelData->GetDurability(VoxelCoord) - DamageAmount;
+    VoxelBlockData->Durability -= DamageAmount;
 
-    if (NewDurability <= 0) {
-      VoxelData->SetVoxel(VoxelCoord, FVoxel(UVoxelData::GetVoidID(), 0.f));
-    } else {
-      VoxelData->SetDurability(VoxelCoord, NewDurability);
+    if (VoxelBlockData->Durability <= 0) {
+      DataManager->SetVoxelData(VoxelCoord, new FVoxelVoidData());
     }
   };
 
   ProcessVoxelsInRadius(CenterGlobalCoord, Radius, DamageLogic);
 }
 
-void UVoxelBuild::ConstructVoxelsInRadius(
+void UBuildManager::ConstructVoxelsInRadius(
     const FIntVector &CenterGlobalCoord, const float Radius,
-    const float ConstructionAmount, const int32 VoxelIDToConstruct) const {
+    const float ConstructionAmount,
+    const TObjectPtr<UVoxelBlockDataAsset> &NewVoxelBlockDataAsset) const {
   auto ConstructLogic = [&](const FIntVector &GlobalCoord) {
-    if (!VoxelData) {
+    if (!DataManager) {
       return;
     }
 
-    const TObjectPtr<UVoxelBlockDataAsset> NewVoxelData =
-        VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(VoxelIDToConstruct);
-    if (!NewVoxelData) {
+    FVoxelSubstanceData *VoxelSubstanceData =
+        dynamic_cast<FVoxelSubstanceData *>(
+            DataManager->GetVoxelData(GlobalCoord));
+    if (!VoxelSubstanceData) {
       return;
     }
 
-    const float NewDurability =
-        VoxelData->GetDurability(GlobalCoord) + ConstructionAmount;
+    FVoxelBlockData *VoxelBlockData =
+        dynamic_cast<FVoxelBlockData *>(VoxelSubstanceData);
 
-    const TObjectPtr<UVoxelBlockDataAsset> BlockDataAsset =
-        VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(GlobalCoord);
+    if (VoxelBlockData) {
+      VoxelBlockData->Durability += ConstructionAmount;
+    }
 
-    if ((BlockDataAsset && NewDurability > BlockDataAsset->MaxDurability) ||
-        VoxelData->GetVoxelID(GlobalCoord) == UVoxelData::GetBorderID()) {
-      if (BlockDataAsset) {
-        VoxelData->SetDurability(GlobalCoord, BlockDataAsset->MaxDurability);
-      }
-
+    if ((VoxelBlockData &&
+         VoxelBlockData->Durability >
+             VoxelBlockData->GetBlockDataAsset()->MaxDurability) ||
+        FVoxelBorderData::IsBorder(VoxelSubstanceData)) {
       for (const FIntVector &NeighborOffset : NeighborOffsets) {
         if (const FIntVector NeighborGlobalCoord = GlobalCoord + NeighborOffset;
-            VoxelData->GetVoxelID(NeighborGlobalCoord) ==
-            UVoxelData::GetVoidID()) {
-          VoxelData->SetVoxel(NeighborGlobalCoord,
-                              FVoxel(VoxelIDToConstruct, ConstructionAmount));
+            FVoxelVoidData::IsVoid(
+                DataManager->GetVoxelData(NeighborGlobalCoord))) {
+          FVoxelBlockData *NewVoxelBlockData =
+              new FVoxelBlockData(NewVoxelBlockDataAsset, ConstructionAmount);
+          DataManager->SetVoxelData(NeighborGlobalCoord, NewVoxelBlockData);
 
           for (const FIntVector &CheckOffset : NeighborOffsets) {
             const FIntVector CheckGlobalCoord =
@@ -77,39 +80,37 @@ void UVoxelBuild::ConstructVoxelsInRadius(
               continue;
             }
 
-            if (const TObjectPtr<UVoxelBlockDataAsset> CheckBlockDataAsset =
-                    VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(
-                        CheckGlobalCoord)) {
+            if (FVoxelBlockData *CheckBlockData =
+                    dynamic_cast<FVoxelBlockData *>(
+                        DataManager->GetVoxelData(CheckGlobalCoord))) {
               if (!IsSurfaceVoxel(CheckGlobalCoord)) {
-                VoxelData->SetDurability(CheckGlobalCoord,
-                                         CheckBlockDataAsset->MaxDurability);
+                CheckBlockData->Durability =
+                    CheckBlockData->GetBlockDataAsset()->MaxDurability;
               }
             }
           }
 
           if (!IsSurfaceVoxel(NeighborGlobalCoord)) {
-            VoxelData->SetDurability(NeighborGlobalCoord,
-                                     NewVoxelData->MaxDurability);
+            NewVoxelBlockData->Durability =
+                NewVoxelBlockData->GetBlockDataAsset()->MaxDurability;
           }
         }
       }
-    } else if (BlockDataAsset) {
-      VoxelData->SetDurability(GlobalCoord, NewDurability);
     }
   };
 
   ProcessVoxelsInRadius(CenterGlobalCoord, Radius, ConstructLogic);
 }
 
-void UVoxelBuild::GetGlobalCoordsInRadius(
+void UBuildManager::GetGlobalCoordsInRadius(
     const FIntVector &CenterGlobalCoord, const float Radius,
     TSet<FIntVector> &FoundGlobalCoords) const {
-  if (!VoxelData) {
+  if (!DataManager) {
     return;
   }
 
   const int32 RadiusInVoxels =
-      FMath::CeilToInt(Radius / VoxelData->GetVoxelSize());
+      FMath::CeilToInt(Radius / DataManager->GetVoxelSize());
   const int32 RadiusSquared = FMath::Square(RadiusInVoxels);
 
   for (int32 z = -RadiusInVoxels; z <= RadiusInVoxels; ++z) {
@@ -126,10 +127,10 @@ void UVoxelBuild::GetGlobalCoordsInRadius(
   }
 }
 
-void UVoxelBuild::ProcessVoxelsInRadius(
+void UBuildManager::ProcessVoxelsInRadius(
     const FIntVector &CenterGlobalCoord, const float Radius,
     const TFunction<void(const FIntVector &)> &VoxelModifier) const {
-  if (!VoxelMesh || !VoxelData) {
+  if (!MeshManager || !DataManager) {
     return;
   }
 
@@ -159,7 +160,7 @@ void UVoxelBuild::ProcessVoxelsInRadius(
         continue;
       }
 
-      if (VoxelData->GetVoxelID(NeighborCoord) != UVoxelData::GetVoidID()) {
+      if (!FVoxelVoidData::IsVoid(DataManager->GetVoxelData(NeighborCoord))) {
         Queue.Enqueue(NeighborCoord);
         Visited.Add(NeighborCoord);
       } else {
@@ -172,16 +173,17 @@ void UVoxelBuild::ProcessVoxelsInRadius(
     VoxelModifier(VoxelCoord);
   }
 
-  VoxelMesh->FlushDirtyChunks();
+  MeshManager->FlushDirtyChunks();
 }
 
-bool UVoxelBuild::IsSurfaceVoxel(const FIntVector &VoxelCoord) const {
-  if (!VoxelData) {
+bool UBuildManager::IsSurfaceVoxel(const FIntVector &VoxelCoord) const {
+  if (!DataManager) {
     return false;
   }
 
   for (const FIntVector &Offset : NeighborOffsets) {
-    if (VoxelData->GetVoxelID(VoxelCoord + Offset) == UVoxelData::GetVoidID()) {
+    if (FVoxelVoidData::IsVoid(
+            DataManager->GetVoxelData(VoxelCoord + Offset))) {
       return true;
     }
   }

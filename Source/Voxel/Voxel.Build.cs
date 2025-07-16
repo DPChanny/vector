@@ -23,5 +23,7 @@ public class Voxel : ModuleRules
 				"Engine"
 			}
 		);
+
+		bUseRTTI = true;
 	}
 }

@@ -8,10 +8,10 @@ class UVoxelBorderDataAsset;
 class UVoxelVoidDataAsset;
 class AVoxelDebugActor;
 class UVoxelBlockDataAsset;
-class UVoxelDebug;
-class UVoxelData;
-class UVoxelBuild;
-class UVoxelMesh;
+class UDebugManager;
+class UDataManager;
+class UBuildManager;
+class UMeshManager;
 class AVoxelChunkActor;
 
 USTRUCT()
@@ -27,10 +27,14 @@ class VOXEL_API AVoxelWorld : public AActor {
   GENERATED_BODY()
 
 public:
-  const TObjectPtr<UVoxelData> &GetVoxelData() const { return VoxelData; }
-  const TObjectPtr<UVoxelDebug> &GetVoxelDebug() const { return VoxelDebug; }
-  const TObjectPtr<UVoxelBuild> &GetVoxelBuild() const { return VoxelBuild; }
-  const TObjectPtr<UVoxelMesh> &GetVoxelMesh() const { return VoxelMesh; }
+  const TObjectPtr<UDataManager> &GetDataManager() const { return DataManager; }
+  const TObjectPtr<UMeshManager> &GetMeshManager() const { return MeshManager; }
+  const TObjectPtr<UDebugManager> &GetDebugManager() const {
+    return DebugManager;
+  }
+  const TObjectPtr<UBuildManager> &GetBuildManager() const {
+    return BuildManager;
+  }
 
   void Initialize(int32 NumberOfPlayers);
 
@@ -53,10 +57,7 @@ private:
   FIntVector WorldSizeInChunks = FIntVector(20, 20, 20);
 
   UPROPERTY(EditDefaultsOnly, Category = "Data")
-  TArray<TObjectPtr<UVoxelBlockDataAsset>> VoxelBlockDataAssets;
-
-  UPROPERTY(EditDefaultsOnly, Category = "Data")
-  TObjectPtr<UVoxelVoidDataAsset> VoxelVoidDataAsset;
+  TObjectPtr<UVoxelBlockDataAsset> VoxelDefaultBlockDataAsset;
 
   UPROPERTY(EditDefaultsOnly, Category = "Data")
   TObjectPtr<UVoxelBorderDataAsset> VoxelBorderDataAsset;
@@ -74,16 +75,16 @@ private:
   TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 
   UPROPERTY()
-  TObjectPtr<UVoxelData> VoxelData;
+  TObjectPtr<UDataManager> DataManager;
 
   UPROPERTY()
-  TObjectPtr<UVoxelDebug> VoxelDebug;
+  TObjectPtr<UDebugManager> DebugManager;
 
   UPROPERTY()
-  TObjectPtr<UVoxelBuild> VoxelBuild;
+  TObjectPtr<UBuildManager> BuildManager;
 
   UPROPERTY()
-  TObjectPtr<UVoxelMesh> VoxelMesh;
+  TObjectPtr<UMeshManager> MeshManager;
 
   TArray<FNexus> Nexuses;
 };

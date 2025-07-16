@@ -19,12 +19,32 @@ public:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
             Category = "Voxel | Destructible", meta = (ClampMin = "0.0"))
   float MaxDurability = 100.0f;
+};
 
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
-            Category = "Voxel | Destructible")
-  TSoftObjectPtr<UNiagaraSystem> BreakEffect;
+USTRUCT()
+struct FVoxelBlockData : public FVoxelSubstanceData {
+  GENERATED_BODY()
 
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
-            Category = "Voxel | Destructible")
-  TSoftObjectPtr<USoundCue> BreakSound;
+  UPROPERTY(VisibleAnywhere)
+  float Durability;
+
+  FVoxelBlockData() = default;
+
+  static bool IsBlock(const FVoxelBaseData *VoxelBaseData) {
+    return dynamic_cast<const FVoxelBlockData *>(VoxelBaseData) != nullptr;
+  }
+
+  explicit FVoxelBlockData(const TObjectPtr<UVoxelBlockDataAsset> &InPtr,
+                           const float InDurability)
+      : FVoxelSubstanceData(InPtr), Durability(InDurability) {}
+
+  TObjectPtr<UVoxelBlockDataAsset> GetBlockDataAsset() const {
+    return Cast<UVoxelBlockDataAsset>(DataAsset);
+  }
+
+  virtual float GetDensity() const override {
+    return DataAsset ? DataAsset->BaseDensity * Durability /
+                           GetBlockDataAsset()->MaxDurability
+                     : -1.f;
+  }
 };

@@ -1,38 +1,32 @@
 #include "Actors/VoxelWorld.h"
 
 #include "DataAssets/VoxelBlockDataAsset.h"
+#include "DataAssets/VoxelBorderDataAsset.h"
+#include "DataAssets/VoxelVoidDataAsset.h"
 #include "GameFramework/PlayerStart.h"
-#include "Managers/VoxelBuild.h"
-#include "Managers/VoxelData.h"
-#include "Managers/VoxelDebug.h"
-#include "Managers/VoxelMesh.h"
+#include "Managers/BuildManager.h"
+#include "Managers/DataManager.h"
+#include "Managers/DebugManager.h"
+#include "Managers/MeshManager.h"
 
 AVoxelWorld::AVoxelWorld() { PrimaryActorTick.bCanEverTick = false; }
 
 void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
-  VoxelDebug = NewObject<UVoxelDebug>(this);
-  VoxelData = NewObject<UVoxelData>(this);
-  VoxelBuild = NewObject<UVoxelBuild>(this);
-  VoxelMesh = NewObject<UVoxelMesh>(this);
+  DebugManager = NewObject<UDebugManager>(this);
+  DataManager = NewObject<UDataManager>(this);
+  BuildManager = NewObject<UBuildManager>(this);
+  MeshManager = NewObject<UMeshManager>(this);
 
-  VoxelDebug->Initialize(VoxelDebugActor);
-  VoxelData->Initialize(WorldSizeInChunks, ChunkSize, VoxelSize,
-                        VoxelChunkActor, VoxelBlockDataAssets,
-                        VoxelVoidDataAsset, VoxelBorderDataAsset);
-  VoxelBuild->Initialize();
-  VoxelMesh->Initialize();
-
-  const TObjectPtr<UVoxelBlockDataAsset> DefaultBlockData =
-      VoxelData->GetVoxelDataAsset<UVoxelBlockDataAsset>(
-          UVoxelData::GetDefaultBlockID());
-  if (!DefaultBlockData) {
-    return;
-  }
+  DebugManager->Initialize(VoxelDebugActor);
+  DataManager->Initialize(WorldSizeInChunks, ChunkSize, VoxelSize,
+                          VoxelChunkActor);
+  BuildManager->Initialize();
+  MeshManager->Initialize();
 
   for (int32 x = 0; x < WorldSizeInChunks.X; ++x) {
     for (int32 y = 0; y < WorldSizeInChunks.Y; ++y) {
       for (int32 z = 0; z < WorldSizeInChunks.Z; ++z) {
-        VoxelData->LoadChunk(FIntVector(x, y, z));
+        DataManager->LoadChunk(FIntVector(x, y, z));
       }
     }
   }
@@ -45,13 +39,14 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
 
         if (!x || !y || !z || x == WorldSize.X - 1 || y == WorldSize.Y - 1 ||
             z == WorldSize.Z - 1) {
-          VoxelData->SetVoxel(VoxelCoord,
-                              FVoxel(UVoxelData::GetBorderID(), 0.f), false);
+          DataManager->SetVoxelData(
+              VoxelCoord, new FVoxelBorderData(VoxelBorderDataAsset), false);
         } else {
-          VoxelData->SetVoxel(VoxelCoord,
-                              FVoxel(UVoxelData::GetDefaultBlockID(),
-                                     DefaultBlockData->MaxDurability),
-                              false);
+          DataManager->SetVoxelData(
+              VoxelCoord,
+              new FVoxelBlockData(VoxelDefaultBlockDataAsset,
+                                  VoxelDefaultBlockDataAsset->MaxDurability),
+              false);
         }
       }
     }
@@ -59,7 +54,7 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
 
   InitializeNexuses(NumberOfPlayers);
 
-  VoxelMesh->FlushDirtyChunks();
+  MeshManager->FlushDirtyChunks();
 }
 
 void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
@@ -124,13 +119,12 @@ void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
     }
 
     TSet<FIntVector> GlobalCoordsInRadius;
-    VoxelBuild->GetGlobalCoordsInRadius(
-        VoxelData->WorldToGlobalCoord(NewRoom.Center), NewRoom.Radius,
+    BuildManager->GetGlobalCoordsInRadius(
+        DataManager->WorldToGlobalCoord(NewRoom.Center), NewRoom.Radius,
         GlobalCoordsInRadius);
 
     for (const FIntVector &GlobalCoord : GlobalCoordsInRadius) {
-      VoxelData->SetVoxel(GlobalCoord, FVoxel(UVoxelData::GetVoidID(), 0.f),
-                          false);
+      DataManager->SetVoxelData(GlobalCoord, new FVoxelVoidData(), false);
     }
 
     FTransform SpawnTransform(FRotator::ZeroRotator, NewRoom.Center);

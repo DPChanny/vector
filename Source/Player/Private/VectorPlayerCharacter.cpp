@@ -7,13 +7,11 @@
 #include "Components/SphereComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "DataAssets/VoxelBaseDataAsset.h"
-#include "DataAssets/VoxelBlockDataAsset.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/PlayerController.h"
-#include "Managers/VoxelBuild.h"
-#include "Managers/VoxelData.h"
-#include "Managers/VoxelDebug.h"
+#include "Managers/BuildManager.h"
+#include "Managers/DataManager.h"
+#include "Managers/DebugManager.h"
 
 AVectorPlayerCharacter::AVectorPlayerCharacter() {
   PrimaryActorTick.bCanEverTick = true;
@@ -107,17 +105,16 @@ void AVectorPlayerCharacter::Fire() const {
       HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
 
   if (bHit) {
-    if (const TObjectPtr<UVoxelBaseDataAsset> BaseDataAsset =
-            Cast<UVoxelBaseDataAsset>(Poop)) {
+    if (Poop) {
       const FIntVector CenterGlobalCoord =
-          World->GetVoxelData()->WorldToGlobalCoord(HitResult.ImpactPoint);
+          World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
 
-      World->GetVoxelBuild()->ConstructVoxelsInRadius(
-          CenterGlobalCoord, 100, 25,
-          World->GetVoxelData()->GetVoxelID(BaseDataAsset));
+      World->GetBuildManager()->ConstructVoxelsInRadius(CenterGlobalCoord, 100,
+                                                        25, Poop);
 
-      World->GetVoxelDebug()->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
-      World->GetVoxelDebug()->FlushDebugVoxelBuffer();
+      World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord,
+                                              FColor::Yellow);
+      World->GetDebugManager()->FlushDebugVoxelBuffer();
     }
   }
 }
@@ -136,10 +133,10 @@ void AVectorPlayerCharacter::Eat() const {
 
   if (bHit) {
     const FIntVector CenterGlobalCoord =
-        World->GetVoxelData()->WorldToGlobalCoord(HitResult.ImpactPoint);
-    World->GetVoxelBuild()->DamageVoxelsInRadius(CenterGlobalCoord, 100, 25);
+        World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
+    World->GetBuildManager()->DamageVoxelsInRadius(CenterGlobalCoord, 100, 25);
 
-    World->GetVoxelDebug()->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
-    World->GetVoxelDebug()->FlushDebugVoxelBuffer();
+    World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
+    World->GetDebugManager()->FlushDebugVoxelBuffer();
   }
 }

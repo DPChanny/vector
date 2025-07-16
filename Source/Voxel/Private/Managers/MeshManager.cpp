@@ -1,23 +1,23 @@
-﻿#include "Managers/VoxelMesh.h"
+﻿#include "Managers/MeshManager.h"
 
 #include "Actors/VoxelChunkActor.h"
 #include "Actors/VoxelWorld.h"
-#include "Managers/VoxelData.h"
+#include "Managers/DataManager.h"
 
-void UVoxelMesh::Initialize() {
+void UMeshManager::Initialize() {
   if (const TObjectPtr<AVoxelWorld> VoxelWorld =
           Cast<AVoxelWorld>(GetOuter())) {
-    VoxelData = VoxelWorld->GetVoxelData();
+    DataManager = VoxelWorld->GetDataManager();
   }
 }
 
-void UVoxelMesh::SetDirtyChunk(const FIntVector &GlobalCoord) {
-  if (!VoxelData) {
+void UMeshManager::SetDirtyChunk(const FIntVector &GlobalCoord) {
+  if (!DataManager) {
     return;
   }
 
-  const FIntVector ChunkCoord = VoxelData->GlobalToChunkCoord(GlobalCoord);
-  const int32 ChunkSize = VoxelData->GetChunkSize();
+  const FIntVector ChunkCoord = DataManager->GlobalToChunkCoord(GlobalCoord);
+  const int32 ChunkSize = DataManager->GetChunkSize();
 
   const int32 LocalX = GlobalCoord.X % ChunkSize;
   const int32 LocalY = GlobalCoord.Y % ChunkSize;
@@ -43,14 +43,14 @@ void UVoxelMesh::SetDirtyChunk(const FIntVector &GlobalCoord) {
   }
 }
 
-void UVoxelMesh::FlushDirtyChunks() {
-  if (!VoxelData) {
+void UMeshManager::FlushDirtyChunks() {
+  if (!DataManager) {
     return;
   }
 
   for (const FIntVector &DirtyChunkCoord : DirtyChunkCoords) {
-    if (VoxelData->IsChunk(DirtyChunkCoord)) {
-      if (const FVoxelChunk *Chunk = VoxelData->GetChunk(DirtyChunkCoord)) {
+    if (DataManager->IsChunk(DirtyChunkCoord)) {
+      if (const FVoxelChunk *Chunk = DataManager->GetChunk(DirtyChunkCoord)) {
         if (Chunk->VoxelChunkActor) {
           Chunk->VoxelChunkActor->UpdateMesh();
         }

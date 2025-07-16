@@ -4,7 +4,7 @@
 #include "VoxelBaseDataAsset.h"
 #include "VoxelSubstanceDataAsset.generated.h"
 
-UCLASS()
+UCLASS(Abstract)
 class VOXEL_API UVoxelSubstanceDataAsset : public UVoxelBaseDataAsset {
   GENERATED_BODY()
 
@@ -13,4 +13,23 @@ public:
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Substance")
   FLinearColor VertexColor;
+};
+
+USTRUCT()
+struct FVoxelSubstanceData : public FVoxelBaseData {
+  GENERATED_BODY()
+
+  FVoxelSubstanceData() = default;
+
+  static bool IsSubstance(const FVoxelBaseData *VoxelBaseData) {
+    return dynamic_cast<const FVoxelSubstanceData *>(VoxelBaseData) != nullptr;
+  }
+
+  TObjectPtr<UVoxelSubstanceDataAsset> GetSubstanceDataAsset() const {
+    return Cast<UVoxelSubstanceDataAsset>(DataAsset);
+  }
+
+  explicit FVoxelSubstanceData(
+      const TObjectPtr<UVoxelSubstanceDataAsset> &InPtr)
+      : FVoxelBaseData(InPtr) {}
 };

@@ -1,13 +1,13 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "VoxelDebug.generated.h"
+#include "DebugManager.generated.h"
 
 class AVoxelDebugActor;
-class UVoxelData;
+class UDataManager;
 
 UCLASS()
-class VOXEL_API UVoxelDebug : public UObject {
+class VOXEL_API UDebugManager : public UObject {
   GENERATED_BODY()
 
 public:
@@ -27,7 +27,7 @@ private:
   TSubclassOf<AVoxelDebugActor> DebugActorClass;
 
   UPROPERTY()
-  TObjectPtr<UVoxelData> VoxelData;
+  TObjectPtr<UDataManager> DataManager;
 
   TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;
   TMap<FIntVector, FColor> DebugVoxelsBuffer;

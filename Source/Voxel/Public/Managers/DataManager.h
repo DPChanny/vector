@@ -32,7 +32,12 @@ public:
   inline bool IsChunk(const FIntVector &ChunkCoord) const;
   FVoxelChunk *GetChunk(const FIntVector &ChunkCoord);
 
-  inline FVoxelBaseData *GetVoxelData(const FIntVector &GlobalCoord) const;
+  inline const FVoxelBaseData *
+  GetVoxelData(const FIntVector &GlobalCoord) const;
+
+  void ModifyVoxelData(const FIntVector &GlobalCoord,
+                       const TFunction<void(FVoxelBaseData *)> &Modifier,
+                       bool bAutoDebug = true);
 
   void SetVoxelData(const FIntVector &GlobalCoord, FVoxelBaseData *VoxelData,
                     bool bAutoDebug = true);

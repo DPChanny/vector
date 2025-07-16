@@ -58,16 +58,16 @@ void AVoxelDebugActor::UpdateActor(const FColor &Color) const {
 
   FString Text;
 
-  Text += FString::Printf(TEXT("%d %d %d\n"), VoxelCoord.X, VoxelCoord.Y,
+  Text += FString::Printf(TEXT("%s "), *VoxelData->DataAsset->VoxelName);
+
+  Text += FString::Printf(TEXT("(%d %d %d)\n"), VoxelCoord.X, VoxelCoord.Y,
                           VoxelCoord.Z);
 
-  Text += FString::Printf(TEXT("Name: %s\n"), *VoxelData->DataAsset->VoxelName);
-
-  Text += FString::Printf(TEXT("Density: %f\n"), VoxelData->GetDensity());
+  Text += FString::Printf(TEXT("Density: %.2f\n"), VoxelData->GetDensity());
 
   if (const FVoxelBlockData *VoxelBlockData =
           dynamic_cast<const FVoxelBlockData *>(VoxelData)) {
-    Text += FString::Printf(TEXT("Durability: %f / %f\n"),
+    Text += FString::Printf(TEXT("Durability: %.2f / %.2f\n"),
                             VoxelBlockData->Durability,
                             VoxelBlockData->GetBlockDataAsset()->MaxDurability);
   }

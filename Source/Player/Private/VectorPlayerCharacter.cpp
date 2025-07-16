@@ -91,7 +91,7 @@ void AVectorPlayerCharacter::Roll(const FInputActionValue &Value) {
 }
 
 void AVectorPlayerCharacter::Fire() const {
-  // Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
+  Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
 
   const FVector StartLocation = Camera->GetComponentLocation();
   const FVector EndLocation =
@@ -110,7 +110,7 @@ void AVectorPlayerCharacter::Fire() const {
           World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
 
       World->GetBuildManager()->ConstructVoxelsInRadius(CenterGlobalCoord, 100,
-                                                        25, Poop);
+                                                        10, Poop);
 
       World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord,
                                               FColor::Yellow);
@@ -134,7 +134,7 @@ void AVectorPlayerCharacter::Eat() const {
   if (bHit) {
     const FIntVector CenterGlobalCoord =
         World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
-    World->GetBuildManager()->DamageVoxelsInRadius(CenterGlobalCoord, 100, 25);
+    World->GetBuildManager()->DamageVoxelsInRadius(CenterGlobalCoord, 100, 10);
 
     World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
     World->GetDebugManager()->FlushDebugVoxelBuffer();

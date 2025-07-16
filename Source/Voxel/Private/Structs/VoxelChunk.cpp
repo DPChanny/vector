@@ -2,8 +2,8 @@
 #include "DataAssets/VoxelBaseDataAsset.h"
 #include "DataAssets/VoxelVoidDataAsset.h"
 
-FVoxelChunk::FVoxelChunk(const int32 InVoxelCount) {
-  VoxelCount = InVoxelCount;
+FVoxelChunk::FVoxelChunk(const int32 InChunkSize) {
+  VoxelCount = InChunkSize * InChunkSize * InChunkSize;
   VoxelDataArray = new FVoxelBaseData *[VoxelCount];
   for (int32 i = 0; i < VoxelCount; ++i) {
     VoxelDataArray[i] = new FVoxelVoidData();
@@ -17,9 +17,12 @@ FVoxelBaseData *FVoxelChunk::GetVoxelData(const int32 Index) const {
   return new FVoxelVoidData();
 }
 
-void FVoxelChunk::SetVoxelData(const int32 Index, FVoxelBaseData *Voxel) const {
-  if (Index >= 0 && Index < VoxelCount && VoxelDataArray && Voxel) {
-    delete VoxelDataArray[Index];
-    VoxelDataArray[Index] = Voxel;
+void FVoxelChunk::SetVoxelData(const int32 Index,
+                               FVoxelBaseData *VoxelBaseData) const {
+  if (Index >= 0 && Index < VoxelCount && VoxelDataArray && VoxelBaseData) {
+    if (VoxelDataArray[Index] != VoxelBaseData) {
+      delete VoxelDataArray[Index];
+    }
+    VoxelDataArray[Index] = VoxelBaseData;
   }
 }

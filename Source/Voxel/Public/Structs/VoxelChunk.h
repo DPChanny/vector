@@ -15,10 +15,10 @@ struct VOXEL_API FVoxelChunk {
 
   FVoxelChunk() = default;
 
-  explicit FVoxelChunk(int32 InVoxelCount);
+  explicit FVoxelChunk(const int32 InChunkSize);
 
   FVoxelBaseData *GetVoxelData(int32 Index) const;
-  void SetVoxelData(int32 Index, FVoxelBaseData *Voxel) const;
+  void SetVoxelData(int32 Index, FVoxelBaseData *VoxelBaseData) const;
 
   UPROPERTY()
   TObjectPtr<AVoxelChunkActor> VoxelChunkActor;

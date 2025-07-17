@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "VoxelWorld.generated.h"
+#include "VoxelWorldActor.generated.h"
 
 class UVoxelBorderDataAsset;
 class UVoxelVoidDataAsset;
@@ -23,7 +23,7 @@ struct FNexus {
 };
 
 UCLASS()
-class VOXEL_API AVoxelWorld : public AActor {
+class VOXEL_API AVoxelWorldActor : public AActor {
   GENERATED_BODY()
 
 public:
@@ -45,7 +45,7 @@ public:
 private:
   void InitializeNexuses(int32 NexusCount);
 
-  AVoxelWorld();
+  AVoxelWorldActor();
 
   UPROPERTY(EditDefaultsOnly, Category = "World")
   int32 ChunkSize = 10;

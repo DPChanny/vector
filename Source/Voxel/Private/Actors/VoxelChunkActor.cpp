@@ -1,6 +1,6 @@
 #include "Actors/VoxelChunkActor.h"
 
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelSubstanceDataAsset.h"
 #include "Engine/World.h"
 #include "Managers/DataManager.h"
@@ -19,8 +19,8 @@ AVoxelChunkActor::AVoxelChunkActor() : ChunkCoord(FIntVector::ZeroValue) {
 }
 
 void AVoxelChunkActor::Initialize(const FIntVector &InChunkCoord) {
-  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
-          Cast<AVoxelWorld>(GetOwner())) {
+  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
+          Cast<AVoxelWorldActor>(GetOwner())) {
     DataManager = VoxelWorld->GetDataManager();
   }
   ChunkCoord = InChunkCoord;

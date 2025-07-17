@@ -1,6 +1,6 @@
 #include "VectorGameMode.h"
 
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerStart.h"
@@ -11,9 +11,9 @@ AActor *
 AVectorGameMode::FindPlayerStart_Implementation(AController *Player,
                                                 const FString &IncomingName) {
   if (!bVoxelWorldSetupAttempted) {
-    if (const TObjectPtr<AVoxelWorld> VoxelWorld =
-            Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
-                GetWorld(), AVoxelWorld::StaticClass()))) {
+    if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
+            Cast<AVoxelWorldActor>(UGameplayStatics::GetActorOfClass(
+                GetWorld(), AVoxelWorldActor::StaticClass()))) {
       const int32 NumDesiredPlayers = GetNumPlayers();
       VoxelWorld->Initialize(NumDesiredPlayers);
 

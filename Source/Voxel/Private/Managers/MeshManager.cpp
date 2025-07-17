@@ -1,12 +1,12 @@
 ﻿#include "Managers/MeshManager.h"
 
 #include "Actors/VoxelChunkActor.h"
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 #include "Managers/DataManager.h"
 
 void UMeshManager::Initialize() {
-  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
-          Cast<AVoxelWorld>(GetOuter())) {
+  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
+          Cast<AVoxelWorldActor>(GetOuter())) {
     DataManager = VoxelWorld->GetDataManager();
   }
 }

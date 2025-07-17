@@ -1,6 +1,6 @@
 ﻿#include "Managers/BuildManager.h"
 
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelBlockDataAsset.h"
 #include "DataAssets/VoxelBorderDataAsset.h"
 #include "DataAssets/VoxelVoidDataAsset.h"
@@ -8,8 +8,8 @@
 #include "Managers/MeshManager.h"
 
 void UBuildManager::Initialize() {
-  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
-          Cast<AVoxelWorld>(GetOuter())) {
+  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
+          Cast<AVoxelWorldActor>(GetOuter())) {
     DataManager = VoxelWorld->GetDataManager();
     MeshManager = VoxelWorld->GetMeshManager();
   }

@@ -1,14 +1,14 @@
 ﻿#include "Managers/DebugManager.h"
 
 #include "Actors/VoxelDebugActor.h"
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 #include "Managers/DataManager.h"
 
 void UDebugManager::Initialize(
     const TSubclassOf<AVoxelDebugActor> &InDebugActorClass) {
   DebugActorClass = InDebugActorClass;
-  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
-          Cast<AVoxelWorld>(GetOuter())) {
+  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
+          Cast<AVoxelWorldActor>(GetOuter())) {
     DataManager = VoxelWorld->GetDataManager();
   }
 }

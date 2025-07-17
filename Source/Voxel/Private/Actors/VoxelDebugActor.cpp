@@ -1,6 +1,6 @@
 #include "Actors/VoxelDebugActor.h"
 
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 #include "Components/BoxComponent.h"
 #include "Components/WidgetComponent.h"
 #include "DataAssets/VoxelBaseDataAsset.h"
@@ -34,8 +34,8 @@ void AVoxelDebugActor::BeginPlay() {
 
 void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord,
                                   const FColor &Color) {
-  if (const TObjectPtr<AVoxelWorld> VoxelWorld =
-          Cast<AVoxelWorld>(GetOwner())) {
+  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
+          Cast<AVoxelWorldActor>(GetOwner())) {
     DataManager = VoxelWorld->GetDataManager();
   }
 

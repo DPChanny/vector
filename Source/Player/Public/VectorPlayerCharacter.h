@@ -5,7 +5,7 @@
 #include "InputActionValue.h"
 #include "VectorPlayerCharacter.generated.h"
 
-class AVoxelWorld;
+class AVoxelWorldActor;
 class USphereComponent;
 class UCameraComponent;
 class UStaticMeshComponent;
@@ -42,7 +42,7 @@ protected:
   TObjectPtr<UVoxelBlockDataAsset> Poop;
 
   UPROPERTY()
-  TObjectPtr<AVoxelWorld> World;
+  TObjectPtr<AVoxelWorldActor> World;
 
 private:
   virtual void BeginPlay() override;

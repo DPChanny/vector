@@ -2,7 +2,7 @@
 
 #include <Kismet/GameplayStatics.h>
 
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/SpotLightComponent.h"
@@ -58,8 +58,8 @@ AVectorPlayerCharacter::AVectorPlayerCharacter() {
   Light->SetAttenuationRadius(500.f);
   Light->SetSourceRadius(25.f);
 
-  World = Cast<AVoxelWorld>(UGameplayStatics::GetActorOfClass(
-      GetWorld(), AVoxelWorld::StaticClass()));
+  World = Cast<AVoxelWorldActor>(UGameplayStatics::GetActorOfClass(
+      GetWorld(), AVoxelWorldActor::StaticClass()));
 }
 
 void AVectorPlayerCharacter::BeginPlay() { Super::BeginPlay(); }

@@ -1,4 +1,4 @@
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 
 #include "DataAssets/VoxelBlockDataAsset.h"
 #include "DataAssets/VoxelBorderDataAsset.h"
@@ -9,9 +9,9 @@
 #include "Managers/DebugManager.h"
 #include "Managers/MeshManager.h"
 
-AVoxelWorld::AVoxelWorld() { PrimaryActorTick.bCanEverTick = false; }
+AVoxelWorldActor::AVoxelWorldActor() { PrimaryActorTick.bCanEverTick = false; }
 
-void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
+void AVoxelWorldActor::Initialize(const int32 NumberOfPlayers) {
   DebugManager = NewObject<UDebugManager>(this);
   DataManager = NewObject<UDataManager>(this);
   BuildManager = NewObject<UBuildManager>(this);
@@ -57,7 +57,7 @@ void AVoxelWorld::Initialize(const int32 NumberOfPlayers) {
   MeshManager->FlushDirtyChunks();
 }
 
-void AVoxelWorld::InitializeNexuses(int32 NexusCount) {
+void AVoxelWorldActor::InitializeNexuses(int32 NexusCount) {
   Nexuses.Empty();
   for (TObjectPtr StartPoint : PlayerStarts) {
     if (StartPoint) {

@@ -1,7 +1,7 @@
 ﻿#include "Managers/DataManager.h"
 
 #include "Actors/VoxelChunkActor.h"
-#include "Actors/VoxelWorld.h"
+#include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelBaseDataAsset.h"
 #include "Managers/DebugManager.h"
 #include "Managers/MeshManager.h"
@@ -10,7 +10,7 @@ void UDataManager::Initialize(
     const FIntVector &InWorldSizeInChunks, const int32 InChunkSize,
     const int32 InVoxelSize,
     const TSubclassOf<AVoxelChunkActor> &InVoxelChunkActor) {
-  const AVoxelWorld *VoxelWorld = Cast<AVoxelWorld>(GetOuter());
+  const AVoxelWorldActor *VoxelWorld = Cast<AVoxelWorldActor>(GetOuter());
   DebugManager = VoxelWorld->GetDebugManager();
   MeshManager = VoxelWorld->GetMeshManager();
   WorldSizeInChunks = InWorldSizeInChunks;

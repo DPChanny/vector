@@ -8,22 +8,18 @@ public class Player : ModuleRules
 
 		bUseRTTI = true;
 
-		PublicDependencyModuleNames.AddRange(
-			new[]
-			{
+		PublicDependencyModuleNames.AddRange([
 				"Core"
-			}
+			]
 		);
 
-		PrivateDependencyModuleNames.AddRange(
-			new[]
-			{
+		PrivateDependencyModuleNames.AddRange([
 				"InputCore",
 				"EnhancedInput",
 				"CoreUObject",
 				"Engine",
 				"Voxel"
-			}
+			]
 		);
 	}
 }

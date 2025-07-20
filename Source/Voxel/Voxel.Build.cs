@@ -6,24 +6,20 @@ public class Voxel : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(
-			new[]
-			{
+		bUseRTTI = true;
+
+		PublicDependencyModuleNames.AddRange([
 				"Core"
-			}
+			]
 		);
 
-		PrivateDependencyModuleNames.AddRange(
-			new[]
-			{
+		PrivateDependencyModuleNames.AddRange([
 				"Niagara",
 				"UMG",
 				"ProceduralMeshComponent",
 				"CoreUObject",
 				"Engine"
-			}
+			]
 		);
-
-		bUseRTTI = true;
 	}
 }

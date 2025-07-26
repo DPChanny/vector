@@ -75,7 +75,7 @@ UDataManager::GetVoxelData(const FIntVector &GlobalCoord) const {
           VoxelChunks.Find(GlobalToChunkCoord(GlobalCoord))) {
     return Chunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord));
   }
-  return new FVoxelVoidData();
+  return nullptr;
 }
 
 void UDataManager::ModifyVoxelData(
@@ -110,18 +110,15 @@ void UDataManager::SetVoxelData(const FIntVector &GlobalCoord,
     Chunk->SetVoxelData(GlobalCoordToIndex(GlobalCoord), NewVoxelData);
 
     if (EntityManager) {
-      const FVoxelEntityData *NewEntityData =
-          dynamic_cast<const FVoxelEntityData *>(NewVoxelData);
-      const bool bIsNewEntity = NewEntityData != nullptr;
-
-      if (FVoxelEntityData::IsEntity(OldData) && !bIsNewEntity) {
+      if (const FVoxelEntityData *NewEntityData =
+              dynamic_cast<const FVoxelEntityData *>(NewVoxelData)) {
+        EntityManager->OnEntityCreated(GlobalCoord, NewEntityData);
+      } else if (FVoxelEntityData::IsEntity(OldData)) {
         EntityManager->OnEntityDestroyed(GlobalCoord);
       }
-
-      if (bIsNewEntity) {
-        EntityManager->OnEntityCreated(GlobalCoord, NewEntityData);
-      }
     }
+
+    delete OldData;
 
     if (DebugManager && bAutoDebug) {
       DebugManager->SetDebugVoxel(GlobalCoord);

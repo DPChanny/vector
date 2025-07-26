@@ -62,8 +62,12 @@ void AVoxelChunkActor::UpdateMesh() const {
         for (int i = 0; i < 8; ++i) {
           const FIntVector CornerGlobalCoord = GlobalCoord + CornerOffsets[i];
 
-          CornerDensities[i] =
-              DataManager->GetVoxelData(CornerGlobalCoord)->GetDensity();
+          if (const FVoxelBaseData *VoxelData =
+                  DataManager->GetVoxelData(CornerGlobalCoord)) {
+            CornerDensities[i] = VoxelData->GetDensity();
+          } else {
+            CornerDensities[i] = FVoxelVoidData().GetDensity();
+          }
           CornerPositions[i] =
               DataManager->GlobalToWorldCoord(CornerGlobalCoord) -
               GetActorLocation();

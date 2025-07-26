@@ -1,4 +1,4 @@
-﻿#include "Structs/VoxelChunk.h"
+﻿#include "VoxelChunk.h"
 #include "DataAssets/VoxelBaseDataAsset.h"
 #include "DataAssets/VoxelVoidDataAsset.h"
 
@@ -14,15 +14,12 @@ FVoxelBaseData *FVoxelChunk::GetVoxelData(const int32 Index) const {
   if (Index >= 0 && Index < VoxelCount) {
     return VoxelDataArray[Index];
   }
-  return new FVoxelVoidData();
+  return nullptr;
 }
 
 void FVoxelChunk::SetVoxelData(const int32 Index,
                                FVoxelBaseData *VoxelBaseData) const {
   if (Index >= 0 && Index < VoxelCount && VoxelBaseData) {
-    if (VoxelDataArray[Index] != VoxelBaseData) {
-      delete VoxelDataArray[Index];
-    }
     VoxelDataArray[Index] = VoxelBaseData;
   }
 }

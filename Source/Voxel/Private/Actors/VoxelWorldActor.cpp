@@ -10,7 +10,7 @@
 #include "Managers/EntityManager.h"
 #include "Managers/MeshManager.h"
 
-AVoxelWorldActor::AVoxelWorldActor() { PrimaryActorTick.bCanEverTick = false; }
+AVoxelWorldActor::AVoxelWorldActor() { PrimaryActorTick.bCanEverTick = true; }
 
 void AVoxelWorldActor::Initialize(const int32 NumberOfPlayers) {
   DebugManager = NewObject<UDebugManager>(this);
@@ -138,4 +138,9 @@ void AVoxelWorldActor::InitializeNexuses(int32 NexusCount) {
       PlayerStarts.Add(NewPlayerStart);
     }
   }
+}
+
+void AVoxelWorldActor::Tick(float DeltaSeconds) {
+  Super::Tick(DeltaSeconds);
+  EntityManager->Tick(DeltaSeconds);
 }

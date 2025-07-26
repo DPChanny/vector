@@ -2,12 +2,14 @@
 
 void UEntityChunk::Tick(float DeltaTime) {}
 
-void UEntityChunk::AddVoxel(const FIntVector &VoxelCoord) {
+void UEntityChunk::AddEntity(const FIntVector &VoxelCoord) {
   ManagedVoxels.Add(VoxelCoord);
 }
 
-void UEntityChunk::RemoveVoxel(const FIntVector &VoxelCoord) {
+void UEntityChunk::RemoveEntity(const FIntVector &VoxelCoord) {
   ManagedVoxels.Remove(VoxelCoord);
 }
 
 bool UEntityChunk::IsEmpty() const { return ManagedVoxels.IsEmpty(); }
+
+void UEntityChunk::OnVoxelDataModified(const FIntVector &VoxelCoord) {}

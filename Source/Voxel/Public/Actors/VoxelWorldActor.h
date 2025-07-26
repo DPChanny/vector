@@ -36,7 +36,9 @@ public:
   const TObjectPtr<UBuildManager> &GetBuildManager() const {
     return BuildManager;
   }
-  const TObjectPtr<UEntityManager> &GetEntityManager() const { return EntityManager; }
+  const TObjectPtr<UEntityManager> &GetEntityManager() const {
+    return EntityManager;
+  }
 
   void Initialize(int32 NumberOfPlayers);
 
@@ -46,6 +48,8 @@ public:
 
 private:
   void InitializeNexuses(int32 NexusCount);
+
+  virtual void Tick(float DeltaSeconds) override;
 
   AVoxelWorldActor();
 
@@ -78,7 +82,7 @@ private:
 
   UPROPERTY()
   TObjectPtr<UDataManager> DataManager;
-  
+
   UPROPERTY()
   TObjectPtr<UEntityManager> EntityManager;
 

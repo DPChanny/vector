@@ -20,15 +20,12 @@ public:
 
   void OnEntityModified(const FIntVector &GlobalCoord);
 
-  void UpdateVoxelChunkMapping(const FIntVector &GlobalCoord,
-                               UEntityChunk *Chunk);
-
 private:
-  void RebuildChunksAround(const FIntVector &GlobalCoord);
-
-  UEntityChunk *GetEntityChunk(const FIntVector &GlobalCoord,
-                               const FVoxelEntityData *EntityData);
-  UEntityChunk *CreateEntityChunk(const FVoxelEntityData *EntityData);
+  void UpdateEntityChunk(const TObjectPtr<UEntityChunk> &OriginalChunk);
+  TSet<FIntVector> GetChunkableVoxels(const FIntVector &StartCoord,
+                                      TSet<FIntVector> &VisitedVoxels) const;
+  TObjectPtr<UEntityChunk>
+  CreateEntityChunk(const FVoxelEntityData *EntityData);
 
   UPROPERTY()
   TObjectPtr<class UDataManager> DataManager;

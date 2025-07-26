@@ -26,14 +26,48 @@ void UEntityManager::OnEntityCreated(const FIntVector &GlobalCoord,
     return;
   }
 
-  UEntityChunk *TargetChunk = GetEntityChunk(GlobalCoord, EntityData);
+  TSet<TObjectPtr<UEntityChunk>> ChunkableChunks;
 
-  if (!TargetChunk) {
-    TargetChunk = CreateEntityChunk(EntityData);
+  const FIntVector NeighborOffsets[] = {
+      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
+      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
+
+  for (const FIntVector &NeighborOffset : NeighborOffsets) {
+    if (const TObjectPtr<UEntityChunk> *FoundChunk =
+            EntityToChunk.Find(GlobalCoord + NeighborOffset)) {
+      if (const FVoxelEntityData *NeighborEntityData =
+              dynamic_cast<const FVoxelEntityData *>(
+                  DataManager->GetVoxelData(GlobalCoord + NeighborOffset))) {
+        if (EntityData->IsChunkableWith(NeighborEntityData)) {
+          ChunkableChunks.Add(*FoundChunk);
+        }
+      }
+    }
   }
 
-  TargetChunk->AddVoxel(GlobalCoord);
-  EntityToChunk.Add(GlobalCoord, TargetChunk);
+  TObjectPtr<UEntityChunk> TargetChunk;
+
+  if (ChunkableChunks.IsEmpty()) {
+    TargetChunk = CreateEntityChunk(EntityData);
+  } else {
+    TargetChunk = ChunkableChunks.Array()[0];
+    ChunkableChunks.Remove(TargetChunk);
+
+    for (UEntityChunk *ChunkToMerge : ChunkableChunks) {
+      TArray<FIntVector> VoxelsToMove =
+          ChunkToMerge->GetManagedVoxels().Array();
+
+      for (const FIntVector &VoxelCoord : VoxelsToMove) {
+        ChunkToMerge->RemoveEntity(VoxelCoord);
+        TargetChunk->AddEntity(VoxelCoord);
+        EntityToChunk[VoxelCoord] = TargetChunk;
+      }
+
+      EntityChunks.Remove(ChunkToMerge);
+    }
+  }
+
+  EntityToChunk.Add(GlobalCoord, TargetChunk)->AddEntity(GlobalCoord);
 }
 
 void UEntityManager::OnEntityDestroyed(const FIntVector &GlobalCoord) {
@@ -42,48 +76,25 @@ void UEntityManager::OnEntityDestroyed(const FIntVector &GlobalCoord) {
   }
 
   UEntityChunk *OwningChunk = EntityToChunk.FindAndRemoveChecked(GlobalCoord);
-  OwningChunk->RemoveVoxel(GlobalCoord);
+  OwningChunk->RemoveEntity(GlobalCoord);
 
   if (OwningChunk->IsEmpty()) {
     EntityChunks.Remove(OwningChunk);
   } else {
-    RebuildChunksAround(GlobalCoord);
+    UpdateEntityChunk(OwningChunk);
   }
 }
 
-void UEntityManager::OnEntityModified(const FIntVector &GlobalCoord) {}
-
-void UEntityManager::UpdateVoxelChunkMapping(const FIntVector &GlobalCoord,
-                                             UEntityChunk *Chunk) {
-  EntityToChunk.Add(GlobalCoord, Chunk);
-}
-
-UEntityChunk *
-UEntityManager::GetEntityChunk(const FIntVector &GlobalCoord,
-                               const FVoxelEntityData *EntityData) {
-  const FIntVector NeighborOffsets[] = {
-      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
-      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
-
-  for (const FIntVector &NeighborOffset : NeighborOffsets) {
-    if (TObjectPtr<UEntityChunk> *FoundChunk =
-            EntityToChunk.Find(GlobalCoord + NeighborOffset)) {
-      if (const FVoxelBaseData *NeighborVoxelData =
-              DataManager->GetVoxelData(GlobalCoord + NeighborOffset)) {
-        if (const FVoxelEntityData *NeighborEntityData =
-                dynamic_cast<const FVoxelEntityData *>(NeighborVoxelData)) {
-          if (EntityData->IsIdentical(NeighborEntityData)) {
-            return *FoundChunk;
-          }
-        }
-      }
+void UEntityManager::OnEntityModified(const FIntVector &GlobalCoord) {
+  if (const TObjectPtr<UEntityChunk> *FoundChunk =
+          EntityToChunk.Find(GlobalCoord)) {
+    if (*FoundChunk) {
+      (*FoundChunk)->OnVoxelDataModified(GlobalCoord);
     }
   }
-
-  return nullptr;
 }
 
-UEntityChunk *
+TObjectPtr<UEntityChunk>
 UEntityManager::CreateEntityChunk(const FVoxelEntityData *EntityData) {
   UEntityChunk *NewChunk = nullptr;
 
@@ -104,13 +115,92 @@ UEntityManager::CreateEntityChunk(const FVoxelEntityData *EntityData) {
   return NewChunk;
 }
 
-void UEntityManager::RebuildChunksAround(const FIntVector &GlobalCoord) {
-  // 이 함수는 복셀 파괴로 인해 하나의 청크가 여러 개로 나뉘었을 때를
-  // 처리합니다.
-  // 1. 파괴된 위치 주변의 모든 인접 엔티티 복셀을 찾습니다.
-  // 2. 각 인접 복셀에 대해 Flood Fill (or BFS/DFS) 탐색을 시작하여 연결된 복셀
-  // 그룹(새로운 청크)을 찾습니다.
-  // 3. 이미 방문한 복셀은 건너뛰어 중복 계산을 방지합니다.
-  // 4. 각 그룹에 대해 새로운 UEntityChunk를 생성하고 관리 목록에 추가합니다.
-  // (구현이 복잡하므로 여기서는 개념만 설명합니다.)
+void UEntityManager::UpdateEntityChunk(
+    const TObjectPtr<UEntityChunk> &OriginalChunk) {
+  TArray<FIntVector> OriginalVoxels = OriginalChunk->GetManagedVoxels().Array();
+
+  for (const FIntVector &VoxelCoord : OriginalVoxels) {
+    OriginalChunk->RemoveEntity(VoxelCoord);
+    EntityToChunk.Remove(VoxelCoord);
+  }
+
+  EntityChunks.Remove(OriginalChunk);
+
+  TSet<FIntVector> VisitedVoxels;
+
+  for (const FIntVector &VoxelCoord : OriginalVoxels) {
+    if (VisitedVoxels.Contains(VoxelCoord)) {
+      continue;
+    }
+
+    TSet<FIntVector> ChunkableVoxels =
+        GetChunkableVoxels(VoxelCoord, VisitedVoxels);
+
+    if (!ChunkableVoxels.IsEmpty()) {
+      if (const FVoxelEntityData *EntityData =
+              dynamic_cast<const FVoxelEntityData *>(
+                  DataManager->GetVoxelData(VoxelCoord))) {
+        TObjectPtr<UEntityChunk> NewChunk = CreateEntityChunk(EntityData);
+
+        for (const FIntVector &ChunkableVoxel : ChunkableVoxels) {
+          NewChunk->AddEntity(ChunkableVoxel);
+          EntityToChunk.Add(ChunkableVoxel, NewChunk);
+        }
+      }
+    }
+  }
+}
+
+TSet<FIntVector>
+UEntityManager::GetChunkableVoxels(const FIntVector &StartCoord,
+                                   TSet<FIntVector> &VisitedVoxels) const {
+  TSet<FIntVector> ConnectedVoxels;
+  TQueue<FIntVector> ToVisit;
+
+  const FVoxelEntityData *StartEntityData =
+      dynamic_cast<const FVoxelEntityData *>(
+          DataManager->GetVoxelData(StartCoord));
+
+  if (!StartEntityData) {
+    return ConnectedVoxels;
+  }
+
+  ToVisit.Enqueue(StartCoord);
+
+  const FIntVector NeighborOffsets[] = {
+      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
+      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
+
+  while (!ToVisit.IsEmpty()) {
+    FIntVector CurrentCoord;
+    ToVisit.Dequeue(CurrentCoord);
+
+    if (VisitedVoxels.Contains(CurrentCoord)) {
+      continue;
+    }
+
+    const FVoxelEntityData *CurrentEntityData =
+        dynamic_cast<const FVoxelEntityData *>(
+            DataManager->GetVoxelData(CurrentCoord));
+
+    if (!CurrentEntityData ||
+        !StartEntityData->IsChunkableWith(CurrentEntityData)) {
+      continue;
+    }
+
+    VisitedVoxels.Add(CurrentCoord);
+    ConnectedVoxels.Add(CurrentCoord);
+
+    for (const FIntVector &Offset : NeighborOffsets) {
+      const FIntVector NeighborCoord = CurrentCoord + Offset;
+      if (!VisitedVoxels.Contains(NeighborCoord)) {
+        if (FVoxelEntityData::IsEntity(
+                DataManager->GetVoxelData(NeighborCoord))) {
+          ToVisit.Enqueue(NeighborCoord);
+        }
+      }
+    }
+  }
+
+  return ConnectedVoxels;
 }

@@ -33,7 +33,7 @@ struct FVoxelEntityData : public FVoxelBlockData {
     return Cast<UVoxelEntityDataAsset>(DataAsset);
   }
 
-  virtual bool IsIdentical(const FVoxelEntityData *Other) const {
+  virtual bool IsChunkableWith(const FVoxelEntityData *Other) const {
     if (!Other || !DataAsset) {
       return false;
     }

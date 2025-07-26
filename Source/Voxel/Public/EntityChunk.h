@@ -5,17 +5,21 @@
 
 class UEntityManager;
 
-UCLASS()
+UCLASS(Abstract)
 class VOXEL_API UEntityChunk : public UObject {
   GENERATED_BODY()
 
 public:
   virtual void Tick(float DeltaTime);
 
-  void AddVoxel(const FIntVector &VoxelCoord);
-  void RemoveVoxel(const FIntVector &VoxelCoord);
+  void AddEntity(const FIntVector &VoxelCoord);
+  void RemoveEntity(const FIntVector &VoxelCoord);
 
   bool IsEmpty() const;
+
+  virtual void OnVoxelDataModified(const FIntVector &VoxelCoord);
+
+  const TSet<FIntVector> &GetManagedVoxels() const { return ManagedVoxels; }
 
 private:
   UPROPERTY()

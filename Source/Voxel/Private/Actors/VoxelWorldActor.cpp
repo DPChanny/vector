@@ -7,6 +7,7 @@
 #include "Managers/BuildManager.h"
 #include "Managers/DataManager.h"
 #include "Managers/DebugManager.h"
+#include "Managers/EntityManager.h"
 #include "Managers/MeshManager.h"
 
 AVoxelWorldActor::AVoxelWorldActor() { PrimaryActorTick.bCanEverTick = false; }
@@ -16,17 +17,19 @@ void AVoxelWorldActor::Initialize(const int32 NumberOfPlayers) {
   DataManager = NewObject<UDataManager>(this);
   BuildManager = NewObject<UBuildManager>(this);
   MeshManager = NewObject<UMeshManager>(this);
+  EntityManager = NewObject<UEntityManager>(this);
 
   DebugManager->Initialize(VoxelDebugActor);
   DataManager->Initialize(WorldSizeInChunks, ChunkSize, VoxelSize,
                           VoxelChunkActor);
   BuildManager->Initialize();
   MeshManager->Initialize();
+  EntityManager->Initialize();
 
   for (int32 x = 0; x < WorldSizeInChunks.X; ++x) {
     for (int32 y = 0; y < WorldSizeInChunks.Y; ++y) {
       for (int32 z = 0; z < WorldSizeInChunks.Z; ++z) {
-        DataManager->LoadChunk(FIntVector(x, y, z));
+        DataManager->LoadVoxelChunk(FIntVector(x, y, z));
       }
     }
   }

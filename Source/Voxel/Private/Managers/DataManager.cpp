@@ -3,7 +3,9 @@
 #include "Actors/VoxelChunkActor.h"
 #include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelBaseDataAsset.h"
+#include "DataAssets/VoxelEntityDataAsset.h"
 #include "Managers/DebugManager.h"
+#include "Managers/EntityManager.h"
 #include "Managers/MeshManager.h"
 
 void UDataManager::Initialize(
@@ -13,17 +15,18 @@ void UDataManager::Initialize(
   const AVoxelWorldActor *VoxelWorld = Cast<AVoxelWorldActor>(GetOuter());
   DebugManager = VoxelWorld->GetDebugManager();
   MeshManager = VoxelWorld->GetMeshManager();
+  EntityManager = VoxelWorld->GetEntityManager();
   WorldSizeInChunks = InWorldSizeInChunks;
   ChunkSize = InChunkSize;
   VoxelSize = InVoxelSize;
   ChunkVolume = ChunkSize * ChunkSize * ChunkSize;
   VoxelChunk = InVoxelChunkActor;
 
-  Chunks.Empty();
+  VoxelChunks.Empty();
 }
 
-void UDataManager::LoadChunk(const FIntVector &ChunkCoord) {
-  if (Chunks.Contains(ChunkCoord)) {
+void UDataManager::LoadVoxelChunk(const FIntVector &ChunkCoord) {
+  if (VoxelChunks.Contains(ChunkCoord)) {
     return;
   }
 
@@ -53,22 +56,23 @@ void UDataManager::LoadChunk(const FIntVector &ChunkCoord) {
     NewVoxelChunk->Initialize(ChunkCoord);
     NewChunk.VoxelChunkActor = NewVoxelChunk;
 
-    Chunks.Add(ChunkCoord, MoveTemp(NewChunk));
+    VoxelChunks.Add(ChunkCoord, MoveTemp(NewChunk));
   }
 }
 
-void UDataManager::UnloadChunk(const FIntVector &ChunkCoord) {
-  if (const FVoxelChunk *Chunk = Chunks.Find(ChunkCoord)) {
+void UDataManager::UnloadVoxelChunk(const FIntVector &ChunkCoord) {
+  if (const FVoxelChunk *Chunk = VoxelChunks.Find(ChunkCoord)) {
     if (Chunk->VoxelChunkActor) {
       Chunk->VoxelChunkActor->Destroy();
     }
-    Chunks.Remove(ChunkCoord);
+    VoxelChunks.Remove(ChunkCoord);
   }
 }
 
 const FVoxelBaseData *
 UDataManager::GetVoxelData(const FIntVector &GlobalCoord) const {
-  if (const FVoxelChunk *Chunk = Chunks.Find(GlobalToChunkCoord(GlobalCoord))) {
+  if (const FVoxelChunk *Chunk =
+          VoxelChunks.Find(GlobalToChunkCoord(GlobalCoord))) {
     return Chunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord));
   }
   return new FVoxelVoidData();
@@ -77,8 +81,13 @@ UDataManager::GetVoxelData(const FIntVector &GlobalCoord) const {
 void UDataManager::ModifyVoxelData(
     const FIntVector &GlobalCoord,
     const TFunction<void(FVoxelBaseData *)> &Modifier, const bool bAutoDebug) {
-  if (const FVoxelChunk *Chunk = Chunks.Find(GlobalToChunkCoord(GlobalCoord))) {
+  if (const FVoxelChunk *Chunk =
+          VoxelChunks.Find(GlobalToChunkCoord(GlobalCoord))) {
     Modifier(Chunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord)));
+
+    if (EntityManager) {
+      EntityManager->OnEntityModified(GlobalCoord);
+    }
 
     if (DebugManager && bAutoDebug) {
       DebugManager->SetDebugVoxel(GlobalCoord);
@@ -91,10 +100,28 @@ void UDataManager::ModifyVoxelData(
 }
 
 void UDataManager::SetVoxelData(const FIntVector &GlobalCoord,
-                                FVoxelBaseData *VoxelData,
+                                FVoxelBaseData *NewVoxelData,
                                 const bool bAutoDebug) {
-  if (const FVoxelChunk *Chunk = Chunks.Find(GlobalToChunkCoord(GlobalCoord))) {
-    Chunk->SetVoxelData(GlobalCoordToIndex(GlobalCoord), VoxelData);
+  if (const FVoxelChunk *Chunk =
+          VoxelChunks.Find(GlobalToChunkCoord(GlobalCoord))) {
+    const FVoxelBaseData *OldData =
+        Chunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord));
+
+    Chunk->SetVoxelData(GlobalCoordToIndex(GlobalCoord), NewVoxelData);
+
+    if (EntityManager) {
+      const FVoxelEntityData *NewEntityData =
+          dynamic_cast<const FVoxelEntityData *>(NewVoxelData);
+      const bool bIsNewEntity = NewEntityData != nullptr;
+
+      if (FVoxelEntityData::IsEntity(OldData) && !bIsNewEntity) {
+        EntityManager->OnEntityDestroyed(GlobalCoord);
+      }
+
+      if (bIsNewEntity) {
+        EntityManager->OnEntityCreated(GlobalCoord, NewEntityData);
+      }
+    }
 
     if (DebugManager && bAutoDebug) {
       DebugManager->SetDebugVoxel(GlobalCoord);
@@ -106,12 +133,12 @@ void UDataManager::SetVoxelData(const FIntVector &GlobalCoord,
   }
 }
 
-bool UDataManager::IsChunk(const FIntVector &ChunkCoord) const {
-  return Chunks.Contains(ChunkCoord);
+bool UDataManager::IsVoxelChunkLoaded(const FIntVector &ChunkCoord) const {
+  return VoxelChunks.Contains(ChunkCoord);
 }
 
-FVoxelChunk *UDataManager::GetChunk(const FIntVector &ChunkCoord) {
-  return Chunks.Find(ChunkCoord);
+FVoxelChunk *UDataManager::GetVoxelChunk(const FIntVector &ChunkCoord) {
+  return VoxelChunks.Find(ChunkCoord);
 }
 
 FIntVector

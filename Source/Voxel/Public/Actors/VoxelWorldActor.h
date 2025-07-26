@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "VoxelWorldActor.generated.h"
 
+class UEntityManager;
 class UVoxelBorderDataAsset;
 class UVoxelVoidDataAsset;
 class AVoxelDebugActor;
@@ -35,6 +36,7 @@ public:
   const TObjectPtr<UBuildManager> &GetBuildManager() const {
     return BuildManager;
   }
+  const TObjectPtr<UEntityManager> &GetEntityManager() const { return EntityManager; }
 
   void Initialize(int32 NumberOfPlayers);
 
@@ -76,6 +78,9 @@ private:
 
   UPROPERTY()
   TObjectPtr<UDataManager> DataManager;
+  
+  UPROPERTY()
+  TObjectPtr<UEntityManager> EntityManager;
 
   UPROPERTY()
   TObjectPtr<UDebugManager> DebugManager;

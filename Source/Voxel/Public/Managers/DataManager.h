@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "DataAssets/VoxelVoidDataAsset.h"
-#include "Voxel/Public/Structs/VoxelChunk.h"
+#include "Voxel/Public/VoxelChunk.h"
 
 // clang-format off
 #include "DataManager.generated.h"
@@ -15,6 +15,7 @@ class UVoxelBorderDataAsset;
 class UVoxelVoidDataAsset;
 class UVoxelBaseDataAsset;
 class AVoxelChunkActor;
+class UEntityManager;
 
 UCLASS()
 class VOXEL_API UDataManager : public UObject {
@@ -27,10 +28,10 @@ public:
                   int32 InVoxelSize,
                   const TSubclassOf<AVoxelChunkActor> &InVoxelChunkActor);
 
-  void LoadChunk(const FIntVector &ChunkCoord);
-  void UnloadChunk(const FIntVector &ChunkCoord);
-  inline bool IsChunk(const FIntVector &ChunkCoord) const;
-  FVoxelChunk *GetChunk(const FIntVector &ChunkCoord);
+  void LoadVoxelChunk(const FIntVector &ChunkCoord);
+  void UnloadVoxelChunk(const FIntVector &ChunkCoord);
+  inline bool IsVoxelChunkLoaded(const FIntVector &ChunkCoord) const;
+  FVoxelChunk *GetVoxelChunk(const FIntVector &ChunkCoord);
 
   inline const FVoxelBaseData *
   GetVoxelData(const FIntVector &GlobalCoord) const;
@@ -39,7 +40,7 @@ public:
                        const TFunction<void(FVoxelBaseData *)> &Modifier,
                        bool bAutoDebug = true);
 
-  void SetVoxelData(const FIntVector &GlobalCoord, FVoxelBaseData *VoxelData,
+  void SetVoxelData(const FIntVector &GlobalCoord, FVoxelBaseData *NewVoxelData,
                     bool bAutoDebug = true);
 
   int32 GetChunkSize() const { return ChunkSize; }
@@ -57,7 +58,7 @@ public:
   inline int32 LocalCoordToIndex(const FIntVector &LocalCoord) const;
 
 private:
-  TMap<FIntVector, FVoxelChunk> Chunks;
+  TMap<FIntVector, FVoxelChunk> VoxelChunks;
   TMap<int32, TObjectPtr<UVoxelBaseDataAsset>> VoxelDataAssets;
 
   UPROPERTY()
@@ -73,4 +74,7 @@ private:
 
   UPROPERTY()
   TObjectPtr<UMeshManager> MeshManager;
+
+  UPROPERTY()
+  TObjectPtr<UEntityManager> EntityManager;
 };

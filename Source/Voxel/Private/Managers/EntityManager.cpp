@@ -20,17 +20,13 @@ void UEntityManager::Tick(const float DeltaTime) {
   }
 }
 
-void UEntityManager::OnEntityCreated(const FIntVector &GlobalCoord,
-                                     const FVoxelEntityData *EntityData) {
+void UEntityManager::OnEntityDataCreated(const FIntVector &GlobalCoord,
+                                         const FVoxelEntityData *EntityData) {
   if (EntityToChunk.Contains(GlobalCoord) || !EntityData) {
     return;
   }
 
   TSet<TObjectPtr<UEntityChunk>> ChunkableChunks;
-
-  const FIntVector NeighborOffsets[] = {
-      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
-      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
 
   for (const FIntVector &NeighborOffset : NeighborOffsets) {
     if (const TObjectPtr<UEntityChunk> *FoundChunk =
@@ -67,10 +63,11 @@ void UEntityManager::OnEntityCreated(const FIntVector &GlobalCoord,
     }
   }
 
-  EntityToChunk.Add(GlobalCoord, TargetChunk)->AddEntity(GlobalCoord);
+  TargetChunk->AddEntity(GlobalCoord);
+  EntityToChunk.Add(GlobalCoord, TargetChunk);
 }
 
-void UEntityManager::OnEntityDestroyed(const FIntVector &GlobalCoord) {
+void UEntityManager::OnEntityDataDestroyed(const FIntVector &GlobalCoord) {
   if (!EntityToChunk.Contains(GlobalCoord)) {
     return;
   }
@@ -85,11 +82,11 @@ void UEntityManager::OnEntityDestroyed(const FIntVector &GlobalCoord) {
   }
 }
 
-void UEntityManager::OnEntityModified(const FIntVector &GlobalCoord) {
+void UEntityManager::OnEntityDataModified(const FIntVector &GlobalCoord) {
   if (const TObjectPtr<UEntityChunk> *FoundChunk =
           EntityToChunk.Find(GlobalCoord)) {
     if (*FoundChunk) {
-      (*FoundChunk)->OnVoxelDataModified(GlobalCoord);
+      (*FoundChunk)->OnEntityDataModified(GlobalCoord);
     }
   }
 }
@@ -133,10 +130,8 @@ void UEntityManager::UpdateEntityChunk(
       continue;
     }
 
-    TSet<FIntVector> ChunkableVoxels =
-        GetChunkableVoxels(VoxelCoord, VisitedVoxels);
-
-    if (!ChunkableVoxels.IsEmpty()) {
+    if (TSet<FIntVector> ChunkableVoxels;
+        GetChunkableEntityCoords(VoxelCoord, VisitedVoxels, ChunkableVoxels)) {
       if (const FVoxelEntityData *EntityData =
               dynamic_cast<const FVoxelEntityData *>(
                   DataManager->GetVoxelData(VoxelCoord))) {
@@ -151,10 +146,10 @@ void UEntityManager::UpdateEntityChunk(
   }
 }
 
-TSet<FIntVector>
-UEntityManager::GetChunkableVoxels(const FIntVector &StartCoord,
-                                   TSet<FIntVector> &VisitedVoxels) const {
-  TSet<FIntVector> ConnectedVoxels;
+bool UEntityManager::GetChunkableEntityCoords(
+    const FIntVector &StartCoord, TSet<FIntVector> &VisitedCoords,
+    TSet<FIntVector> &ChunkableEntityCoords) const {
+  ChunkableEntityCoords.Reset();
   TQueue<FIntVector> ToVisit;
 
   const FVoxelEntityData *StartEntityData =
@@ -162,20 +157,16 @@ UEntityManager::GetChunkableVoxels(const FIntVector &StartCoord,
           DataManager->GetVoxelData(StartCoord));
 
   if (!StartEntityData) {
-    return ConnectedVoxels;
+    return false;
   }
 
   ToVisit.Enqueue(StartCoord);
-
-  const FIntVector NeighborOffsets[] = {
-      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
-      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
 
   while (!ToVisit.IsEmpty()) {
     FIntVector CurrentCoord;
     ToVisit.Dequeue(CurrentCoord);
 
-    if (VisitedVoxels.Contains(CurrentCoord)) {
+    if (VisitedCoords.Contains(CurrentCoord)) {
       continue;
     }
 
@@ -188,12 +179,12 @@ UEntityManager::GetChunkableVoxels(const FIntVector &StartCoord,
       continue;
     }
 
-    VisitedVoxels.Add(CurrentCoord);
-    ConnectedVoxels.Add(CurrentCoord);
+    VisitedCoords.Add(CurrentCoord);
+    ChunkableEntityCoords.Add(CurrentCoord);
 
     for (const FIntVector &Offset : NeighborOffsets) {
-      const FIntVector NeighborCoord = CurrentCoord + Offset;
-      if (!VisitedVoxels.Contains(NeighborCoord)) {
+      if (const FIntVector NeighborCoord = CurrentCoord + Offset;
+          !VisitedCoords.Contains(NeighborCoord)) {
         if (FVoxelEntityData::IsEntity(
                 DataManager->GetVoxelData(NeighborCoord))) {
           ToVisit.Enqueue(NeighborCoord);
@@ -202,5 +193,5 @@ UEntityManager::GetChunkableVoxels(const FIntVector &StartCoord,
     }
   }
 
-  return ConnectedVoxels;
+  return !ChunkableEntityCoords.IsEmpty();
 }

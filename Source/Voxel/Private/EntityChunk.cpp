@@ -12,4 +12,4 @@ void UEntityChunk::RemoveEntity(const FIntVector &VoxelCoord) {
 
 bool UEntityChunk::IsEmpty() const { return ManagedVoxels.IsEmpty(); }
 
-void UEntityChunk::OnVoxelDataModified(const FIntVector &VoxelCoord) {}
+void UEntityChunk::OnEntityDataModified(const FIntVector &VoxelCoord) {}

@@ -86,7 +86,7 @@ void UDataManager::ModifyVoxelData(
     Modifier(Chunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord)));
 
     if (EntityManager) {
-      EntityManager->OnEntityModified(GlobalCoord);
+      EntityManager->OnEntityDataModified(GlobalCoord);
     }
 
     if (DebugManager && bAutoDebug) {
@@ -112,9 +112,9 @@ void UDataManager::SetVoxelData(const FIntVector &GlobalCoord,
     if (EntityManager) {
       if (const FVoxelEntityData *NewEntityData =
               dynamic_cast<const FVoxelEntityData *>(NewVoxelData)) {
-        EntityManager->OnEntityCreated(GlobalCoord, NewEntityData);
+        EntityManager->OnEntityDataCreated(GlobalCoord, NewEntityData);
       } else if (FVoxelEntityData::IsEntity(OldData)) {
-        EntityManager->OnEntityDestroyed(GlobalCoord);
+        EntityManager->OnEntityDataDestroyed(GlobalCoord);
       }
     }
 

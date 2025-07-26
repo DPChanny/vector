@@ -11,13 +11,13 @@ class UDataManager;
 class UMeshManager;
 class UDebugManager;
 
-const TArray NeighborOffsets = {FIntVector(1, 0, 0), FIntVector(-1, 0, 0),
-                                FIntVector(0, 1, 0), FIntVector(0, -1, 0),
-                                FIntVector(0, 0, 1), FIntVector(0, 0, -1)};
-
 UCLASS()
 class VOXEL_API UBuildManager : public UObject {
   GENERATED_BODY()
+
+  const FIntVector NeighborOffsets[6] = {
+      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
+      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
 
 public:
   void Initialize();

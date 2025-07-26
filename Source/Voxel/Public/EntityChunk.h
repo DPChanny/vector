@@ -17,7 +17,7 @@ public:
 
   bool IsEmpty() const;
 
-  virtual void OnVoxelDataModified(const FIntVector &VoxelCoord);
+  virtual void OnEntityDataModified(const FIntVector &VoxelCoord);
 
   const TSet<FIntVector> &GetManagedVoxels() const { return ManagedVoxels; }
 

@@ -19,10 +19,12 @@ public:
   void Tick(float DeltaTime);
 
   void OnEntityDataCreated(const FIntVector &GlobalCoord,
-                           const FVoxelEntityData *EntityData);
-  void OnEntityDataDestroyed(const FIntVector &GlobalCoord);
+                           const FVoxelEntityData &EntityData);
+  void OnEntityDataDestroyed(const FIntVector &GlobalCoord,
+                             const FVoxelEntityData &EntityData);
 
-  void OnEntityDataModified(const FIntVector &GlobalCoord);
+  void OnEntityDataModified(const FIntVector &GlobalCoord,
+                            const FVoxelEntityData &EntityData);
 
 private:
   void UpdateEntityChunk(const TObjectPtr<UEntityChunk> &OriginalChunk);
@@ -30,7 +32,7 @@ private:
                                 TSet<FIntVector> &VisitedCoords,
                                 TSet<FIntVector> &ChunkableEntityCoords) const;
   TObjectPtr<UEntityChunk>
-  CreateEntityChunk(const FVoxelEntityData *EntityData);
+  CreateEntityChunk(const FVoxelEntityData &EntityData);
 
   UPROPERTY()
   TObjectPtr<class UDataManager> DataManager;

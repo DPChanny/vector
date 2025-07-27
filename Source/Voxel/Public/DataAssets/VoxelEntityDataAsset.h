@@ -4,20 +4,24 @@
 #include "DataAssets/VoxelBlockDataAsset.h"
 #include "VoxelEntityDataAsset.generated.h"
 
-class UEntityChunk;
-
 UCLASS()
 class UVoxelEntityDataAsset : public UVoxelBlockDataAsset {
   GENERATED_BODY()
 
 public:
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entity")
-  TSubclassOf<UEntityChunk> EntityChunkClass;
+  TSubclassOf<class UEntityChunk> EntityChunkClass;
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Entity")
+  TArray<TSubclassOf<class UEntityComponent>> EntityComponentClasses;
 };
 
 USTRUCT()
 struct FVoxelEntityData : public FVoxelBlockData {
   GENERATED_BODY()
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Entity")
+  uint8 TeamID;
 
   FVoxelEntityData() = default;
 
@@ -26,8 +30,8 @@ struct FVoxelEntityData : public FVoxelBlockData {
   }
 
   explicit FVoxelEntityData(const TObjectPtr<UVoxelEntityDataAsset> &InPtr,
-                            const float InDurability)
-      : FVoxelBlockData(InPtr, InDurability) {}
+                            const float InDurability, const uint8 InTeamID = 0)
+      : FVoxelBlockData(InPtr, InDurability), TeamID(InTeamID) {}
 
   TObjectPtr<UVoxelEntityDataAsset> GetEntityDataAsset() const {
     return Cast<UVoxelEntityDataAsset>(DataAsset);
@@ -39,7 +43,8 @@ struct FVoxelEntityData : public FVoxelBlockData {
     }
 
     return GetEntityDataAsset()->GetClass() ==
-           Other->GetEntityDataAsset()->GetClass();
+               Other->GetEntityDataAsset()->GetClass() &&
+           TeamID == Other->TeamID;
   }
 
   virtual float GetDensity() const override {

@@ -10,6 +10,10 @@
 UCLASS()
 class VOXEL_API UVoxelBorderDataAsset : public UVoxelSubstanceDataAsset {
   GENERATED_BODY()
+
+public:
+  virtual FVoxelBaseData *
+  ConstructVoxelData(const FVoxelBaseParams &Params) const override;
 };
 
 USTRUCT()
@@ -22,10 +26,17 @@ struct FVoxelBorderData : public FVoxelSubstanceData {
     return dynamic_cast<const FVoxelBorderData *>(VoxelBaseData) != nullptr;
   }
 
-  TObjectPtr<UVoxelBorderDataAsset> GetVoidDataAsset() const {
-    return Cast<UVoxelBorderDataAsset>(DataAsset);
+  TObjectPtr<const UVoxelBorderDataAsset> GetVoidDataAsset() const {
+    return Cast<const UVoxelBorderDataAsset>(DataAsset);
   }
 
-  explicit FVoxelBorderData(const TObjectPtr<UVoxelBorderDataAsset> &InPtr)
+  explicit FVoxelBorderData(
+      const TObjectPtr<const UVoxelBorderDataAsset> &InPtr)
       : FVoxelSubstanceData(InPtr) {}
+};
+
+struct FVoxelBorderParams : FVoxelSubstanceParams {
+  virtual FVoxelBaseParams *Clone() const override {
+    return new FVoxelBorderParams(*this);
+  }
 };

@@ -140,7 +140,7 @@ void AVoxelWorldActor::InitializeNexuses(int32 NexusCount) {
   }
 }
 
-void AVoxelWorldActor::Tick(float DeltaSeconds) {
+void AVoxelWorldActor::Tick(const float DeltaSeconds) {
   Super::Tick(DeltaSeconds);
   EntityManager->Tick(DeltaSeconds);
 }

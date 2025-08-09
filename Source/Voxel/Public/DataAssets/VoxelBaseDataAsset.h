@@ -15,6 +15,9 @@ public:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Voxel | Base",
             meta = (ClampMin = "-1.0", ClampMax = "1.0"))
   float BaseDensity = 1.0f;
+
+  virtual struct FVoxelBaseData *
+  ConstructVoxelData(const struct FVoxelBaseParams &Params) const;
 };
 
 USTRUCT()
@@ -22,11 +25,12 @@ struct FVoxelBaseData {
   GENERATED_BODY()
 
   UPROPERTY(VisibleAnywhere)
-  TObjectPtr<UVoxelBaseDataAsset> DataAsset;
+  TObjectPtr<const UVoxelBaseDataAsset> DataAsset;
 
   FVoxelBaseData() = default;
 
-  explicit FVoxelBaseData(const TObjectPtr<UVoxelBaseDataAsset> &InDataAsset)
+  explicit FVoxelBaseData(
+      const TObjectPtr<const UVoxelBaseDataAsset> &InDataAsset)
       : DataAsset(InDataAsset) {}
 
   virtual float GetDensity() const {
@@ -34,4 +38,10 @@ struct FVoxelBaseData {
   }
 
   virtual ~FVoxelBaseData() = default;
+};
+
+struct FVoxelBaseParams {
+  virtual ~FVoxelBaseParams() = default;
+
+  virtual FVoxelBaseParams *Clone() const = 0;
 };

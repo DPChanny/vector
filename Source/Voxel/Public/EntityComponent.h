@@ -9,9 +9,9 @@ UCLASS(Abstract)
 class VOXEL_API UEntityComponent : public UObject {
   GENERATED_BODY()
 
+public:
   explicit UEntityComponent();
 
-public:
   virtual void OnEntityAdded(const FIntVector &VoxelCoord,
                              const FVoxelEntityData &Data) {}
   virtual void OnEntityRemoved(const FIntVector &VoxelCoord,

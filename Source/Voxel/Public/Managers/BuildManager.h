@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "DataAssets/VoxelBaseDataAsset.h"
+#include "DataAssets/VoxelBlockDataAsset.h"
 
 // clang-format off
 #include "BuildManager.generated.h"
@@ -22,12 +24,13 @@ class VOXEL_API UBuildManager : public UObject {
 public:
   void Initialize();
 
-  void DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord, float Radius,
+  void DamageBlocksInRadius(const FIntVector &CenterGlobalCoord, float Radius,
                             float DamageAmount) const;
-  void ConstructVoxelsInRadius(
+  void ConstructBlocksInRadius(
       const FIntVector &CenterGlobalCoord, float Radius,
       float ConstructionAmount,
-      const TObjectPtr<UVoxelBlockDataAsset> &NewVoxelBlockDataAsset) const;
+      const TObjectPtr<const UVoxelBlockDataAsset> &NewVoxelBlockDataAsset,
+      const FVoxelBlockParams &VoxelParams) const;
 
   void GetGlobalCoordsInRadius(const FIntVector &CenterGlobalCoord,
                                float Radius,

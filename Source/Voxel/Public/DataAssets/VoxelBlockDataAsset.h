@@ -19,6 +19,9 @@ public:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
             Category = "Voxel | Destructible", meta = (ClampMin = "0.0"))
   float MaxDurability = 100.0f;
+
+  virtual FVoxelBaseData *
+  ConstructVoxelData(const FVoxelBaseParams &Params) const override;
 };
 
 USTRUCT()
@@ -26,7 +29,7 @@ struct FVoxelBlockData : public FVoxelSubstanceData {
   GENERATED_BODY()
 
   UPROPERTY(VisibleAnywhere)
-  float Durability;
+  float Durability = 0.f;
 
   FVoxelBlockData() = default;
 
@@ -34,17 +37,29 @@ struct FVoxelBlockData : public FVoxelSubstanceData {
     return dynamic_cast<const FVoxelBlockData *>(VoxelBaseData) != nullptr;
   }
 
-  explicit FVoxelBlockData(const TObjectPtr<UVoxelBlockDataAsset> &InPtr,
-                           const float InDurability)
-      : FVoxelSubstanceData(InPtr), Durability(InDurability) {}
+  explicit FVoxelBlockData(
+      const TObjectPtr<const UVoxelBlockDataAsset> &InDataAsset,
+      const float InDurability)
+      : FVoxelSubstanceData(InDataAsset), Durability(InDurability) {}
 
-  TObjectPtr<UVoxelBlockDataAsset> GetBlockDataAsset() const {
-    return Cast<UVoxelBlockDataAsset>(DataAsset);
+  TObjectPtr<const UVoxelBlockDataAsset> GetBlockDataAsset() const {
+    return Cast<const UVoxelBlockDataAsset>(DataAsset);
   }
 
   virtual float GetDensity() const override {
     return DataAsset ? DataAsset->BaseDensity * Durability /
                            GetBlockDataAsset()->MaxDurability
                      : -1.f;
+  }
+};
+
+struct FVoxelBlockParams : FVoxelSubstanceParams {
+  float Durability;
+
+  explicit FVoxelBlockParams(const float InDurability)
+      : Durability(InDurability) {}
+
+  virtual FVoxelBaseParams *Clone() const override {
+    return new FVoxelBlockParams(*this);
   }
 };

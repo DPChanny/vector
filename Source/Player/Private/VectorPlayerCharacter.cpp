@@ -109,8 +109,8 @@ void AVectorPlayerCharacter::Fire() const {
       const FIntVector CenterGlobalCoord =
           World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
 
-      World->GetBuildManager()->ConstructVoxelsInRadius(CenterGlobalCoord, 100,
-                                                        10, Poop);
+      World->GetBuildManager()->ConstructBlocksInRadius(
+          CenterGlobalCoord, 100, 10, Poop, FVoxelBlockParams(0));
 
       World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord,
                                               FColor::Yellow);
@@ -134,7 +134,7 @@ void AVectorPlayerCharacter::Eat() const {
   if (bHit) {
     const FIntVector CenterGlobalCoord =
         World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
-    World->GetBuildManager()->DamageVoxelsInRadius(CenterGlobalCoord, 100, 10);
+    World->GetBuildManager()->DamageBlocksInRadius(CenterGlobalCoord, 100, 10);
 
     World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
     World->GetDebugManager()->FlushDebugVoxelBuffer();

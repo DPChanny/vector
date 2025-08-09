@@ -19,8 +19,8 @@ USTRUCT()
 struct FNexus {
   GENERATED_BODY()
 
-  UPROPERTY(VisibleAnywhere) FVector Center;
-  UPROPERTY(VisibleAnywhere) float Radius;
+  UPROPERTY(VisibleAnywhere) FVector Center = FVector::ZeroVector;
+  UPROPERTY(VisibleAnywhere) float Radius = 0.f;
 };
 
 UCLASS()

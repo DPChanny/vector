@@ -21,11 +21,17 @@ struct FVoxelSubstanceData : public FVoxelBaseData {
 
   FVoxelSubstanceData() = default;
 
-  TObjectPtr<UVoxelSubstanceDataAsset> GetSubstanceDataAsset() const {
-    return Cast<UVoxelSubstanceDataAsset>(DataAsset);
+  TObjectPtr<const UVoxelSubstanceDataAsset> GetSubstanceDataAsset() const {
+    return Cast<const UVoxelSubstanceDataAsset>(DataAsset);
   }
 
   explicit FVoxelSubstanceData(
-      const TObjectPtr<UVoxelSubstanceDataAsset> &InPtr)
-      : FVoxelBaseData(InPtr) {}
+      const TObjectPtr<const UVoxelSubstanceDataAsset> &InDataAsset)
+      : FVoxelBaseData(InDataAsset) {}
+};
+
+struct FVoxelSubstanceParams : FVoxelBaseParams {
+  virtual FVoxelBaseParams *Clone() const override {
+    return new FVoxelSubstanceParams(*this);
+  }
 };

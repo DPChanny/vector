@@ -18,18 +18,14 @@ void UTargetComponent::UpdateTargets() {
     return !IsValidTarget(Target.Get());
   });
 
-  if (Targets.Num() >= TargetCount) {
-    return;
-  }
-
   TArray<AActor *> Actors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), TargetClass, Actors);
 
   TArray<TPair<float, TObjectPtr<AActor>>> Priorities;
   for (AActor *Actor : Actors) {
     if (IsValidTarget(Actor) && !Targets.Contains(Actor)) {
-      float Priority = GetTargetPriority(Actor);
-      Priorities.Add(TPair<float, TObjectPtr<AActor>>(Priority, Actor));
+      Priorities.Add(
+          TPair<float, TObjectPtr<AActor>>(GetTargetPriority(Actor), Actor));
     }
   }
 
@@ -43,8 +39,8 @@ void UTargetComponent::UpdateTargets() {
   }
 }
 
-bool UTargetComponent::IsValidTarget(AActor *Actor) const {
-  return Actor && IsValid(Actor) && Actor->IsA(TargetClass);
+bool UTargetComponent::IsValidTarget(const TObjectPtr<AActor> Actor) const {
+  return true;
 }
 
 float UTargetComponent::GetTargetPriority(

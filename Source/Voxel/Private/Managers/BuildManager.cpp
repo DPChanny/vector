@@ -15,7 +15,7 @@ void UBuildManager::Initialize() {
   }
 }
 
-void UBuildManager::DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord,
+void UBuildManager::DamageBlocksInRadius(const FIntVector &CenterGlobalCoord,
                                          const float Radius,
                                          const float DamageAmount) const {
   auto DamageLogic = [&](const FIntVector &GlobalCoord) {
@@ -43,10 +43,11 @@ void UBuildManager::DamageVoxelsInRadius(const FIntVector &CenterGlobalCoord,
   ProcessVoxelsInRadius(CenterGlobalCoord, Radius, DamageLogic);
 }
 
-void UBuildManager::ConstructVoxelsInRadius(
+void UBuildManager::ConstructBlocksInRadius(
     const FIntVector &CenterGlobalCoord, const float Radius,
     const float ConstructionAmount,
-    const TObjectPtr<UVoxelBlockDataAsset> &NewVoxelBlockDataAsset) const {
+    const TObjectPtr<const UVoxelBlockDataAsset> &NewVoxelBlockDataAsset,
+    const FVoxelBlockParams &VoxelParams) const {
   auto ConstructLogic = [&](const FIntVector &GlobalCoord) {
     if (!DataManager) {
       return;
@@ -83,10 +84,12 @@ void UBuildManager::ConstructVoxelsInRadius(
         if (const FIntVector NeighborGlobalCoord = GlobalCoord + NeighborOffset;
             FVoxelVoidData::IsVoid(
                 DataManager->GetVoxelData(NeighborGlobalCoord))) {
-
+          const TUniquePtr<FVoxelBlockParams> NewVoxelParams(
+              static_cast<FVoxelBlockParams *>(VoxelParams.Clone()));
+          NewVoxelParams->Durability = ConstructionAmount;
           DataManager->SetVoxelData(
               NeighborGlobalCoord,
-              new FVoxelBlockData(NewVoxelBlockDataAsset, ConstructionAmount));
+              NewVoxelBlockDataAsset->ConstructVoxelData(*NewVoxelParams));
 
           for (const FIntVector &CheckOffset : NeighborOffsets) {
             const FIntVector CheckGlobalCoord =

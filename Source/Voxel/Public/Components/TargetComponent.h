@@ -23,5 +23,5 @@ public:
 protected:
   void UpdateTargets();
   virtual float GetTargetPriority(TObjectPtr<AActor> TargetCandidate);
-  virtual bool IsValidTarget(AActor *Actor) const;
+  virtual bool IsValidTarget(TObjectPtr<AActor> Actor) const;
 };

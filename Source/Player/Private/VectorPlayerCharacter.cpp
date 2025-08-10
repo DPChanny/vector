@@ -7,6 +7,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "DataAssets/VoxelEntityDataAsset.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/PlayerController.h"
 #include "Managers/BuildManager.h"
@@ -62,13 +63,15 @@ AVectorPlayerCharacter::AVectorPlayerCharacter() {
       GetWorld(), AVoxelWorldActor::StaticClass()));
 }
 
-void AVectorPlayerCharacter::BeginPlay() { Super::BeginPlay(); }
+void AVectorPlayerCharacter::BeginPlay() {
+  Super::BeginPlay();
+}
 
 void AVectorPlayerCharacter::Tick(const float DeltaTime) {
   Super::Tick(DeltaTime);
 }
 
-void AVectorPlayerCharacter::Move(const FInputActionValue &Value) const {
+void AVectorPlayerCharacter::Move(const FInputActionValue& Value) const {
   const FVector MoveValue = Value.Get<FVector>();
 
   const FVector MoveDirection = GetActorForwardVector() * MoveValue.Y +
@@ -78,13 +81,13 @@ void AVectorPlayerCharacter::Move(const FInputActionValue &Value) const {
   Collider->AddForce(MoveDirection.GetSafeNormal() * 100, NAME_None, true);
 }
 
-void AVectorPlayerCharacter::Look(const FInputActionValue &Value) {
+void AVectorPlayerCharacter::Look(const FInputActionValue& Value) {
   const FVector2D LookValue = Value.Get<FVector2D>();
 
   AddActorLocalRotation(FRotator(-LookValue.Y, LookValue.X, 0.f));
 }
 
-void AVectorPlayerCharacter::Roll(const FInputActionValue &Value) {
+void AVectorPlayerCharacter::Roll(const FInputActionValue& Value) {
   const float RollValue = Value.Get<float>();
 
   AddActorLocalRotation(FRotator(0, 0, RollValue));
@@ -110,7 +113,7 @@ void AVectorPlayerCharacter::Fire() const {
           World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
 
       World->GetBuildManager()->ConstructBlocksInRadius(
-          CenterGlobalCoord, 100, 10, Poop, FVoxelBlockParams(0));
+          CenterGlobalCoord, 100, 10, Poop, FVoxelEntityParams(0, 0));
 
       World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord,
                                               FColor::Yellow);

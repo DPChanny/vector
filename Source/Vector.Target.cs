@@ -10,6 +10,7 @@ public class VectorTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		ExtraModuleNames.Add("Vector");
 		RegisterModulesCreatedByRider();
+		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 	}
 
 	private void RegisterModulesCreatedByRider()

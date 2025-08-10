@@ -1,16 +1,20 @@
-#include "Components/TurretTargetComponent.h"
+#include "TurretComponent.h"
+#include "VectorPlayerCharacter.h"
 
 #include "Components/HealthComponent.h"
 #include "EntityChunk.h"
 
-bool UTurretTargetComponent::IsValidTarget(
-    const TObjectPtr<AActor> Actor) const {
-
-  return FVector::Dist(Actor->GetActorLocation(), OwnerChunk->CenterOfMass) <
-         200.f;
+UTurretComponent::UTurretComponent() {
+  TargetClass = AVectorPlayerCharacter::StaticClass();
 }
 
-void UTurretTargetComponent::Tick(const float DeltaTime) {
+bool UTurretComponent::IsValidTarget(
+    const TObjectPtr<AActor> Actor) const {
+  return FVector::Dist(Actor->GetActorLocation(), OwnerChunk->CenterOfMass) <
+         BaseRange;
+}
+
+void UTurretComponent::Tick(const float DeltaTime) {
   Super::Tick(DeltaTime);
   if (Timer > 0) {
     Timer -= DeltaTime;
@@ -19,7 +23,7 @@ void UTurretTargetComponent::Tick(const float DeltaTime) {
     float Damage = BaseDamage;
     if (const TObjectPtr<const UHealthComponent> HealthComponent =
             OwnerChunk->GetComponent<UHealthComponent>()) {
-      Damage *= HealthComponent->CurrentHealth / HealthComponent->TotalHealth;
+      Damage *= 1.f;
     }
     for (const auto Target : Targets) {
       UE_LOG(LogTemp, Log, TEXT("Attacking %s with damage amount of %f"),

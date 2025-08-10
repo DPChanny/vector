@@ -2,9 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "InputActionValue.h"
 #include "VectorPlayerCharacter.generated.h"
 
+struct FInputActionValue;
 class AVoxelWorldActor;
 class USphereComponent;
 class UCameraComponent;
@@ -13,19 +13,20 @@ class USpotLightComponent;
 class UVoxelBlockDataAsset;
 
 UCLASS()
+
 class PLAYER_API AVectorPlayerCharacter : public APawn {
   GENERATED_BODY()
 
-public:
+ public:
   AVectorPlayerCharacter();
 
-  void Move(const FInputActionValue &Value) const;
-  void Look(const FInputActionValue &Value);
-  void Roll(const FInputActionValue &Value);
+  void Move(const FInputActionValue& Value) const;
+  void Look(const FInputActionValue& Value);
+  void Roll(const FInputActionValue& Value);
   void Eat() const;
   void Fire() const;
 
-protected:
+ protected:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
   TObjectPtr<USphereComponent> Collider;
 
@@ -44,7 +45,7 @@ protected:
   UPROPERTY()
   TObjectPtr<AVoxelWorldActor> World;
 
-private:
+ private:
   virtual void BeginPlay() override;
   virtual void Tick(float DeltaTime) override;
 };

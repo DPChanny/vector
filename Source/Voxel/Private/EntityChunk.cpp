@@ -65,8 +65,7 @@ void UEntityChunk::UpdateCenterOfMass() {
     if (const FVoxelEntityData *EntityData =
             dynamic_cast<const FVoxelEntityData *>(
                 DataManager->GetVoxelData(VoxelCoord))) {
-      CenterOfMass += FVector(VoxelCoord) * EntityData->Durability /
-                      EntityData->GetEntityDataAsset()->MaxDurability;
+      CenterOfMass += FVector(DataManager->GlobalToWorldCoord(VoxelCoord));
     }
   }
   CenterOfMass /= ManagedVoxels.Num();

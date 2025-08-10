@@ -101,34 +101,31 @@ void UEntityManager::OnEntityDataModified(const FIntVector& GlobalCoord,
 
 TObjectPtr<UEntityChunk> UEntityManager::CreateEntityChunk(
     const FVoxelEntityData& EntityData) {
-  UEntityChunk* NewChunk = nullptr;
+  const TObjectPtr<const UVoxelEntityDataAsset> EntityDataAsset =
+      EntityData.GetEntityDataAsset();
 
-  if (const UVoxelEntityDataAsset* EntityDataAsset =
-          EntityData.GetEntityDataAsset()) {
-    if (EntityDataAsset->EntityChunkClass) {
-      NewChunk =
-          NewObject<UEntityChunk>(this, EntityDataAsset->EntityChunkClass);
-    }
-
-    if (!NewChunk) {
-      NewChunk = NewObject<UEntityChunk>(this);
-    }
-
-    for (const TSubclassOf<UEntityComponent>& EntityComponentClass :
-         EntityDataAsset->EntityComponentClasses) {
-      if (EntityComponentClass) {
-        NewChunk->AddComponent(
-            NewObject<UEntityComponent>(NewChunk, EntityComponentClass));
-      }
-    }
+  if (!EntityDataAsset) {
+    return nullptr;
   }
 
-  if (!NewChunk) {
+  TObjectPtr<UEntityChunk> NewChunk;
+
+  if (EntityDataAsset->EntityChunkClass) {
+    NewChunk = NewObject<UEntityChunk>(this, EntityDataAsset->EntityChunkClass);
+  } else {
     NewChunk = NewObject<UEntityChunk>(this);
   }
 
-  EntityChunks.Add(NewChunk);
   NewChunk->Initialize(DataManager);
+
+  for (const TSubclassOf<UEntityComponent>& EntityComponentClass :
+       EntityDataAsset->EntityComponentClasses) {
+    if (EntityComponentClass) {
+      NewChunk->AddComponent(
+          NewObject<UEntityComponent>(NewChunk, EntityComponentClass));
+    }
+  }
+  EntityChunks.Add(NewChunk);
 
   return NewChunk;
 }

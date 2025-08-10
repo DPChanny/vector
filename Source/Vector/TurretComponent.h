@@ -2,23 +2,28 @@
 
 #include "Components/TargetComponent.h"
 #include "CoreMinimal.h"
-#include "TurretTargetComponent.generated.h"
+#include "TurretComponent.generated.h"
 
 UCLASS()
 
-class VOXEL_API UTurretTargetComponent : public UTargetComponent {
+class VECTOR_API UTurretComponent : public UTargetComponent {
   GENERATED_BODY()
+
+  UTurretComponent();
 
  public:
   virtual bool IsValidTarget(TObjectPtr<AActor> Actor) const override;
   virtual void Tick(float DeltaTime) override;
 
  private:
+  UPROPERTY(VisibleAnywhere)
+  float BaseRange = 200.f;
+
   float Timer = 0.f;
 
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere)
   float TimeInterval = 5.f;
 
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere)
   float BaseDamage = 100.f;
 };

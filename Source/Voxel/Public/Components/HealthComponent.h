@@ -16,7 +16,7 @@ class VOXEL_API UHealthComponent : public UEntityComponent {
                                const FVoxelEntityData& Data) override;
 
   UPROPERTY(VisibleAnywhere)
-  float TotalHealth;
+  float MaxHealth;
   UPROPERTY(VisibleAnywhere)
   float CurrentHealth;
 };

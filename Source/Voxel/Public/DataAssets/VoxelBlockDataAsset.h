@@ -12,19 +12,21 @@ class UNiagaraSystem;
 class USoundCue;
 
 UCLASS()
+
 class VOXEL_API UVoxelBlockDataAsset : public UVoxelSubstanceDataAsset {
   GENERATED_BODY()
 
-public:
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
-            Category = "Voxel | Destructible", meta = (ClampMin = "0.0"))
+ public:
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Block",
+            meta = (ClampMin = "0.0"))
   float MaxDurability = 100.0f;
 
-  virtual FVoxelBaseData *
-  ConstructVoxelData(const FVoxelBaseParams &Params) const override;
+  virtual FVoxelBaseData* ConstructVoxelData(
+      const FVoxelBaseParams& Params) const override;
 };
 
 USTRUCT()
+
 struct FVoxelBlockData : public FVoxelSubstanceData {
   GENERATED_BODY()
 
@@ -33,12 +35,12 @@ struct FVoxelBlockData : public FVoxelSubstanceData {
 
   FVoxelBlockData() = default;
 
-  static bool IsBlock(const FVoxelBaseData *VoxelBaseData) {
-    return dynamic_cast<const FVoxelBlockData *>(VoxelBaseData) != nullptr;
+  static bool IsBlock(const FVoxelBaseData* VoxelBaseData) {
+    return dynamic_cast<const FVoxelBlockData*>(VoxelBaseData) != nullptr;
   }
 
   explicit FVoxelBlockData(
-      const TObjectPtr<const UVoxelBlockDataAsset> &InDataAsset,
+      const TObjectPtr<const UVoxelBlockDataAsset>& InDataAsset,
       const float InDurability)
       : FVoxelSubstanceData(InDataAsset), Durability(InDurability) {}
 
@@ -59,7 +61,7 @@ struct FVoxelBlockParams : FVoxelSubstanceParams {
   explicit FVoxelBlockParams(const float InDurability)
       : Durability(InDurability) {}
 
-  virtual FVoxelBaseParams *Clone() const override {
+  virtual FVoxelBaseParams* Clone() const override {
     return new FVoxelBlockParams(*this);
   }
 };

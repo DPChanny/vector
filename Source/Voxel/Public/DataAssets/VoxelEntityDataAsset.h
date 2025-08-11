@@ -5,35 +5,37 @@
 #include "VoxelEntityDataAsset.generated.h"
 
 UCLASS()
+
 class UVoxelEntityDataAsset : public UVoxelBlockDataAsset {
   GENERATED_BODY()
 
-public:
-  UPROPERTY(EditAnywhere, Category = "Entity")
+ public:
+  UPROPERTY(EditAnywhere, Category = "Voxel | Entity")
   TSubclassOf<class UEntityChunk> EntityChunkClass;
 
-  UPROPERTY(EditAnywhere, Category = "Entity")
+  UPROPERTY(EditAnywhere, Category = "Voxel | Entity")
   TArray<TSubclassOf<class UEntityComponent>> EntityComponentClasses;
 
-  virtual FVoxelBaseData *
-  ConstructVoxelData(const FVoxelBaseParams &Params) const override;
+  virtual FVoxelBaseData* ConstructVoxelData(
+      const FVoxelBaseParams& Params) const override;
 };
 
 USTRUCT()
+
 struct FVoxelEntityData : public FVoxelBlockData {
   GENERATED_BODY()
 
-  UPROPERTY(VisibleAnywhere, Category = "Entity")
+  UPROPERTY(VisibleAnywhere, Category = "Voxel | Entity")
   uint8 TeamID = 0;
 
   FVoxelEntityData() = default;
 
-  static bool IsEntity(const FVoxelBaseData *VoxelBaseData) {
-    return dynamic_cast<const FVoxelEntityData *>(VoxelBaseData) != nullptr;
+  static bool IsEntity(const FVoxelBaseData* VoxelBaseData) {
+    return dynamic_cast<const FVoxelEntityData*>(VoxelBaseData) != nullptr;
   }
 
   explicit FVoxelEntityData(
-      const TObjectPtr<const UVoxelEntityDataAsset> &InDataAsset,
+      const TObjectPtr<const UVoxelEntityDataAsset>& InDataAsset,
       const float InDurability, const uint8 InTeamID)
       : FVoxelBlockData(InDataAsset, InDurability), TeamID(InTeamID) {}
 
@@ -41,7 +43,7 @@ struct FVoxelEntityData : public FVoxelBlockData {
     return Cast<const UVoxelEntityDataAsset>(DataAsset);
   }
 
-  virtual bool IsChunkableWith(const FVoxelEntityData *Other) const {
+  virtual bool IsChunkableWith(const FVoxelEntityData* Other) const {
     if (!Other || !DataAsset) {
       return false;
     }
@@ -64,7 +66,7 @@ struct FVoxelEntityParams final : FVoxelBlockParams {
   explicit FVoxelEntityParams(const float InDurability, const uint8 InTeamID)
       : FVoxelBlockParams(InDurability), TeamID(InTeamID) {}
 
-  virtual FVoxelBaseParams *Clone() const override {
+  virtual FVoxelBaseParams* Clone() const override {
     return new FVoxelEntityParams(*this);
   }
 };

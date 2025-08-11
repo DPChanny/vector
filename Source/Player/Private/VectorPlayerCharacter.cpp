@@ -93,7 +93,7 @@ void AVectorPlayerCharacter::Roll(const FInputActionValue& Value) {
 }
 
 void AVectorPlayerCharacter::Fire() const {
-  Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
+  // Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
 
   const FVector StartLocation = Camera->GetComponentLocation();
   const FVector EndLocation =

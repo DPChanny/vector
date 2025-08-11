@@ -15,9 +15,7 @@ public class VectorCore : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			[
 				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore"
+				"Engine"
 			]
 		);
 	}

@@ -31,23 +31,38 @@ class PLAYER_API AVectorPlayerCharacter : public APawn, public IDamageable {
                                        float DamageRange) override;
 
  protected:
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+  UPROPERTY(VisibleAnywhere, Category = "Player | Components")
   TObjectPtr<USphereComponent> Collider;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+  UPROPERTY(VisibleAnywhere, Category = "Player | Components")
   TObjectPtr<UCameraComponent> Camera;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+  UPROPERTY(VisibleAnywhere, Category = "Player | Components")
   TObjectPtr<UStaticMeshComponent> Mesh;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+  UPROPERTY(VisibleAnywhere, Category = "Player | Components")
   TObjectPtr<USpotLightComponent> Light;
 
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Poops")
+  UPROPERTY(EditDefaultsOnly, Category = "Player | Poops")
   TObjectPtr<UVoxelBlockDataAsset> Poop;
 
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere, Category = "Player")
   TObjectPtr<AVoxelWorldActor> World;
+
+  UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
+  float MaxHealth;
+
+  UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
+  float Range = 100.f;
+
+  UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
+  float Distance = 200.f;
+
+  UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
+  float Recoil = 0.f;
+
+  UPROPERTY(VisibleAnywhere, Category = "Player | Stats")
+  float Health;
 
  private:
   virtual void BeginPlay() override;

@@ -31,8 +31,8 @@ void UTurretComponent::Tick(const float DeltaTime) {
         HealthComponent->CurrentHealth / HealthComponent->MaxHealth);
     for (const auto Target : Targets) {
       if (Target->GetClass()->ImplementsInterface(UDamageable::StaticClass())) {
-        IDamageable::Execute_OnDamage(Target, Target->GetActorLocation(), 100,
-                                      Damage);
+        IDamageable::Execute_OnDamage(Target, Target->GetActorLocation(), Damage,
+                                      0);
       }
       DrawDebugLine(GetWorld(), OwnerChunk->CenterOfMass,
                     Target->GetActorLocation(), FColor::Red, false, 5.f, 0,

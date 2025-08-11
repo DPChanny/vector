@@ -12,7 +12,7 @@
 #include "Managers/DataManager.h"
 #include "Managers/DebugManager.h"
 
-AVectorPlayerCharacter::AVectorPlayerCharacter() {
+AVectorPlayerCharacter::AVectorPlayerCharacter() : Health(MaxHealth) {
   PrimaryActorTick.bCanEverTick = true;
 
   Collider = CreateDefaultSubobject<USphereComponent>(TEXT("Collider"));
@@ -92,11 +92,11 @@ void AVectorPlayerCharacter::Roll(const FInputActionValue& Value) {
 }
 
 void AVectorPlayerCharacter::Fire() const {
-  // Collider->AddImpulse(-Camera->GetForwardVector() * 50, NAME_None, true);
+  Collider->AddImpulse(Camera->GetForwardVector() * Recoil, NAME_None, true);
 
   const FVector StartLocation = Camera->GetComponentLocation();
   const FVector EndLocation =
-      StartLocation + Camera->GetForwardVector() * 2000.f;
+      StartLocation + Camera->GetForwardVector() * Distance;
 
   FHitResult HitResult;
   FCollisionQueryParams Params;
@@ -111,7 +111,7 @@ void AVectorPlayerCharacter::Fire() const {
           World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
 
       World->GetBuildManager()->ConstructBlocksInRadius(
-          CenterGlobalCoord, 100, 10, Poop, FVoxelEntityParams(0, 0));
+          CenterGlobalCoord, Range, 10, Poop, FVoxelEntityParams(0, 0));
 
       World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord,
                                               FColor::Yellow);
@@ -125,13 +125,13 @@ void AVectorPlayerCharacter::OnDamage_Implementation(const FVector HitPoint,
                                                      const float DamageRange) {
   IDamageable::OnDamage_Implementation(HitPoint, DamageAmount, DamageRange);
 
-  UE_LOG(LogTemp, Log, TEXT("Ouch"));
+  Health -= DamageAmount;
 }
 
 void AVectorPlayerCharacter::Eat() const {
   const FVector StartLocation = Camera->GetComponentLocation();
   const FVector EndLocation =
-      StartLocation + Camera->GetForwardVector() * 2000.f;
+      StartLocation + Camera->GetForwardVector() * Distance;
 
   FHitResult HitResult;
   FCollisionQueryParams Params;
@@ -144,7 +144,7 @@ void AVectorPlayerCharacter::Eat() const {
     if (const TObjectPtr<AActor> HitActor = HitResult.GetActor()) {
       if (HitActor->GetClass()->ImplementsInterface(
               UDamageable::StaticClass())) {
-        Execute_OnDamage(HitActor, HitResult.ImpactPoint, 10, 100);
+        Execute_OnDamage(HitActor, HitResult.ImpactPoint, 10, Range);
       }
     }
   }

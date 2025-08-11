@@ -3,7 +3,9 @@
 #include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelSubstanceDataAsset.h"
 #include "Engine/World.h"
+#include "Managers/BuildManager.h"
 #include "Managers/DataManager.h"
+#include "Managers/DebugManager.h"
 #include "MarchingCubesTables.h"
 #include "ProceduralMeshComponent.h"
 
@@ -18,16 +20,18 @@ AVoxelChunkActor::AVoxelChunkActor() : ChunkCoord(FIntVector::ZeroValue) {
   Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
-void AVoxelChunkActor::Initialize(const FIntVector &InChunkCoord) {
+void AVoxelChunkActor::Initialize(const FIntVector& InChunkCoord) {
   if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
           Cast<AVoxelWorldActor>(GetOwner())) {
     DataManager = VoxelWorld->GetDataManager();
+    DebugManager = VoxelWorld->GetDebugManager();
+    BuildManager = VoxelWorld->GetBuildManager();
   }
   ChunkCoord = InChunkCoord;
 }
 
-FVector AVoxelChunkActor::InterpolateVertex(const FVector &P1,
-                                            const FVector &P2, const float Val1,
+FVector AVoxelChunkActor::InterpolateVertex(const FVector& P1,
+                                            const FVector& P2, const float Val1,
                                             const float Val2) {
   if (FMath::IsNearlyEqual(Val1, Val2)) {
     return P1;
@@ -62,7 +66,7 @@ void AVoxelChunkActor::UpdateMesh() const {
         for (int i = 0; i < 8; ++i) {
           const FIntVector CornerGlobalCoord = GlobalCoord + CornerOffsets[i];
 
-          if (const FVoxelBaseData *VoxelData =
+          if (const FVoxelBaseData* VoxelData =
                   DataManager->GetVoxelData(CornerGlobalCoord)) {
             CornerDensities[i] = VoxelData->GetDensity();
           } else {
@@ -91,13 +95,13 @@ void AVoxelChunkActor::UpdateMesh() const {
             EdgeVertices[i] = InterpolateVertex(
                 CornerPositions[CornerA], CornerPositions[CornerB],
                 CornerDensities[CornerA], CornerDensities[CornerB]);
-            if (const FVoxelBaseData *VoxelData = DataManager->GetVoxelData(
+            if (const FVoxelBaseData* VoxelData = DataManager->GetVoxelData(
                     GlobalCoord +
                     (CornerDensities[CornerA] > CornerDensities[CornerB]
                          ? CornerOffsets[CornerA]
                          : CornerOffsets[CornerB]))) {
-              if (const FVoxelSubstanceData *VoxelSubstanceData =
-                      dynamic_cast<const FVoxelSubstanceData *>(VoxelData)) {
+              if (const FVoxelSubstanceData* VoxelSubstanceData =
+                      dynamic_cast<const FVoxelSubstanceData*>(VoxelData)) {
                 if (VoxelSubstanceData->GetSubstanceDataAsset()) {
                   EdgeVertexColors[i] =
                       VoxelSubstanceData->GetSubstanceDataAsset()->VertexColor;
@@ -123,7 +127,7 @@ void AVoxelChunkActor::UpdateMesh() const {
                 RoundVector(TriangleVertices[j], 0.001f);
             int32 VertexIndex;
 
-            if (int32 *ExistingIndex = VertexMap.Find(RoundedVertex)) {
+            if (int32* ExistingIndex = VertexMap.Find(RoundedVertex)) {
               VertexIndex = *ExistingIndex;
             } else {
               VertexIndex = Vertices.Add(TriangleVertices[j]);
@@ -142,12 +146,12 @@ void AVoxelChunkActor::UpdateMesh() const {
     }
   }
 
-  for (auto &Pair : VertexNormals) {
+  for (auto& Pair : VertexNormals) {
     int32 VertexIndex = Pair.Key;
-    TArray<FVector> &FaceNormals = Pair.Value;
+    TArray<FVector>& FaceNormals = Pair.Value;
 
     FVector AverageNormal = FVector::ZeroVector;
-    for (const FVector &FaceNormal : FaceNormals) {
+    for (const FVector& FaceNormal : FaceNormals) {
       AverageNormal += FaceNormal;
     }
 
@@ -163,14 +167,26 @@ void AVoxelChunkActor::UpdateMesh() const {
   Mesh->SetMaterial(0, Material);
 }
 
-FVector AVoxelChunkActor::RoundVector(const FVector &InVector,
+void AVoxelChunkActor::OnDamage_Implementation(const FVector HitPoint,
+                                               const float DamageAmount,
+                                               const float DamageRange) {
+  IDamageable::OnDamage_Implementation(HitPoint, DamageAmount, DamageRange);
+
+  const FIntVector GlobalCoord = DataManager->WorldToGlobalCoord(HitPoint);
+  BuildManager->DamageBlocksInRadius(GlobalCoord, DamageRange, DamageAmount);
+
+  DebugManager->SetDebugVoxel(GlobalCoord, FColor::Yellow);
+  DebugManager->FlushDebugVoxelBuffer();
+}
+
+FVector AVoxelChunkActor::RoundVector(const FVector& InVector,
                                       const float Precision) {
   return FVector(FMath::RoundToFloat(InVector.X / Precision) * Precision,
                  FMath::RoundToFloat(InVector.Y / Precision) * Precision,
                  FMath::RoundToFloat(InVector.Z / Precision) * Precision);
 }
 
-FVector2D AVoxelChunkActor::GetUV(const FVector &Position) {
+FVector2D AVoxelChunkActor::GetUV(const FVector& Position) {
   const FVector AbsNormal = FVector(
       FMath::Abs(Position.X), FMath::Abs(Position.Y), FMath::Abs(Position.Z));
 

@@ -18,6 +18,7 @@ public class Player : ModuleRules
 				"EnhancedInput",
 				"CoreUObject",
 				"Engine",
+				"VectorCore",
 				"Voxel"
 			]
 		);

@@ -8,6 +8,6 @@ public class Vector : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(["Core", "CoreUObject", "Voxel", "Engine", "Player"]);
+		PublicDependencyModuleNames.AddRange(["Core", "CoreUObject", "Voxel", "Engine", "Player", "VectorCore"]);
 	}
 }

@@ -18,7 +18,8 @@ public class Voxel : ModuleRules
 				"UMG",
 				"ProceduralMeshComponent",
 				"CoreUObject",
-				"Engine"
+				"Engine",
+				"VectorCore"
 			]
 		);
 	}

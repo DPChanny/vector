@@ -30,8 +30,10 @@ void UTurretComponent::Tick(const float DeltaTime) {
         BaseDamage, DamageBalancer, OwnerChunk->GetManagedVoxels().Num(),
         HealthComponent->CurrentHealth / HealthComponent->MaxHealth);
     for (const auto Target : Targets) {
-      UE_LOG(LogTemp, Log, TEXT("Attacking %s with damage amount of %f"),
-             *Target->GetName(), Damage);
+      if (Target->GetClass()->ImplementsInterface(UDamageable::StaticClass())) {
+        IDamageable::Execute_OnDamage(Target, Target->GetActorLocation(), 100,
+                                      Damage);
+      }
       DrawDebugLine(GetWorld(), OwnerChunk->CenterOfMass,
                     Target->GetActorLocation(), FColor::Red, false, 5.f, 0,
                     .5f);

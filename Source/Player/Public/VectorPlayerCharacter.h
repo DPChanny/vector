@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Damageable.h"
 #include "GameFramework/Pawn.h"
 #include "VectorPlayerCharacter.generated.h"
 
@@ -14,7 +15,7 @@ class UVoxelBlockDataAsset;
 
 UCLASS()
 
-class PLAYER_API AVectorPlayerCharacter : public APawn {
+class PLAYER_API AVectorPlayerCharacter : public APawn, public IDamageable {
   GENERATED_BODY()
 
  public:
@@ -25,6 +26,9 @@ class PLAYER_API AVectorPlayerCharacter : public APawn {
   void Roll(const FInputActionValue& Value);
   void Eat() const;
   void Fire() const;
+
+  virtual void OnDamage_Implementation(FVector HitPoint, float DamageAmount,
+                                       float DamageRange) override;
 
  protected:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

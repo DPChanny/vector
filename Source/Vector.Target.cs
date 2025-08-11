@@ -15,6 +15,7 @@ public class VectorTarget : TargetRules
 
 	private void RegisterModulesCreatedByRider()
 	{
+		ExtraModuleNames.AddRange(new[] { "VectorCore" });
 		ExtraModuleNames.AddRange(["Voxel", "Player"]);
 	}
 }

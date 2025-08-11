@@ -1,7 +1,5 @@
 #include "VectorPlayerCharacter.h"
 
-#include <Kismet/GameplayStatics.h>
-
 #include "Actors/VoxelWorldActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
@@ -9,6 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "DataAssets/VoxelEntityDataAsset.h"
 #include "EnhancedInputSubsystems.h"
+#include "Kismet/GameplayStatics.h"
 #include "Managers/BuildManager.h"
 #include "Managers/DataManager.h"
 #include "Managers/DebugManager.h"
@@ -121,6 +120,14 @@ void AVectorPlayerCharacter::Fire() const {
   }
 }
 
+void AVectorPlayerCharacter::OnDamage_Implementation(const FVector HitPoint,
+                                                     const float DamageAmount,
+                                                     const float DamageRange) {
+  IDamageable::OnDamage_Implementation(HitPoint, DamageAmount, DamageRange);
+
+  UE_LOG(LogTemp, Log, TEXT("Ouch"));
+}
+
 void AVectorPlayerCharacter::Eat() const {
   const FVector StartLocation = Camera->GetComponentLocation();
   const FVector EndLocation =
@@ -134,11 +141,11 @@ void AVectorPlayerCharacter::Eat() const {
       HitResult, StartLocation, EndLocation, ECC_Visibility, Params);
 
   if (bHit) {
-    const FIntVector CenterGlobalCoord =
-        World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
-    World->GetBuildManager()->DamageBlocksInRadius(CenterGlobalCoord, 100, 10);
-
-    World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
-    World->GetDebugManager()->FlushDebugVoxelBuffer();
+    if (const TObjectPtr<AActor> HitActor = HitResult.GetActor()) {
+      if (HitActor->GetClass()->ImplementsInterface(
+              UDamageable::StaticClass())) {
+        Execute_OnDamage(HitActor, HitResult.ImpactPoint, 10, 100);
+      }
+    }
   }
 }

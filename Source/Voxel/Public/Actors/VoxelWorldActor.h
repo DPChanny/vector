@@ -55,47 +55,29 @@ class VOXEL_API AVoxelWorldActor : public AActor {
  private:
   void InitializeNexuses(int32 NexusCount);
 
-  virtual void Tick(float DeltaSeconds) override;
-
   AVoxelWorldActor();
 
-  UPROPERTY(EditDefaultsOnly, Category = "World | World")
-  int32 ChunkSize = 32;
-
-  UPROPERTY(EditDefaultsOnly, Category = "World | World")
-  int32 VoxelSize = 50;
-
-  UPROPERTY(EditDefaultsOnly, Category = "World | Data")
-  TObjectPtr<UVoxelBlockDataAsset> VoxelDefaultBlockDataAsset;
-
-  UPROPERTY(EditDefaultsOnly, Category = "World | Chunk")
-  TSubclassOf<AVoxelChunkActor> VoxelChunkActorClass;
-
-  UPROPERTY(EditDefaultsOnly, Category = "World | Nexus")
+  UPROPERTY(EditDefaultsOnly, Category = "Nexus")
   float NexusRadius = 200.f;
 
-  UPROPERTY(EditDefaultsOnly, Category = "World | Nexus")
+  UPROPERTY(EditDefaultsOnly, Category = "Nexus")
   float NexusPlacementRadius = 1000.f;
 
-  UPROPERTY(EditDefaultsOnly, Category = "World | Debug")
-  TSubclassOf<AVoxelDebugActor> VoxelDebugActorClass;
-
-  UPROPERTY()
   TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 
-  UPROPERTY()
+  UPROPERTY(EditDefaultsOnly, Category = "Manager")
   TObjectPtr<UDataManager> DataManager;
 
-  UPROPERTY()
+  UPROPERTY(EditDefaultsOnly, Category = "Manager")
   TObjectPtr<UEntityManager> EntityManager;
 
-  UPROPERTY()
+  UPROPERTY(EditDefaultsOnly, Category = "Manager")
   TObjectPtr<UDebugManager> DebugManager;
 
-  UPROPERTY()
+  UPROPERTY(EditDefaultsOnly, Category = "Manager")
   TObjectPtr<UBuildManager> BuildManager;
 
-  UPROPERTY()
+  UPROPERTY(EditDefaultsOnly, Category = "Manager")
   TObjectPtr<UMeshManager> MeshManager;
 
   TArray<FNexus> Nexuses;

@@ -1,19 +1,23 @@
 ﻿#include "Managers/EntityManager.h"
 
-#include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelEntityDataAsset.h"
 #include "EntityChunk.h"
 #include "EntityComponent.h"
 #include "Managers/DataManager.h"
 
-void UEntityManager::Initialize() {
-  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
-          Cast<AVoxelWorldActor>(GetOuter())) {
-    DataManager = VoxelWorld->GetDataManager();
+void UEntityManager::BeginPlay() {
+  Super::BeginPlay();
+
+  if (const AActor* Owner = GetOwner()) {
+    DataManager = Owner->GetComponentByClass<UDataManager>();
   }
 }
 
-void UEntityManager::Tick(const float DeltaTime) {
+void UEntityManager::TickComponent(
+    float DeltaTime, const ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction) {
+  Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
   for (const TObjectPtr Chunk : EntityChunks) {
     if (Chunk) {
       Chunk->Tick(DeltaTime);

@@ -7,26 +7,27 @@ class AVoxelDebugActor;
 class UDataManager;
 
 UCLASS()
-class VOXEL_API UDebugManager : public UObject {
+
+class VOXEL_API UDebugManager : public UActorComponent {
   GENERATED_BODY()
 
-public:
-  void Initialize(const TSubclassOf<AVoxelDebugActor> &InDebugActorClass);
-
-  void SetDebugVoxels(const TSet<FIntVector> &NewDebugVoxels,
-                      const FColor &Color = FColor::Green);
-  void SetDebugVoxel(const FIntVector &NewDebugVoxel,
-                     const FColor &Color = FColor::Green);
+ public:
+  void SetDebugVoxels(const TSet<FIntVector>& NewDebugVoxels,
+                      const FColor& Color = FColor::Green);
+  void SetDebugVoxel(const FIntVector& NewDebugVoxel,
+                     const FColor& Color = FColor::Green);
   void FlushDebugVoxelBuffer();
 
-private:
-  void AddDebugVoxel(const FIntVector &GlobalCoord);
-  void RemoveDebugVoxel(const FIntVector &VoxelCoord);
+ private:
+  virtual void BeginPlay() override;
 
-  UPROPERTY()
-  TSubclassOf<AVoxelDebugActor> DebugActorClass;
+  void AddDebugVoxel(const FIntVector& GlobalCoord);
+  void RemoveDebugVoxel(const FIntVector& VoxelCoord);
 
-  UPROPERTY()
+  UPROPERTY(EditDefaultsOnly)
+  TSubclassOf<AVoxelDebugActor> VoxelDebugActorClass;
+
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UDataManager> DataManager;
 
   TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;

@@ -17,18 +17,12 @@ class UEntityManager;
 
 UCLASS()
 
-class VOXEL_API UDataManager : public UObject {
+class VOXEL_API UDataManager : public UActorComponent {
   GENERATED_BODY()
 
  public:
   static float GetSurfaceLevel() { return 0.f; }
 
-  void Initialize(
-      int32 InChunkSize, int32 InVoxelSize,
-      const TSubclassOf<AVoxelChunkActor>& InVoxelChunkActorClass,
-      const TObjectPtr<UVoxelBlockDataAsset>& InVoxelDefaultBlockDataAsset);
-
-  inline bool IsVoxelChunkLoaded(const FIntVector& ChunkCoord) const;
   FVoxelChunk* GetVoxelChunk(const FIntVector& ChunkCoord);
 
   inline const FVoxelBaseData* GetVoxelData(const FIntVector& GlobalCoord);
@@ -57,27 +51,31 @@ class VOXEL_API UDataManager : public UObject {
   inline int32 GlobalCoordToIndex(const FIntVector& GlobalCoord) const;
 
  private:
+  virtual void BeginPlay() override;
+
   FVoxelChunk* LoadVoxelChunk(const FIntVector& ChunkCoord);
   void UnloadVoxelChunk(const FIntVector& ChunkCoord);
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY(EditDefaultsOnly)
+  int32 ChunkSize = 16;
+
+  UPROPERTY(EditDefaultsOnly)
+  int32 VoxelSize = 50;
+
+  UPROPERTY(EditDefaultsOnly)
   TObjectPtr<UVoxelBlockDataAsset> VoxelDefaultBlockDataAsset;
+
+  UPROPERTY(EditDefaultsOnly)
+  TSubclassOf<AVoxelChunkActor> VoxelChunkActorClass;
 
   TMap<FIntVector, FVoxelChunk> VoxelChunks;
 
-  UPROPERTY()
-  TSubclassOf<AVoxelChunkActor> VoxelChunkActorClass;
-  int32 VoxelSize;
-
-  int32 ChunkSize;
-  int32 ChunkVolume;
-
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UDebugManager> DebugManager;
 
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UMeshManager> MeshManager;
 
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UEntityManager> EntityManager;
 };

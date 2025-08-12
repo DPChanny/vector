@@ -1,28 +1,20 @@
 ﻿#include "Managers/DataManager.h"
 
 #include "Actors/VoxelChunkActor.h"
-#include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelBaseDataAsset.h"
 #include "DataAssets/VoxelEntityDataAsset.h"
 #include "Managers/DebugManager.h"
 #include "Managers/EntityManager.h"
 #include "Managers/MeshManager.h"
 
-void UDataManager::Initialize(
-    const int32 InChunkSize, const int32 InVoxelSize,
-    const TSubclassOf<AVoxelChunkActor>& InVoxelChunkActorClass,
-    const TObjectPtr<UVoxelBlockDataAsset>& InVoxelDefaultBlockDataAsset) {
-  const AVoxelWorldActor* VoxelWorld = Cast<AVoxelWorldActor>(GetOuter());
-  DebugManager = VoxelWorld->GetDebugManager();
-  MeshManager = VoxelWorld->GetMeshManager();
-  EntityManager = VoxelWorld->GetEntityManager();
-  ChunkSize = InChunkSize;
-  VoxelSize = InVoxelSize;
-  ChunkVolume = ChunkSize * ChunkSize * ChunkSize;
-  VoxelChunkActorClass = InVoxelChunkActorClass;
-  VoxelDefaultBlockDataAsset = InVoxelDefaultBlockDataAsset;
+void UDataManager::BeginPlay() {
+  Super::BeginPlay();
 
-  VoxelChunks.Empty();
+  if (const AActor* Owner = GetOwner()) {
+    DebugManager = Owner->GetComponentByClass<UDebugManager>();
+    MeshManager = Owner->GetComponentByClass<UMeshManager>();
+    EntityManager = Owner->GetComponentByClass<UEntityManager>();
+  }
 }
 
 FVoxelChunk* UDataManager::LoadVoxelChunk(const FIntVector& ChunkCoord) {
@@ -141,10 +133,6 @@ void UDataManager::SetVoxelData(const FIntVector& GlobalCoord,
       MeshManager->SetDirtyChunk(GlobalCoord);
     }
   }
-}
-
-bool UDataManager::IsVoxelChunkLoaded(const FIntVector& ChunkCoord) const {
-  return VoxelChunks.Contains(ChunkCoord);
 }
 
 FIntVector UDataManager::GlobalToChunkCoord(

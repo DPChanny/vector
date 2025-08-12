@@ -14,37 +14,38 @@ class UMeshManager;
 class UDebugManager;
 
 UCLASS()
-class VOXEL_API UBuildManager : public UObject {
+
+class VOXEL_API UBuildManager : public UActorComponent {
   GENERATED_BODY()
 
   const FIntVector NeighborOffsets[6] = {
       FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
       FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
 
-public:
-  void Initialize();
-
-  void DamageBlocksInRadius(const FIntVector &CenterGlobalCoord, float Radius,
+ public:
+  void DamageBlocksInRadius(const FIntVector& CenterGlobalCoord, float Radius,
                             float DamageAmount) const;
   void ConstructBlocksInRadius(
-      const FIntVector &CenterGlobalCoord, float Radius,
+      const FIntVector& CenterGlobalCoord, float Radius,
       float ConstructionAmount,
-      const TObjectPtr<const UVoxelBlockDataAsset> &NewVoxelBlockDataAsset,
-      const FVoxelBlockParams &VoxelParams) const;
+      const TObjectPtr<const UVoxelBlockDataAsset>& NewVoxelBlockDataAsset,
+      const FVoxelBlockParams& VoxelParams) const;
 
-  void GetGlobalCoordsInRadius(const FIntVector &CenterGlobalCoord,
+  void GetGlobalCoordsInRadius(const FIntVector& CenterGlobalCoord,
                                float Radius,
-                               TSet<FIntVector> &FoundGlobalCoords) const;
+                               TSet<FIntVector>& FoundGlobalCoords) const;
 
-private:
+ private:
+  virtual void BeginPlay() override;
+
   void ProcessVoxelsInRadius(
-      const FIntVector &CenterGlobalCoord, float Radius,
-      const TFunction<void(const FIntVector &)> &VoxelModifier) const;
-  bool IsSurfaceVoxel(const FIntVector &VoxelCoord) const;
+      const FIntVector& CenterGlobalCoord, float Radius,
+      const TFunction<void(const FIntVector&)>& VoxelModifier) const;
+  bool IsSurfaceVoxel(const FIntVector& VoxelCoord) const;
 
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UDataManager> DataManager;
 
-  UPROPERTY()
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UMeshManager> MeshManager;
 };

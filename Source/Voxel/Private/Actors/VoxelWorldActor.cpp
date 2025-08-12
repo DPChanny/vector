@@ -10,22 +10,15 @@
 
 AVoxelWorldActor::AVoxelWorldActor() {
   PrimaryActorTick.bCanEverTick = true;
+
+  DebugManager = CreateDefaultSubobject<UDebugManager>(TEXT("DebugManager"));
+  DataManager = CreateDefaultSubobject<UDataManager>(TEXT("DataManager"));
+  BuildManager = CreateDefaultSubobject<UBuildManager>(TEXT("BuildManager"));
+  MeshManager = CreateDefaultSubobject<UMeshManager>(TEXT("MeshManager"));
+  EntityManager = CreateDefaultSubobject<UEntityManager>(TEXT("EntityManager"));
 }
 
 void AVoxelWorldActor::Initialize(const int32 NumberOfPlayers) {
-  DebugManager = NewObject<UDebugManager>(this);
-  DataManager = NewObject<UDataManager>(this);
-  BuildManager = NewObject<UBuildManager>(this);
-  MeshManager = NewObject<UMeshManager>(this);
-  EntityManager = NewObject<UEntityManager>(this);
-
-  DebugManager->Initialize(VoxelDebugActorClass);
-  DataManager->Initialize(ChunkSize, VoxelSize, VoxelChunkActorClass,
-                          VoxelDefaultBlockDataAsset);
-  BuildManager->Initialize();
-  MeshManager->Initialize();
-  EntityManager->Initialize();
-
   InitializeNexuses(NumberOfPlayers);
 
   MeshManager->FlushDirtyChunks();
@@ -81,9 +74,4 @@ void AVoxelWorldActor::InitializeNexuses(const int32 NexusCount) {
       PlayerStarts.Add(NewPlayerStart);
     }
   }
-}
-
-void AVoxelWorldActor::Tick(const float DeltaSeconds) {
-  Super::Tick(DeltaSeconds);
-  EntityManager->Tick(DeltaSeconds);
 }

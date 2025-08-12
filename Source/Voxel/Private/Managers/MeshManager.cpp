@@ -4,10 +4,10 @@
 #include "Actors/VoxelWorldActor.h"
 #include "Managers/DataManager.h"
 
-void UMeshManager::Initialize() {
-  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
-          Cast<AVoxelWorldActor>(GetOuter())) {
-    DataManager = VoxelWorld->GetDataManager();
+void UMeshManager::BeginPlay() {
+  Super::BeginPlay();
+  if (const AActor* Owner = GetOwner()) {
+    DataManager = Owner->GetComponentByClass<UDataManager>();
   }
 }
 

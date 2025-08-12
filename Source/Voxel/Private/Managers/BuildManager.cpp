@@ -1,17 +1,17 @@
 ﻿#include "Managers/BuildManager.h"
 
-#include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelBlockDataAsset.h"
 #include "DataAssets/VoxelBorderDataAsset.h"
 #include "DataAssets/VoxelVoidDataAsset.h"
 #include "Managers/DataManager.h"
 #include "Managers/MeshManager.h"
 
-void UBuildManager::Initialize() {
-  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
-          Cast<AVoxelWorldActor>(GetOuter())) {
-    DataManager = VoxelWorld->GetDataManager();
-    MeshManager = VoxelWorld->GetMeshManager();
+void UBuildManager::BeginPlay() {
+  Super::BeginPlay();
+
+  if (const AActor* Owner = GetOwner()) {
+    DataManager = Owner->GetComponentByClass<UDataManager>();
+    MeshManager = Owner->GetComponentByClass<UMeshManager>();
   }
 }
 

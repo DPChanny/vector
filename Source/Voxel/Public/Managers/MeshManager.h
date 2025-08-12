@@ -6,19 +6,19 @@
 class UDataManager;
 
 UCLASS()
-class VOXEL_API UMeshManager : public UObject {
+
+class VOXEL_API UMeshManager : public UActorComponent {
   GENERATED_BODY()
 
-public:
-  void Initialize();
+ public:
+  virtual void BeginPlay() override;
 
-  void SetDirtyChunk(const FIntVector &GlobalCoord);
+  void SetDirtyChunk(const FIntVector& GlobalCoord);
   void FlushDirtyChunks();
 
-private:
-  UPROPERTY()
+ private:
+  UPROPERTY(VisibleAnywhere)
   TObjectPtr<UDataManager> DataManager;
 
-  UPROPERTY()
   TSet<FIntVector> DirtyChunkCoords;
 };

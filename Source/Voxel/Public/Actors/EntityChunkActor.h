@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "EntityChunk.generated.h"
+#include "EntityChunkActor.generated.h"
 
 class UDataManager;
 class UEntityComponent;
@@ -9,14 +9,10 @@ struct FVoxelEntityData;
 
 UCLASS()
 
-class VOXEL_API UEntityChunk : public UObject {
+class VOXEL_API AEntityChunkActor : public AActor {
   GENERATED_BODY()
 
  public:
-  virtual void Initialize(TObjectPtr<UDataManager> InDataManager);
-
-  virtual void Tick(float DeltaTime);
-
   virtual void AddEntity(const FIntVector& VoxelCoord,
                          const FVoxelEntityData& EntityData);
   virtual void RemoveEntity(const FIntVector& VoxelCoord,
@@ -29,29 +25,15 @@ class VOXEL_API UEntityChunk : public UObject {
 
   const TSet<FIntVector>& GetManagedVoxels() const { return ManagedVoxels; }
 
-  void AddComponent(const TObjectPtr<UEntityComponent>& Component);
-
-  template <typename T>
-  TObjectPtr<T> GetComponent() const {
-    for (auto Component : Components) {
-      if (TObjectPtr<T> Casted = Cast<T>(Component)) {
-        return Casted;
-      }
-    }
-    return nullptr;
-  }
-
-  UPROPERTY(VisibleAnywhere)
-  FVector CenterOfMass;
-
  private:
+  virtual void BeginPlay() override;
+
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UDataManager> DataManager;
 
   TSet<FIntVector> ManagedVoxels;
 
-  UPROPERTY()
   TArray<TObjectPtr<UEntityComponent>> Components;
 
-  void UpdateCenterOfMass();
+  void UpdateLocation();
 };

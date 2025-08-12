@@ -58,3 +58,7 @@ void UMeshManager::FlushDirtyChunks() {
   }
   DirtyChunkCoords.Empty();
 }
+
+UMeshManager::UMeshManager() {
+  bWantsInitializeComponent = true;
+}

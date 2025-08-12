@@ -36,6 +36,8 @@ class VOXEL_API UBuildManager : public UActorComponent {
                                TSet<FIntVector>& FoundGlobalCoords) const;
 
  private:
+  UBuildManager();
+
   virtual void InitializeComponent() override;
 
   void ProcessVoxelsInRadius(

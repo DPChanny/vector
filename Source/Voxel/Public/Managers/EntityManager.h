@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "EntityManager.generated.h"
 
-class UEntityChunk;
+class AEntityChunkActor;
 struct FVoxelEntityData;
 
 UCLASS()
@@ -11,15 +11,20 @@ UCLASS()
 class VOXEL_API UEntityManager : public UActorComponent {
   GENERATED_BODY()
 
-  const FIntVector NeighborOffsets[6] = {
-      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
-      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
+  const FIntVector NeighborOffsets[26] = {
+      FIntVector(1, 0, 0),   FIntVector(-1, 0, 0),  FIntVector(0, 1, 0),
+      FIntVector(0, -1, 0),  FIntVector(0, 0, 1),   FIntVector(0, 0, -1),
+
+      FIntVector(1, 1, 0),   FIntVector(1, -1, 0),  FIntVector(-1, 1, 0),
+      FIntVector(-1, -1, 0), FIntVector(1, 0, 1),   FIntVector(1, 0, -1),
+      FIntVector(-1, 0, 1),  FIntVector(-1, 0, -1), FIntVector(0, 1, 1),
+      FIntVector(0, 1, -1),  FIntVector(0, -1, 1),  FIntVector(0, -1, -1),
+
+      FIntVector(1, 1, 1),   FIntVector(1, 1, -1),  FIntVector(1, -1, 1),
+      FIntVector(1, -1, -1), FIntVector(-1, 1, 1),  FIntVector(-1, 1, -1),
+      FIntVector(-1, -1, 1), FIntVector(-1, -1, -1)};
 
  public:
-  virtual void TickComponent(
-      float DeltaTime, ELevelTick TickType,
-      FActorComponentTickFunction* ThisTickFunction) override;
-
   void OnEntityDataCreated(const FIntVector& GlobalCoord,
                            const FVoxelEntityData& EntityData);
   void OnEntityDataDestroyed(const FIntVector& GlobalCoord,
@@ -29,19 +34,21 @@ class VOXEL_API UEntityManager : public UActorComponent {
                             const FVoxelEntityData& EntityData);
 
  private:
+  UEntityManager();
+
   virtual void InitializeComponent() override;
 
-  void UpdateEntityChunk(const TObjectPtr<UEntityChunk>& OriginalChunk);
+  void UpdateEntityChunk(const TObjectPtr<AEntityChunkActor>& OriginalChunk);
   bool GetChunkableEntityCoords(const FIntVector& StartCoord,
                                 TSet<FIntVector>& VisitedCoords,
                                 TSet<FIntVector>& ChunkableEntityCoords) const;
-  TObjectPtr<UEntityChunk> CreateEntityChunk(
+  TObjectPtr<AEntityChunkActor> CreateEntityChunk(
       const FVoxelEntityData& EntityData);
 
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<class UDataManager> DataManager;
 
-  TMap<FIntVector, TObjectPtr<UEntityChunk>> EntityToChunk;
+  TMap<FIntVector, TObjectPtr<AEntityChunkActor>> EntityToChunk;
 
-  TSet<TObjectPtr<UEntityChunk>> EntityChunks;
+  TSet<TObjectPtr<AEntityChunkActor>> EntityChunks;
 };

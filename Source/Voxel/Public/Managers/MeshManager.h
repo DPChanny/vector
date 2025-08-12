@@ -17,6 +17,8 @@ class VOXEL_API UMeshManager : public UActorComponent {
   void FlushDirtyChunks();
 
  private:
+  UMeshManager();
+
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UDataManager> DataManager;
 

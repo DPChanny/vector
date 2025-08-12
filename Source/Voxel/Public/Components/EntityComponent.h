@@ -3,17 +3,14 @@
 #include "CoreMinimal.h"
 #include "EntityComponent.generated.h"
 
-class UEntityChunk;
 struct FVoxelEntityData;
 
-UCLASS(Abstract)
+UCLASS(Abstract, meta = (BlueprintSpawnableComponent), Blueprintable)
 
-class VOXEL_API UEntityComponent : public UObject {
+class VOXEL_API UEntityComponent : public UActorComponent {
   GENERATED_BODY()
 
  public:
-  explicit UEntityComponent();
-
   virtual void OnEntityAdded(const FIntVector& VoxelCoord,
                              const FVoxelEntityData& Data) {}
 
@@ -22,10 +19,4 @@ class VOXEL_API UEntityComponent : public UObject {
 
   virtual void OnEntityDataModified(const FIntVector& VoxelCoord,
                                     const FVoxelEntityData& Data) {}
-
-  virtual void Tick(float DeltaTime) {}
-
- protected:
-  UPROPERTY()
-  TObjectPtr<UEntityChunk> OwnerChunk;
 };

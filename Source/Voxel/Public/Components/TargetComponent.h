@@ -5,11 +5,14 @@
 #include "TargetComponent.generated.h"
 
 UCLASS()
+
 class VOXEL_API UTargetComponent : public UEntityComponent {
   GENERATED_BODY()
 
-public:
-  virtual void Tick(float DeltaTime) override;
+ public:
+  virtual void TickComponent(
+      float DeltaTime, ELevelTick TickType,
+      FActorComponentTickFunction* ThisTickFunction) override;
 
   UPROPERTY(EditDefaultsOnly)
   TSubclassOf<AActor> TargetClass;
@@ -20,7 +23,9 @@ public:
   UPROPERTY(VisibleAnywhere)
   TArray<TObjectPtr<AActor>> Targets;
 
-protected:
+ protected:
+  UTargetComponent();
+
   void UpdateTargets();
   virtual float GetTargetPriority(TObjectPtr<AActor> TargetCandidate);
   virtual bool IsValidTarget(TObjectPtr<AActor> Actor) const;

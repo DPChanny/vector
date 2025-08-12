@@ -156,6 +156,10 @@ void UBuildManager::GetGlobalCoordsInRadius(
   }
 }
 
+UBuildManager::UBuildManager() {
+  bWantsInitializeComponent = true;
+}
+
 void UBuildManager::ProcessVoxelsInRadius(
     const FIntVector& CenterGlobalCoord, const float Radius,
     const TFunction<void(const FIntVector&)>& VoxelModifier) const {

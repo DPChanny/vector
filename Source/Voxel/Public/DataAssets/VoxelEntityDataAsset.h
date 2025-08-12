@@ -11,10 +11,7 @@ class UVoxelEntityDataAsset : public UVoxelBlockDataAsset {
 
  public:
   UPROPERTY(EditAnywhere, Category = "Voxel | Entity")
-  TSubclassOf<class UEntityChunk> EntityChunkClass;
-
-  UPROPERTY(EditAnywhere, Category = "Voxel | Entity")
-  TArray<TSubclassOf<class UEntityComponent>> EntityComponentClasses;
+  TSubclassOf<class AEntityChunkActor> EntityChunkActorClass;
 
   virtual FVoxelBaseData* ConstructVoxelData(
       const FVoxelBaseParams& Params) const override;

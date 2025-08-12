@@ -159,6 +159,10 @@ int32 UDataManager::GlobalCoordToIndex(const FIntVector& GlobalCoord) const {
   return LocalCoordToIndex(GlobalToLocalCoord(GlobalCoord));
 }
 
+UDataManager::UDataManager() {
+  bWantsInitializeComponent = true;
+}
+
 FIntVector UDataManager::LocalToGlobalCoord(
     const FIntVector& LocalCoord, const FIntVector& ChunkCoord) const {
   return ChunkToGlobalCoord(ChunkCoord) + LocalCoord;

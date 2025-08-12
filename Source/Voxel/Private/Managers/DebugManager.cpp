@@ -1,7 +1,6 @@
 ﻿#include "Managers/DebugManager.h"
 
 #include "Actors/VoxelDebugActor.h"
-#include "Actors/VoxelWorldActor.h"
 #include "Managers/DataManager.h"
 
 void UDebugManager::InitializeComponent() {
@@ -50,6 +49,10 @@ void UDebugManager::FlushDebugVoxelBuffer() {
   }
 
   DebugVoxelsBuffer.Empty();
+}
+
+UDebugManager::UDebugManager() {
+  bWantsInitializeComponent = true;
 }
 
 void UDebugManager::AddDebugVoxel(const FIntVector& GlobalCoord) {

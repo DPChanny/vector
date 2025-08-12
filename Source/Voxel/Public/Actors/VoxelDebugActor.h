@@ -10,6 +10,7 @@ class UWidgetComponent;
 class UVoxelDebugWidget;
 
 UCLASS()
+
 class VOXEL_API AVoxelDebugActor : public AActor {
   GENERATED_BODY()
 
@@ -20,7 +21,7 @@ class VOXEL_API AVoxelDebugActor : public AActor {
   FIntVector VoxelCoord;
 
   UPROPERTY(VisibleAnywhere)
-  TObjectPtr<const UDataManager> DataManager;
+  TObjectPtr<UDataManager> DataManager;
 
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UBoxComponent> Box;
@@ -31,7 +32,7 @@ class VOXEL_API AVoxelDebugActor : public AActor {
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UVoxelDebugWidget> DisplayWidget;
 
-public:
-  void Initialize(const FIntVector &InVoxelCoord, const FColor &Color);
-  void UpdateActor(const FColor &Color) const;
+ public:
+  void Initialize(const FIntVector& InVoxelCoord, const FColor& Color);
+  void UpdateActor(const FColor& Color) const;
 };

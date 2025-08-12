@@ -16,6 +16,7 @@ class UMeshManager;
 class AVoxelChunkActor;
 
 USTRUCT()
+
 struct FNexus {
   GENERATED_BODY()
 
@@ -24,55 +25,57 @@ struct FNexus {
 };
 
 UCLASS()
+
 class VOXEL_API AVoxelWorldActor : public AActor {
   GENERATED_BODY()
 
-public:
-  const TObjectPtr<UDataManager> &GetDataManager() const { return DataManager; }
-  const TObjectPtr<UMeshManager> &GetMeshManager() const { return MeshManager; }
-  const TObjectPtr<UDebugManager> &GetDebugManager() const {
+ public:
+  const TObjectPtr<UDataManager>& GetDataManager() const { return DataManager; }
+
+  const TObjectPtr<UMeshManager>& GetMeshManager() const { return MeshManager; }
+
+  const TObjectPtr<UDebugManager>& GetDebugManager() const {
     return DebugManager;
   }
-  const TObjectPtr<UBuildManager> &GetBuildManager() const {
+
+  const TObjectPtr<UBuildManager>& GetBuildManager() const {
     return BuildManager;
   }
-  const TObjectPtr<UEntityManager> &GetEntityManager() const {
+
+  const TObjectPtr<UEntityManager>& GetEntityManager() const {
     return EntityManager;
   }
 
   void Initialize(int32 NumberOfPlayers);
 
-  const TArray<TObjectPtr<APlayerStart>> &GetPlayerStarts() const {
+  const TArray<TObjectPtr<APlayerStart>>& GetPlayerStarts() const {
     return PlayerStarts;
   }
 
-private:
+ private:
   void InitializeNexuses(int32 NexusCount);
 
   virtual void Tick(float DeltaSeconds) override;
 
   AVoxelWorldActor();
 
-  UPROPERTY(EditDefaultsOnly, Category = "World")
+  UPROPERTY(EditDefaultsOnly, Category = "World | World")
   int32 ChunkSize = 10;
 
-  UPROPERTY(EditDefaultsOnly, Category = "World")
+  UPROPERTY(EditDefaultsOnly, Category = "World | World")
   int32 VoxelSize = 50;
 
-  UPROPERTY(EditDefaultsOnly, Category = "World")
-  FIntVector WorldSizeInChunks = FIntVector(20, 20, 20);
-
-  UPROPERTY(EditDefaultsOnly, Category = "Data")
+  UPROPERTY(EditDefaultsOnly, Category = "World | Data")
   TObjectPtr<UVoxelBlockDataAsset> VoxelDefaultBlockDataAsset;
 
-  UPROPERTY(EditDefaultsOnly, Category = "Data")
-  TObjectPtr<UVoxelBorderDataAsset> VoxelBorderDataAsset;
+  UPROPERTY(EditDefaultsOnly, Category = "World | Chunk")
+  TSubclassOf<AVoxelChunkActor> VoxelChunkActorClass;
 
-  UPROPERTY(EditDefaultsOnly, Category = "Chunk")
-  TSubclassOf<AVoxelChunkActor> VoxelChunkActor;
-
-  UPROPERTY(EditDefaultsOnly, Category = "Nexus")
+  UPROPERTY(EditDefaultsOnly, Category = "World | Nexus")
   float NexusRadius = 200.f;
+
+  UPROPERTY(EditDefaultsOnly, Category = "World | Nexus")
+  float NexusPlacementRadius = 1000.f;
 
   UPROPERTY(EditDefaultsOnly, Category = "Debug")
   TSubclassOf<AVoxelDebugActor> VoxelDebugActor;

@@ -1,7 +1,5 @@
 #include "Actors/VoxelWorldActor.h"
 
-#include "DataAssets/VoxelBlockDataAsset.h"
-#include "DataAssets/VoxelBorderDataAsset.h"
 #include "DataAssets/VoxelVoidDataAsset.h"
 #include "GameFramework/PlayerStart.h"
 #include "Managers/BuildManager.h"
@@ -10,7 +8,9 @@
 #include "Managers/EntityManager.h"
 #include "Managers/MeshManager.h"
 
-AVoxelWorldActor::AVoxelWorldActor() { PrimaryActorTick.bCanEverTick = true; }
+AVoxelWorldActor::AVoxelWorldActor() {
+  PrimaryActorTick.bCanEverTick = true;
+}
 
 void AVoxelWorldActor::Initialize(const int32 NumberOfPlayers) {
   DebugManager = NewObject<UDebugManager>(this);
@@ -20,47 +20,18 @@ void AVoxelWorldActor::Initialize(const int32 NumberOfPlayers) {
   EntityManager = NewObject<UEntityManager>(this);
 
   DebugManager->Initialize(VoxelDebugActor);
-  DataManager->Initialize(WorldSizeInChunks, ChunkSize, VoxelSize,
-                          VoxelChunkActor);
+  DataManager->Initialize(ChunkSize, VoxelSize, VoxelChunkActorClass,
+                          VoxelDefaultBlockDataAsset);
   BuildManager->Initialize();
   MeshManager->Initialize();
   EntityManager->Initialize();
-
-  for (int32 x = 0; x < WorldSizeInChunks.X; ++x) {
-    for (int32 y = 0; y < WorldSizeInChunks.Y; ++y) {
-      for (int32 z = 0; z < WorldSizeInChunks.Z; ++z) {
-        DataManager->LoadVoxelChunk(FIntVector(x, y, z));
-      }
-    }
-  }
-
-  const FIntVector WorldSize = WorldSizeInChunks * ChunkSize;
-  for (int32 x = 0; x < WorldSize.X; ++x) {
-    for (int32 y = 0; y < WorldSize.Y; ++y) {
-      for (int32 z = 0; z < WorldSize.Z; ++z) {
-        const FIntVector VoxelCoord = FIntVector(x, y, z);
-
-        if (!x || !y || !z || x == WorldSize.X - 1 || y == WorldSize.Y - 1 ||
-            z == WorldSize.Z - 1) {
-          DataManager->SetVoxelData(
-              VoxelCoord, new FVoxelBorderData(VoxelBorderDataAsset), false);
-        } else {
-          DataManager->SetVoxelData(
-              VoxelCoord,
-              new FVoxelBlockData(VoxelDefaultBlockDataAsset,
-                                  VoxelDefaultBlockDataAsset->MaxDurability),
-              false);
-        }
-      }
-    }
-  }
 
   InitializeNexuses(NumberOfPlayers);
 
   MeshManager->FlushDirtyChunks();
 }
 
-void AVoxelWorldActor::InitializeNexuses(int32 NexusCount) {
+void AVoxelWorldActor::InitializeNexuses(const int32 NexusCount) {
   Nexuses.Empty();
   for (TObjectPtr StartPoint : PlayerStarts) {
     if (StartPoint) {
@@ -69,64 +40,38 @@ void AVoxelWorldActor::InitializeNexuses(int32 NexusCount) {
   }
   PlayerStarts.Empty();
 
-  const FIntVector WorldSize = WorldSizeInChunks * ChunkSize;
-  const FVector WorldMaxBounds = FVector(WorldSize) * VoxelSize - 1;
-  const FVector WorldMinBounds = FVector::ZeroVector + 1;
+  const FVector Center = FVector::ZeroVector;
+  const float RandomJitter = NexusPlacementRadius * 0.08f;
 
   for (int32 i = 0; i < NexusCount; ++i) {
-    constexpr int32 MaxPlacementAttempts = 100;
     FNexus NewRoom;
     NewRoom.Radius = NexusRadius;
 
-    const FVector SafeMinBounds = WorldMinBounds + NewRoom.Radius;
-    const FVector SafeMaxBounds = WorldMaxBounds - NewRoom.Radius;
+    const float Phi = acos(1 - 2 * (i + 0.5f) / NexusCount);
+    constexpr float GoldenRatio = 1.618033988749895f;
+    const float Theta = GoldenRatio * 2 * PI * i;
 
-    if (SafeMinBounds.X >= SafeMaxBounds.X ||
-        SafeMinBounds.Y >= SafeMaxBounds.Y ||
-        SafeMinBounds.Z >= SafeMaxBounds.Z) {
-      UE_LOG(LogTemp, Warning,
-             TEXT("Room radius is too large for the world size. Skipping room "
-                  "generation for room %d."),
-             i);
-      continue;
-    }
+    FVector Dir;
+    Dir.X = FMath::Sin(Phi) * FMath::Cos(Theta);
+    Dir.Y = FMath::Sin(Phi) * FMath::Sin(Theta);
+    Dir.Z = FMath::Cos(Phi);
 
-    bool bRoomPlaced = false;
-    for (int32 Attempt = 0; Attempt < MaxPlacementAttempts; ++Attempt) {
-      FVector CenterLocation =
-          FVector(FMath::RandRange(SafeMinBounds.X, SafeMaxBounds.X),
-                  FMath::RandRange(SafeMinBounds.Y, SafeMaxBounds.Y),
-                  FMath::RandRange(SafeMinBounds.Z, SafeMaxBounds.Z));
-      NewRoom.Center = CenterLocation;
+    FVector Jitter(FMath::FRandRange(-RandomJitter, RandomJitter),
+                   FMath::FRandRange(-RandomJitter, RandomJitter),
+                   FMath::FRandRange(-RandomJitter, RandomJitter));
 
-      bool bOverlaps = false;
-      for (const auto &[Center, Radius] : Nexuses) {
-        if (FVector::Dist(NewRoom.Center, Center) < NewRoom.Radius + Radius) {
-          bOverlaps = true;
-          break;
-        }
-      }
+    NewRoom.Center = Center + Dir * NexusPlacementRadius + Jitter;
 
-      if (!bOverlaps) {
-        Nexuses.Add(NewRoom);
-        bRoomPlaced = true;
-        break;
-      }
-    }
+    NewRoom.Center = FVector(500, 500, 500);
 
-    if (!bRoomPlaced) {
-      UE_LOG(LogTemp, Warning,
-             TEXT("Failed to place room %d after %d attempts. Skipping."), i,
-             MaxPlacementAttempts);
-      continue;
-    }
+    Nexuses.Add(NewRoom);
 
     TSet<FIntVector> GlobalCoordsInRadius;
     BuildManager->GetGlobalCoordsInRadius(
         DataManager->WorldToGlobalCoord(NewRoom.Center), NewRoom.Radius,
         GlobalCoordsInRadius);
 
-    for (const FIntVector &GlobalCoord : GlobalCoordsInRadius) {
+    for (const FIntVector& GlobalCoord : GlobalCoordsInRadius) {
       DataManager->SetVoxelData(GlobalCoord, new FVoxelVoidData(), false);
     }
 

@@ -33,7 +33,7 @@ class VOXEL_API AVoxelChunkActor : public AActor, public IDamageable {
   TObjectPtr<UProceduralMeshComponent> Mesh;
 
   UPROPERTY(VisibleAnywhere)
-  TObjectPtr<const UDataManager> DataManager;
+  TObjectPtr<UDataManager> DataManager;
 
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<const UBuildManager> BuildManager;

@@ -4,9 +4,7 @@
 #include "DataAssets/VoxelVoidDataAsset.h"
 #include "Voxel/Public/VoxelChunk.h"
 
-// clang-format off
 #include "DataManager.generated.h"
-// clang-format on
 
 class UVoxelBlockDataAsset;
 class UMeshManager;
@@ -18,54 +16,59 @@ class AVoxelChunkActor;
 class UEntityManager;
 
 UCLASS()
+
 class VOXEL_API UDataManager : public UObject {
   GENERATED_BODY()
 
-public:
+ public:
   static float GetSurfaceLevel() { return 0.f; }
 
-  void Initialize(const FIntVector &InWorldSizeInChunks, int32 InChunkSize,
-                  int32 InVoxelSize,
-                  const TSubclassOf<AVoxelChunkActor> &InVoxelChunkActor);
+  void Initialize(
+      int32 InChunkSize, int32 InVoxelSize,
+      const TSubclassOf<AVoxelChunkActor>& InVoxelChunkActor,
+      const TObjectPtr<UVoxelBlockDataAsset>& InVoxelDefaultBlockDataAsset);
 
-  void LoadVoxelChunk(const FIntVector &ChunkCoord);
-  void UnloadVoxelChunk(const FIntVector &ChunkCoord);
-  inline bool IsVoxelChunkLoaded(const FIntVector &ChunkCoord) const;
-  FVoxelChunk *GetVoxelChunk(const FIntVector &ChunkCoord);
+  inline bool IsVoxelChunkLoaded(const FIntVector& ChunkCoord) const;
+  FVoxelChunk* GetVoxelChunk(const FIntVector& ChunkCoord);
 
-  inline const FVoxelBaseData *
-  GetVoxelData(const FIntVector &GlobalCoord) const;
+  inline const FVoxelBaseData* GetVoxelData(const FIntVector& GlobalCoord);
 
-  void ModifyVoxelData(const FIntVector &GlobalCoord,
-                       const TFunction<void(FVoxelBaseData *)> &Modifier,
+  void ModifyVoxelData(const FIntVector& GlobalCoord,
+                       const TFunction<void(FVoxelBaseData*)>& Modifier,
                        bool bAutoDebug = true);
 
-  void SetVoxelData(const FIntVector &GlobalCoord, FVoxelBaseData *NewVoxelData,
+  void SetVoxelData(const FIntVector& GlobalCoord, FVoxelBaseData* NewVoxelData,
                     bool bAutoDebug = true);
 
   int32 GetChunkSize() const { return ChunkSize; }
+
   int32 GetVoxelSize() const { return VoxelSize; }
 
-  inline FIntVector GlobalToChunkCoord(const FIntVector &GlobalCoord) const;
-  inline FIntVector ChunkToGlobalCoord(const FIntVector &ChunkCoord) const;
-  inline FIntVector GlobalToLocalCoord(const FIntVector &GlobalCoord) const;
-  inline int32 GlobalCoordToIndex(const FIntVector &GlobalCoord) const;
-  inline FIntVector LocalToGlobalCoord(const FIntVector &LocalCoord,
-                                       const FIntVector &ChunkCoord) const;
-  inline FIntVector WorldToGlobalCoord(const FVector &WorldCoord) const;
-  inline FVector GlobalToWorldCoord(const FIntVector &GlobalCoord) const;
+  inline FVector GlobalToWorldCoord(const FIntVector& GlobalCoord) const;
+  inline FIntVector GlobalToChunkCoord(const FIntVector& GlobalCoord) const;
+  inline FIntVector GlobalToLocalCoord(const FIntVector& GlobalCoord) const;
 
-  inline int32 LocalCoordToIndex(const FIntVector &LocalCoord) const;
+  inline FIntVector WorldToGlobalCoord(const FVector& WorldCoord) const;
+  inline FIntVector ChunkToGlobalCoord(const FIntVector& ChunkCoord) const;
+  inline FIntVector LocalToGlobalCoord(const FIntVector& LocalCoord,
+                                       const FIntVector& ChunkCoord) const;
 
-private:
+  inline int32 LocalCoordToIndex(const FIntVector& LocalCoord) const;
+  inline int32 GlobalCoordToIndex(const FIntVector& GlobalCoord) const;
+
+ private:
+  FVoxelChunk* LoadVoxelChunk(const FIntVector& ChunkCoord);
+  void UnloadVoxelChunk(const FIntVector& ChunkCoord);
+
+  UPROPERTY(VisibleAnywhere)
+  TObjectPtr<UVoxelBlockDataAsset> VoxelDefaultBlockDataAsset;
+
   TMap<FIntVector, FVoxelChunk> VoxelChunks;
-  TMap<int32, TObjectPtr<UVoxelBaseDataAsset>> VoxelDataAssets;
 
   UPROPERTY()
-  TSubclassOf<AVoxelChunkActor> VoxelChunk;
+  TSubclassOf<AVoxelChunkActor> VoxelChunkClass;
   int32 VoxelSize;
 
-  FIntVector WorldSizeInChunks;
   int32 ChunkSize;
   int32 ChunkVolume;
 

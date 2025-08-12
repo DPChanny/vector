@@ -11,7 +11,7 @@ void UMeshManager::Initialize() {
   }
 }
 
-void UMeshManager::SetDirtyChunk(const FIntVector &GlobalCoord) {
+void UMeshManager::SetDirtyChunk(const FIntVector& GlobalCoord) {
   if (!DataManager) {
     return;
   }
@@ -48,13 +48,11 @@ void UMeshManager::FlushDirtyChunks() {
     return;
   }
 
-  for (const FIntVector &DirtyChunkCoord : DirtyChunkCoords) {
-    if (DataManager->IsVoxelChunkLoaded(DirtyChunkCoord)) {
-      if (const FVoxelChunk *Chunk =
-              DataManager->GetVoxelChunk(DirtyChunkCoord)) {
-        if (Chunk->VoxelChunkActor) {
-          Chunk->VoxelChunkActor->UpdateMesh();
-        }
+  for (const FIntVector& DirtyChunkCoord : DirtyChunkCoords) {
+    if (const FVoxelChunk* Chunk =
+            DataManager->GetVoxelChunk(DirtyChunkCoord)) {
+      if (Chunk->VoxelChunkActor) {
+        Chunk->VoxelChunkActor->UpdateMesh();
       }
     }
   }

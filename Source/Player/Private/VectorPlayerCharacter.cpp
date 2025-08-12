@@ -12,7 +12,7 @@
 #include "Managers/DataManager.h"
 #include "Managers/DebugManager.h"
 
-AVectorPlayerCharacter::AVectorPlayerCharacter() : Health(MaxHealth) {
+AVectorPlayerCharacter::AVectorPlayerCharacter() {
   PrimaryActorTick.bCanEverTick = true;
 
   Collider = CreateDefaultSubobject<USphereComponent>(TEXT("Collider"));
@@ -56,13 +56,13 @@ AVectorPlayerCharacter::AVectorPlayerCharacter() : Health(MaxHealth) {
   Light->SetInnerConeAngle(0.f);
   Light->SetAttenuationRadius(500.f);
   Light->SetSourceRadius(25.f);
-
-  World = Cast<AVoxelWorldActor>(UGameplayStatics::GetActorOfClass(
-      GetWorld(), AVoxelWorldActor::StaticClass()));
 }
 
 void AVectorPlayerCharacter::BeginPlay() {
   Super::BeginPlay();
+
+  World = Cast<AVoxelWorldActor>(UGameplayStatics::GetActorOfClass(
+      GetWorld(), AVoxelWorldActor::StaticClass()));
 }
 
 void AVectorPlayerCharacter::Tick(const float DeltaTime) {
@@ -76,7 +76,8 @@ void AVectorPlayerCharacter::Move(const FInputActionValue& Value) const {
                                 GetActorRightVector() * MoveValue.X +
                                 GetActorUpVector() * MoveValue.Z;
 
-  Collider->AddForce(MoveDirection.GetSafeNormal() * 100, NAME_None, true);
+  Collider->AddForce(MoveDirection.GetSafeNormal() * CurrentSpeed, NAME_None,
+                     true);
 }
 
 void AVectorPlayerCharacter::Look(const FInputActionValue& Value) {
@@ -126,6 +127,13 @@ void AVectorPlayerCharacter::OnDamage_Implementation(const FVector HitPoint,
   IDamageable::OnDamage_Implementation(HitPoint, DamageAmount, DamageRange);
 
   Health -= DamageAmount;
+}
+
+void AVectorPlayerCharacter::PostInitializeComponents() {
+  Super::PostInitializeComponents();
+
+  Health = MaxHealth;
+  CurrentSpeed = WalkSpeed;
 }
 
 void AVectorPlayerCharacter::Eat() const {

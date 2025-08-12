@@ -31,6 +31,8 @@ class PLAYER_API AVectorPlayerCharacter : public APawn, public IDamageable {
                                        float DamageRange) override;
 
  protected:
+  virtual void PostInitializeComponents() override;
+
   UPROPERTY(VisibleAnywhere, Category = "Player | Components")
   TObjectPtr<USphereComponent> Collider;
 
@@ -48,6 +50,14 @@ class PLAYER_API AVectorPlayerCharacter : public APawn, public IDamageable {
 
   UPROPERTY(VisibleAnywhere, Category = "Player")
   TObjectPtr<AVoxelWorldActor> World;
+
+  UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
+  float WalkSpeed = 100.f;
+
+  UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
+  float RunSpeed = 500.f;
+
+  float CurrentSpeed;
 
   UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
   float MaxHealth = 100.f;

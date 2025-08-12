@@ -5,8 +5,8 @@
 #include "EntityComponent.h"
 #include "Managers/DataManager.h"
 
-void UEntityManager::BeginPlay() {
-  Super::BeginPlay();
+void UEntityManager::InitializeComponent() {
+  Super::InitializeComponent();
 
   if (const AActor* Owner = GetOwner()) {
     DataManager = Owner->GetComponentByClass<UDataManager>();

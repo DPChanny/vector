@@ -65,19 +65,15 @@ class VOXEL_API AVoxelWorldActor : public AActor {
 
   TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 
-  UPROPERTY(EditDefaultsOnly, Category = "Manager")
+  UPROPERTY(VisibleAnywhere, Category = "Managers")
   TObjectPtr<UDataManager> DataManager;
-
-  UPROPERTY(EditDefaultsOnly, Category = "Manager")
+  UPROPERTY(VisibleAnywhere, Category = "Managers")
   TObjectPtr<UEntityManager> EntityManager;
-
-  UPROPERTY(EditDefaultsOnly, Category = "Manager")
+  UPROPERTY(VisibleAnywhere, Category = "Managers")
   TObjectPtr<UDebugManager> DebugManager;
-
-  UPROPERTY(EditDefaultsOnly, Category = "Manager")
+  UPROPERTY(VisibleAnywhere, Category = "Managers")
   TObjectPtr<UBuildManager> BuildManager;
-
-  UPROPERTY(EditDefaultsOnly, Category = "Manager")
+  UPROPERTY(VisibleAnywhere, Category = "Managers")
   TObjectPtr<UMeshManager> MeshManager;
 
   TArray<FNexus> Nexuses;

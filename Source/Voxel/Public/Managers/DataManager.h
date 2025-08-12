@@ -51,7 +51,7 @@ class VOXEL_API UDataManager : public UActorComponent {
   inline int32 GlobalCoordToIndex(const FIntVector& GlobalCoord) const;
 
  private:
-  virtual void BeginPlay() override;
+  virtual void InitializeComponent() override;
 
   FVoxelChunk* LoadVoxelChunk(const FIntVector& ChunkCoord);
   void UnloadVoxelChunk(const FIntVector& ChunkCoord);

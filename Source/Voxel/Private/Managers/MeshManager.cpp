@@ -1,11 +1,11 @@
 ﻿#include "Managers/MeshManager.h"
 
 #include "Actors/VoxelChunkActor.h"
-#include "Actors/VoxelWorldActor.h"
 #include "Managers/DataManager.h"
 
-void UMeshManager::BeginPlay() {
-  Super::BeginPlay();
+void UMeshManager::InitializeComponent() {
+  Super::InitializeComponent();
+
   if (const AActor* Owner = GetOwner()) {
     DataManager = Owner->GetComponentByClass<UDataManager>();
   }

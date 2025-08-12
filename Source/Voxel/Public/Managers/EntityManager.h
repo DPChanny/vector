@@ -29,7 +29,7 @@ class VOXEL_API UEntityManager : public UActorComponent {
                             const FVoxelEntityData& EntityData);
 
  private:
-  virtual void BeginPlay() override;
+  virtual void InitializeComponent() override;
 
   void UpdateEntityChunk(const TObjectPtr<UEntityChunk>& OriginalChunk);
   bool GetChunkableEntityCoords(const FIntVector& StartCoord,

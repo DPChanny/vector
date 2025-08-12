@@ -6,8 +6,8 @@
 #include "Managers/DataManager.h"
 #include "Managers/MeshManager.h"
 
-void UBuildManager::BeginPlay() {
-  Super::BeginPlay();
+void UBuildManager::InitializeComponent() {
+  Super::InitializeComponent();
 
   if (const AActor* Owner = GetOwner()) {
     DataManager = Owner->GetComponentByClass<UDataManager>();

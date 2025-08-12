@@ -4,8 +4,8 @@
 #include "Actors/VoxelWorldActor.h"
 #include "Managers/DataManager.h"
 
-void UDebugManager::BeginPlay() {
-  Super::BeginPlay();
+void UDebugManager::InitializeComponent() {
+  Super::InitializeComponent();
 
   if (const AActor* Owner = GetOwner()) {
     DataManager = Owner->GetComponentByClass<UDataManager>();

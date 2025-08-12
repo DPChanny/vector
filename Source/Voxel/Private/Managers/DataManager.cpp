@@ -7,8 +7,8 @@
 #include "Managers/EntityManager.h"
 #include "Managers/MeshManager.h"
 
-void UDataManager::BeginPlay() {
-  Super::BeginPlay();
+void UDataManager::InitializeComponent() {
+  Super::InitializeComponent();
 
   if (const AActor* Owner = GetOwner()) {
     DebugManager = Owner->GetComponentByClass<UDebugManager>();

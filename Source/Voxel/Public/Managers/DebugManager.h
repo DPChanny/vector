@@ -19,7 +19,7 @@ class VOXEL_API UDebugManager : public UActorComponent {
   void FlushDebugVoxelBuffer();
 
  private:
-  virtual void BeginPlay() override;
+  virtual void InitializeComponent() override;
 
   void AddDebugVoxel(const FIntVector& GlobalCoord);
   void RemoveDebugVoxel(const FIntVector& VoxelCoord);

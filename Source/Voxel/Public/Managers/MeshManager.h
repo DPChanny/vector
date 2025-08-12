@@ -11,7 +11,7 @@ class VOXEL_API UMeshManager : public UActorComponent {
   GENERATED_BODY()
 
  public:
-  virtual void BeginPlay() override;
+  virtual void InitializeComponent() override;
 
   void SetDirtyChunk(const FIntVector& GlobalCoord);
   void FlushDirtyChunks();

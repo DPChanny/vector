@@ -6,7 +6,7 @@
 void UHealthComponent::InitializeComponent() {
   Super::InitializeComponent();
 
-  EntityChunkActor->bCacheEnabled = true;
+  EntityChunkActor->SetCacheEnabled(true);
 }
 
 void UHealthComponent::OnEntityAdded(const FIntVector& GlobalCoord,

@@ -7,7 +7,7 @@ class AEntityChunkActor;
 struct FVoxelBaseData;
 struct FVoxelEntityData;
 
-UCLASS(Abstract, meta = (BlueprintSpawnableComponent), Blueprintable)
+UCLASS(Abstract, meta = (BlueprintSpawnableComponent))
 
 class VOXEL_API UEntityComponent : public UActorComponent {
   GENERATED_BODY()

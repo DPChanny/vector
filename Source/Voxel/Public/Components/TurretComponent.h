@@ -5,12 +5,11 @@
 #include "TurretComponent.generated.h"
 
 class UHealthComponent;
-UCLASS()
 
-class VECTOR_API UTurretComponent : public UTargetComponent {
+UCLASS(meta = (BlueprintSpawnableComponent))
+
+class VOXEL_API UTurretComponent : public UTargetComponent {
   GENERATED_BODY()
-
-  UTurretComponent();
 
  public:
   virtual bool IsValidTarget(TObjectPtr<AActor> Actor) const override;
@@ -18,18 +17,13 @@ class VECTOR_API UTurretComponent : public UTargetComponent {
       float DeltaTime, ELevelTick TickType,
       FActorComponentTickFunction* ThisTickFunction) override;
 
- private:
-  virtual void InitializeComponent() override;
-
+ protected:
   static float Amplifier(float Base, float Balancer, float Amount, float Ratio);
 
-  bool CheckHealthComponent();
+  virtual void InitializeComponent() override;
 
- protected:
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<const UHealthComponent> HealthComponent;
-
-  const TSet<FIntVector>* Entities;
 
   UPROPERTY(EditDefaultsOnly)
   float RangeBalancer = 5.f;

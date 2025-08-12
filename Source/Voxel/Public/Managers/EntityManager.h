@@ -11,14 +11,18 @@ UCLASS()
 class VOXEL_API UEntityManager : public UActorComponent {
   GENERATED_BODY()
 
-  const FIntVector NeighborOffsets[18] = {
+  const FIntVector NeighborOffsets[26] = {
       FIntVector(1, 0, 0),   FIntVector(-1, 0, 0),  FIntVector(0, 1, 0),
       FIntVector(0, -1, 0),  FIntVector(0, 0, 1),   FIntVector(0, 0, -1),
 
       FIntVector(1, 1, 0),   FIntVector(1, -1, 0),  FIntVector(-1, 1, 0),
       FIntVector(-1, -1, 0), FIntVector(1, 0, 1),   FIntVector(1, 0, -1),
       FIntVector(-1, 0, 1),  FIntVector(-1, 0, -1), FIntVector(0, 1, 1),
-      FIntVector(0, 1, -1),  FIntVector(0, -1, 1),  FIntVector(0, -1, -1)};
+      FIntVector(0, 1, -1),  FIntVector(0, -1, 1),  FIntVector(0, -1, -1),
+
+      FIntVector(1, 1, 1),   FIntVector(1, 1, -1),  FIntVector(1, -1, 1),
+      FIntVector(1, -1, -1), FIntVector(-1, 1, 1),  FIntVector(-1, 1, -1),
+      FIntVector(-1, -1, 1), FIntVector(-1, -1, -1)};
 
  public:
   void SetDirtyEntity(const FIntVector& GlobalCoord);
@@ -34,18 +38,12 @@ class VOXEL_API UEntityManager : public UActorComponent {
   virtual void InitializeComponent() override;
 
   void MergeEntityChunk(const FIntVector& GlobalCoord,
-                        const FVoxelEntityData& EntityData,
-                        const TSet<FIntVector>& ProcessedVoxels,
-                        TSet<FIntVector>& MergedVoxels);
+                        const FVoxelEntityData& EntityData);
 
   void SplitEntityChunk(const FIntVector& GlobalCoord,
-                        const TSet<FIntVector>& ProcessedVoxels,
-                        TSet<FIntVector>& SplitVoxels);
+                        TSet<FIntVector>& ProcessedVoxels);
 
-  bool GetChunkableEntityCoords(const FIntVector& StartCoord,
-                                TSet<FIntVector>& VisitedCoords,
-                                TSet<FIntVector>& ChunkableEntityCoords) const;
-  TObjectPtr<AEntityChunkActor> GetEntityChunk(
+  TObjectPtr<AEntityChunkActor> ConstructEntityChunk(
       const FVoxelEntityData& EntityData);
 
   UPROPERTY()
@@ -53,7 +51,7 @@ class VOXEL_API UEntityManager : public UActorComponent {
 
   TMap<FIntVector, TObjectPtr<AEntityChunkActor>> EntityToChunk;
 
-  TSet<TObjectPtr<AEntityChunkActor>> EntityChunks;
+  TSet<TObjectPtr<AEntityChunkActor>> EntityChunkActors;
 
   TSet<FIntVector> DirtyEntityVoxels;
 };

@@ -4,7 +4,9 @@
 #include "EntityComponent.h"
 #include "TargetComponent.generated.h"
 
-UCLASS()
+class USurfaceComponent;
+
+UCLASS(meta = (BlueprintSpawnableComponent))
 
 class VOXEL_API UTargetComponent : public UEntityComponent {
   GENERATED_BODY()
@@ -18,15 +20,19 @@ class VOXEL_API UTargetComponent : public UEntityComponent {
   TSubclassOf<AActor> TargetClass;
 
   UPROPERTY(EditDefaultsOnly)
-  uint8 TargetCount = 1;
-
-  UPROPERTY(VisibleAnywhere)
-  TArray<TObjectPtr<AActor>> Targets;
+  uint8 MaxTargetCount = 1;
 
  protected:
+  virtual void InitializeComponent() override;
+
   UTargetComponent();
 
+  TArray<TObjectPtr<AActor>> Targets;
+
+  UPROPERTY(VisibleAnywhere)
+  TObjectPtr<USurfaceComponent> SurfaceComponent;
+
   void UpdateTargets();
-  virtual float GetTargetPriority(TObjectPtr<AActor> TargetCandidate);
+  virtual float GetTargetPriority(TObjectPtr<AActor> Target);
   virtual bool IsValidTarget(TObjectPtr<AActor> Actor) const;
 };

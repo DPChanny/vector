@@ -6,11 +6,11 @@
 #include "Managers/DataManager.h"
 
 bool AEntityChunkActor::IsChunkableWith(const FVoxelEntityData& Other) const {
-  if (Entities.IsEmpty()) {
+  if (EntityCoords.IsEmpty()) {
     return false;
   }
   return dynamic_cast<const FVoxelEntityData*>(
-             DataManager->GetVoxelData(*Entities.begin()))
+             DataManager->GetVoxelData(*EntityCoords.begin()))
       ->IsChunkableWith(&Other);
 }
 
@@ -19,6 +19,10 @@ FVoxelEntityData* AEntityChunkActor::GetCache(const FIntVector& GlobalCoord) {
     return *CacheData;
   }
   return nullptr;
+}
+
+void AEntityChunkActor::SetCacheEnabled(const bool InbCacheEnabled) {
+  bCacheEnabled = InbCacheEnabled;
 }
 
 void AEntityChunkActor::BeginPlay() {
@@ -35,7 +39,7 @@ void AEntityChunkActor::BeginPlay() {
 
 void AEntityChunkActor::AddEntity(const FIntVector& GlobalCoord,
                                   const FVoxelEntityData& NewEntityData) {
-  Entities.Add(GlobalCoord);
+  EntityCoords.Add(GlobalCoord);
   UpdateLocation();
 
   for (const TObjectPtr<UEntityComponent>& Component : Components) {
@@ -51,7 +55,7 @@ void AEntityChunkActor::AddEntity(const FIntVector& GlobalCoord,
 }
 
 void AEntityChunkActor::RemoveEntity(const FIntVector& GlobalCoord) {
-  Entities.Remove(GlobalCoord);
+  EntityCoords.Remove(GlobalCoord);
   UpdateLocation();
 
   for (const TObjectPtr<UEntityComponent>& Component : Components) {
@@ -66,7 +70,7 @@ void AEntityChunkActor::RemoveEntity(const FIntVector& GlobalCoord) {
 }
 
 bool AEntityChunkActor::IsEmpty() const {
-  return Entities.IsEmpty();
+  return EntityCoords.IsEmpty();
 }
 
 void AEntityChunkActor::OnEntityModified(
@@ -87,9 +91,9 @@ void AEntityChunkActor::OnEntityModified(
 
 void AEntityChunkActor::UpdateLocation() {
   FVector Location = FVector::ZeroVector;
-  for (const FIntVector& VoxelCoord : Entities) {
+  for (const FIntVector& VoxelCoord : EntityCoords) {
     Location += FVector(DataManager->GlobalToWorldCoord(VoxelCoord));
   }
-  Location /= Entities.Num();
+  Location /= EntityCoords.Num();
   SetActorLocation(Location);
 }

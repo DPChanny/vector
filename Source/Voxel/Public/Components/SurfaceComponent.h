@@ -1,16 +1,18 @@
 ﻿#pragma once
 
+#include "Components/EntityComponent.h"
 #include "CoreMinimal.h"
-#include "EntityComponent.h"
-#include "HealthComponent.generated.h"
+#include "SurfaceComponent.generated.h"
 
 UCLASS(meta = (BlueprintSpawnableComponent))
 
-class VOXEL_API UHealthComponent : public UEntityComponent {
+class VOXEL_API USurfaceComponent : public UEntityComponent {
   GENERATED_BODY()
 
  public:
-  virtual void InitializeComponent() override;
+  USurfaceComponent();
+
+  FIntVector GetClosestSurfaceVoxel(const FVector& TargetCoord) const;
 
   virtual void OnEntityAdded(const FIntVector& GlobalCoord,
                              const FVoxelEntityData& NewEntityData) override;
@@ -18,8 +20,12 @@ class VOXEL_API UHealthComponent : public UEntityComponent {
   virtual void OnEntityModified(const FIntVector& GlobalCoord,
                                 const FVoxelEntityData& NewEntityData) override;
 
-  UPROPERTY(VisibleAnywhere)
-  float MaxHealth;
-  UPROPERTY(VisibleAnywhere)
-  float CurrentHealth;
+ private:
+  TSet<FIntVector> SurfaceVoxels;
+
+  bool IsSurfaceVoxel(const FIntVector& GlobalCoord) const;
+
+  void UpdateSurfaceAroundVoxel(const FIntVector& GlobalCoord);
+
+  static const TArray<FIntVector> NeighborOffsets;
 };

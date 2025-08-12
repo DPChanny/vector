@@ -19,7 +19,7 @@ class VOXEL_API UMeshManager : public UActorComponent {
  private:
   UMeshManager();
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY()
   TObjectPtr<UDataManager> DataManager;
 
   TSet<FIntVector> DirtyChunkCoords;

@@ -22,26 +22,28 @@ class VOXEL_API AEntityChunkActor : public AActor {
   virtual void OnEntityModified(const FIntVector& GlobalCoord,
                                 const FVoxelEntityData& NewEntityData);
 
-  const TSet<FIntVector>& GetEntities() const { return Entities; }
+  const TSet<FIntVector>& GetEntityCoords() const { return EntityCoords; }
 
   bool IsChunkableWith(const FVoxelEntityData& Other) const;
 
   FVoxelEntityData* GetCache(const FIntVector& GlobalCoord);
 
+  TObjectPtr<UDataManager>& GetDataManager() { return DataManager; }
+
+  void SetCacheEnabled(bool InbCacheEnabled);
+
+ protected:
   bool bCacheEnabled = false;
 
- private:
   virtual void BeginPlay() override;
 
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UDataManager> DataManager;
 
-  TSet<FIntVector> Entities;
+  TSet<FIntVector> EntityCoords;
 
   TArray<TObjectPtr<UEntityComponent>> Components;
 
   void UpdateLocation();
-
- protected:
   TMap<FIntVector, FVoxelEntityData*> Cache;
 };

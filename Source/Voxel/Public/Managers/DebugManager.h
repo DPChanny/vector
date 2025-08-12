@@ -29,7 +29,7 @@ class VOXEL_API UDebugManager : public UActorComponent {
   UPROPERTY(EditDefaultsOnly)
   TSubclassOf<AVoxelDebugActor> VoxelDebugActorClass;
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY()
   TObjectPtr<UDataManager> DataManager;
 
   TMap<FIntVector, TObjectPtr<AVoxelDebugActor>> DebugVoxels;

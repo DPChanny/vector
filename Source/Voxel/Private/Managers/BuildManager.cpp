@@ -4,6 +4,7 @@
 #include "DataAssets/VoxelBorderDataAsset.h"
 #include "DataAssets/VoxelVoidDataAsset.h"
 #include "Managers/DataManager.h"
+#include "Managers/EntityManager.h"
 #include "Managers/MeshManager.h"
 
 void UBuildManager::InitializeComponent() {
@@ -12,6 +13,7 @@ void UBuildManager::InitializeComponent() {
   if (const AActor* Owner = GetOwner()) {
     DataManager = Owner->GetComponentByClass<UDataManager>();
     MeshManager = Owner->GetComponentByClass<UMeshManager>();
+    EntityManager = Owner->GetComponentByClass<UEntityManager>();
   }
 }
 
@@ -206,7 +208,13 @@ void UBuildManager::ProcessVoxelsInRadius(
     VoxelModifier(VoxelCoord);
   }
 
-  MeshManager->FlushDirtyChunks();
+  if (MeshManager) {
+    MeshManager->FlushDirtyChunks();
+  }
+
+  if (EntityManager) {
+    EntityManager->FlushDirtyEntities();
+  }
 }
 
 bool UBuildManager::IsSurfaceVoxel(const FIntVector& VoxelCoord) const {

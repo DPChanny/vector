@@ -20,10 +20,12 @@ class VOXEL_API AEntityChunkActor : public AActor {
 
   bool IsEmpty() const;
 
-  virtual void OnEntityDataModified(const FIntVector& VoxelCoord,
-                                    const FVoxelEntityData& EntityData);
+  virtual void OnEntityModified(const FIntVector& VoxelCoord,
+                                const FVoxelEntityData& EntityData);
 
-  const TSet<FIntVector>& GetManagedVoxels() const { return ManagedVoxels; }
+  const TSet<FIntVector>& GetEntities() const { return Entities; }
+
+  bool IsChunkableWith(const FVoxelEntityData& Other) const;
 
  private:
   virtual void BeginPlay() override;
@@ -31,7 +33,7 @@ class VOXEL_API AEntityChunkActor : public AActor {
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UDataManager> DataManager;
 
-  TSet<FIntVector> ManagedVoxels;
+  TSet<FIntVector> Entities;
 
   TArray<TObjectPtr<UEntityComponent>> Components;
 

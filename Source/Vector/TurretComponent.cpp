@@ -47,7 +47,7 @@ void UTurretComponent::TickComponent(
 void UTurretComponent::InitializeComponent() {
   Super::InitializeComponent();
 
-  ManagedVoxels = &Cast<AEntityChunkActor>(GetOwner())->GetManagedVoxels();
+  ManagedVoxels = &Cast<AEntityChunkActor>(GetOwner())->GetEntities();
 }
 
 float UTurretComponent::Amplifier(const float Base, const float Balancer,

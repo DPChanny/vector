@@ -89,7 +89,7 @@ void UDataManager::ModifyVoxelData(
       if (const FVoxelEntityData* EntityData =
               dynamic_cast<const FVoxelEntityData*>(
                   VoxelChunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord)))) {
-        EntityManager->OnEntityDataModified(GlobalCoord, *EntityData);
+        EntityManager->OnEntityModified(GlobalCoord, *EntityData);
       }
     }
 
@@ -108,29 +108,23 @@ void UDataManager::SetVoxelData(const FIntVector& GlobalCoord,
                                 const bool bAutoDebug) {
   if (const FVoxelChunk* VoxelChunk =
           GetVoxelChunk(GlobalToChunkCoord(GlobalCoord))) {
-    const FVoxelBaseData* OldData =
-        VoxelChunk->GetVoxelData(GlobalCoordToIndex(GlobalCoord));
+
+    const bool bWasEntity =
+        dynamic_cast<const FVoxelEntityData*>(VoxelChunk->GetVoxelData(
+            GlobalCoordToIndex(GlobalCoord))) != nullptr;
 
     VoxelChunk->SetVoxelData(GlobalCoordToIndex(GlobalCoord), NewVoxelData);
-
-    if (EntityManager) {
-      if (const FVoxelEntityData* NewEntityData =
-              dynamic_cast<const FVoxelEntityData*>(NewVoxelData)) {
-        EntityManager->OnEntityDataCreated(GlobalCoord, *NewEntityData);
-      } else if (const FVoxelEntityData* OldEntityData =
-                     dynamic_cast<const FVoxelEntityData*>(OldData)) {
-        EntityManager->OnEntityDataDestroyed(GlobalCoord, *OldEntityData);
-      }
-    }
-
-    delete OldData;
 
     if (DebugManager && bAutoDebug) {
       DebugManager->SetDebugVoxel(GlobalCoord);
     }
-
     if (MeshManager) {
       MeshManager->SetDirtyChunk(GlobalCoord);
+    }
+    if (EntityManager) {
+      if (bWasEntity || dynamic_cast<const FVoxelEntityData*>(NewVoxelData)) {
+        EntityManager->SetDirtyEntity(GlobalCoord);
+      }
     }
   }
 }

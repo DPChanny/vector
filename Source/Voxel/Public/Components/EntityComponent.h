@@ -17,6 +17,6 @@ class VOXEL_API UEntityComponent : public UActorComponent {
   virtual void OnEntityRemoved(const FIntVector& VoxelCoord,
                                const FVoxelEntityData& Data) {}
 
-  virtual void OnEntityDataModified(const FIntVector& VoxelCoord,
-                                    const FVoxelEntityData& Data) {}
+  virtual void OnEntityModified(const FIntVector& VoxelCoord,
+                                const FVoxelEntityData& Data) {}
 };

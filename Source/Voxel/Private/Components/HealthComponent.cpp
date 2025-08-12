@@ -1,14 +1,14 @@
 ﻿#include "Components/HealthComponent.h"
 #include "DataAssets/VoxelEntityDataAsset.h"
 
-void UHealthComponent::OnEntityAdded(const FIntVector &VoxelCoord,
-                                     const FVoxelEntityData &Data) {
+void UHealthComponent::OnEntityAdded(const FIntVector& VoxelCoord,
+                                     const FVoxelEntityData& Data) {
   MaxHealth += Data.GetEntityDataAsset()->MaxDurability;
   CurrentHealth += Data.Durability;
 }
 
-void UHealthComponent::OnEntityRemoved(const FIntVector &VoxelCoord,
-                                       const FVoxelEntityData &Data) {
+void UHealthComponent::OnEntityRemoved(const FIntVector& VoxelCoord,
+                                       const FVoxelEntityData& Data) {
   MaxHealth -= Data.GetEntityDataAsset()->MaxDurability;
   CurrentHealth -= Data.Durability;
 }

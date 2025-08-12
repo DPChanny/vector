@@ -12,117 +12,148 @@ void UEntityManager::InitializeComponent() {
   }
 }
 
-void UEntityManager::OnEntityDataCreated(const FIntVector& GlobalCoord,
-                                         const FVoxelEntityData& EntityData) {
+void UEntityManager::SetDirtyEntity(const FIntVector& GlobalCoord) {
+  DirtyEntityVoxels.Add(GlobalCoord);
+}
+
+void UEntityManager::OnEntityModified(const FIntVector& GlobalCoord,
+                                      const FVoxelEntityData& EntityData) {
+  if (const TObjectPtr<AEntityChunkActor>* FoundChunk =
+          EntityToChunk.Find(GlobalCoord)) {
+    (*FoundChunk)->OnEntityModified(GlobalCoord, EntityData);
+  }
+}
+
+void UEntityManager::FlushDirtyEntities() {
+  const TSet<FIntVector> ProcessedVoxels;
+
+  for (const FIntVector& GlobalCoord : DirtyEntityVoxels) {
+    if (ProcessedVoxels.Contains(GlobalCoord)) {
+      continue;
+    }
+
+    const FVoxelEntityData* EntityData = dynamic_cast<const FVoxelEntityData*>(
+        DataManager->GetVoxelData(GlobalCoord));
+
+    if (EntityData) {
+      TSet<FIntVector> MergedVoxels;
+      MergeEntityChunk(GlobalCoord, *EntityData, ProcessedVoxels, MergedVoxels);
+    } else {
+      TSet<FIntVector> SplitVoxels;
+      SplitEntityChunk(GlobalCoord, ProcessedVoxels, SplitVoxels);
+    }
+  }
+
+  DirtyEntityVoxels = DirtyEntityVoxels.Difference(ProcessedVoxels);
+}
+
+void UEntityManager::MergeEntityChunk(const FIntVector& GlobalCoord,
+                                      const FVoxelEntityData& EntityData,
+                                      const TSet<FIntVector>& ProcessedVoxels,
+                                      TSet<FIntVector>& MergedVoxels) {
   if (EntityToChunk.Contains(GlobalCoord)) {
+    MergedVoxels.Add(GlobalCoord);
     return;
   }
 
-  TSet<TObjectPtr<AEntityChunkActor>> ChunkableChunks;
+  TObjectPtr<AEntityChunkActor> TargetChunk = nullptr;
+  TSet<FIntVector> ChunkableVoxels;
+  TSet<FIntVector> VisitedVoxels;
 
-  for (const FIntVector& NeighborOffset : NeighborOffsets) {
+  for (const FIntVector& Offset : NeighborOffsets) {
+    const FIntVector NeighborCoord = GlobalCoord + Offset;
     if (const TObjectPtr<AEntityChunkActor>* FoundChunk =
-            EntityToChunk.Find(GlobalCoord + NeighborOffset)) {
-      if (const FVoxelEntityData* NeighborEntityData =
-              dynamic_cast<const FVoxelEntityData*>(
-                  DataManager->GetVoxelData(GlobalCoord + NeighborOffset))) {
-        if (EntityData.IsChunkableWith(NeighborEntityData)) {
-          ChunkableChunks.Add(*FoundChunk);
-        }
+            EntityToChunk.Find(NeighborCoord)) {
+      if ((*FoundChunk)->IsChunkableWith(EntityData)) {
+        TargetChunk = *FoundChunk;
+        break;
       }
     }
   }
 
-  TObjectPtr<AEntityChunkActor> TargetChunk;
+  if (!TargetChunk) {
+    TargetChunk = GetEntityChunk(EntityData);
+  }
 
-  if (ChunkableChunks.IsEmpty()) {
-    TargetChunk = CreateEntityChunk(EntityData);
-  } else {
-    TargetChunk = ChunkableChunks.Array()[0];
-    ChunkableChunks.Remove(TargetChunk);
+  if (GetChunkableEntityCoords(GlobalCoord, VisitedVoxels, ChunkableVoxels)) {
+    TMap<TObjectPtr<AEntityChunkActor>, TSet<FIntVector>> ChunksToUpdate;
 
-    for (TObjectPtr ChunkToMerge : ChunkableChunks) {
-      TArray<FIntVector> VoxelsToMove =
-          ChunkToMerge->GetManagedVoxels().Array();
+    for (const FIntVector& VoxelCoord : ChunkableVoxels) {
+      if (ProcessedVoxels.Contains(VoxelCoord)) {
+        continue;
+      }
 
-      for (const FIntVector& VoxelCoord : VoxelsToMove) {
+      if (const TObjectPtr<AEntityChunkActor>* ExistingChunk =
+              EntityToChunk.Find(VoxelCoord)) {
+        if (*ExistingChunk != TargetChunk) {
+          ChunksToUpdate.FindOrAdd(*ExistingChunk).Add(VoxelCoord);
+        }
+      }
+    }
+
+    for (const auto& [ChunkToUpdate, VoxelsToRemove] : ChunksToUpdate) {
+      for (const FIntVector& VoxelCoord : VoxelsToRemove) {
         if (const FVoxelEntityData* VoxelEntityData =
                 dynamic_cast<const FVoxelEntityData*>(
                     DataManager->GetVoxelData(VoxelCoord))) {
-          ChunkToMerge->RemoveEntity(VoxelCoord, *VoxelEntityData);
-          TargetChunk->AddEntity(VoxelCoord, *VoxelEntityData);
-          EntityToChunk[VoxelCoord] = TargetChunk;
+          ChunkToUpdate->RemoveEntity(VoxelCoord, *VoxelEntityData);
+          EntityToChunk.Remove(VoxelCoord);
         }
       }
 
-      EntityChunks.Remove(ChunkToMerge);
-      ChunkToMerge->Destroy();
+      if (ChunkToUpdate->IsEmpty()) {
+        EntityChunks.Remove(ChunkToUpdate);
+        ChunkToUpdate->Destroy();
+      }
     }
-  }
 
-  TargetChunk->AddEntity(GlobalCoord, EntityData);
-  EntityToChunk.Add(GlobalCoord, TargetChunk);
+    for (const FIntVector& VoxelCoord : ChunkableVoxels) {
+      if (ProcessedVoxels.Contains(VoxelCoord)) {
+        continue;
+      }
+
+      if (const FVoxelEntityData* VoxelEntityData =
+              dynamic_cast<const FVoxelEntityData*>(
+                  DataManager->GetVoxelData(VoxelCoord))) {
+        TargetChunk->AddEntity(VoxelCoord, *VoxelEntityData);
+        EntityToChunk.Add(VoxelCoord, TargetChunk);
+      }
+    }
+
+    MergedVoxels = ChunkableVoxels;
+  }
 }
 
-void UEntityManager::OnEntityDataDestroyed(const FIntVector& GlobalCoord,
-                                           const FVoxelEntityData& EntityData) {
-  if (!EntityToChunk.Contains(GlobalCoord)) {
+void UEntityManager::SplitEntityChunk(const FIntVector& GlobalCoord,
+                                      const TSet<FIntVector>& ProcessedVoxels,
+                                      TSet<FIntVector>& SplitVoxels) {
+  const TObjectPtr<AEntityChunkActor>* FoundChunk =
+      EntityToChunk.Find(GlobalCoord);
+  if (!FoundChunk) {
+    SplitVoxels.Add(GlobalCoord);
     return;
   }
 
-  const TObjectPtr OwningChunk =
-      EntityToChunk.FindAndRemoveChecked(GlobalCoord);
+  TObjectPtr<AEntityChunkActor> OriginalChunk = *FoundChunk;
+  TSet<FIntVector> OriginalVoxels = OriginalChunk->GetEntities();
 
-  OwningChunk->RemoveEntity(GlobalCoord, EntityData);
-
-  if (OwningChunk->IsEmpty()) {
-    EntityChunks.Remove(OwningChunk);
-    OwningChunk->Destroy();
-  } else {
-    UpdateEntityChunk(OwningChunk);
+  if (const FVoxelEntityData* EntityData =
+          dynamic_cast<const FVoxelEntityData*>(
+              DataManager->GetVoxelData(GlobalCoord))) {
+    OriginalChunk->RemoveEntity(GlobalCoord, *EntityData);
   }
-}
+  EntityToChunk.Remove(GlobalCoord);
+  OriginalVoxels.Remove(GlobalCoord);
 
-void UEntityManager::OnEntityDataModified(const FIntVector& GlobalCoord,
-                                          const FVoxelEntityData& EntityData) {
-  if (const TObjectPtr<AEntityChunkActor>* FoundChunk =
-          EntityToChunk.Find(GlobalCoord)) {
-    if (*FoundChunk) {
-      (*FoundChunk)->OnEntityDataModified(GlobalCoord, EntityData);
-    }
-  }
-}
-
-UEntityManager::UEntityManager() {
-  bWantsInitializeComponent = true;
-}
-
-TObjectPtr<AEntityChunkActor> UEntityManager::CreateEntityChunk(
-    const FVoxelEntityData& EntityData) {
-  const TObjectPtr<const UVoxelEntityDataAsset> EntityDataAsset =
-      EntityData.GetEntityDataAsset();
-
-  if (!EntityDataAsset) {
-    return nullptr;
+  if (OriginalVoxels.IsEmpty()) {
+    EntityChunks.Remove(OriginalChunk);
+    OriginalChunk->Destroy();
+    SplitVoxels.Add(GlobalCoord);
+    return;
   }
 
-  TObjectPtr<AEntityChunkActor> NewEntityChunkActor;
-
-  if (EntityDataAsset->EntityChunkActorClass) {
-    NewEntityChunkActor = GetWorld()->SpawnActor<AEntityChunkActor>(
-        EntityDataAsset->EntityChunkActorClass);
-  } else {
-    NewEntityChunkActor = GetWorld()->SpawnActor<AEntityChunkActor>();
-  }
-
-  EntityChunks.Add(NewEntityChunkActor);
-
-  return NewEntityChunkActor;
-}
-
-void UEntityManager::UpdateEntityChunk(
-    const TObjectPtr<AEntityChunkActor>& OriginalChunk) {
-  TArray<FIntVector> OriginalVoxels = OriginalChunk->GetManagedVoxels().Array();
+  TSet<FIntVector> AllProcessedVoxels = ProcessedVoxels;
+  AllProcessedVoxels.Add(GlobalCoord);
 
   for (const FIntVector& VoxelCoord : OriginalVoxels) {
     if (const FVoxelEntityData* EntityData =
@@ -132,23 +163,23 @@ void UEntityManager::UpdateEntityChunk(
     }
     EntityToChunk.Remove(VoxelCoord);
   }
-
   EntityChunks.Remove(OriginalChunk);
   OriginalChunk->Destroy();
 
-  TSet<FIntVector> VisitedVoxels;
-
+  TSet<FIntVector> VisitedForSplit;
   for (const FIntVector& VoxelCoord : OriginalVoxels) {
-    if (VisitedVoxels.Contains(VoxelCoord)) {
+    if (VisitedForSplit.Contains(VoxelCoord) ||
+        AllProcessedVoxels.Contains(VoxelCoord)) {
       continue;
     }
 
-    if (TSet<FIntVector> ChunkableVoxels;
-        GetChunkableEntityCoords(VoxelCoord, VisitedVoxels, ChunkableVoxels)) {
+    TSet<FIntVector> ChunkableVoxels;
+    if (GetChunkableEntityCoords(VoxelCoord, VisitedForSplit,
+                                 ChunkableVoxels)) {
       if (const FVoxelEntityData* EntityData =
               dynamic_cast<const FVoxelEntityData*>(
                   DataManager->GetVoxelData(VoxelCoord))) {
-        TObjectPtr<AEntityChunkActor> NewChunk = CreateEntityChunk(*EntityData);
+        TObjectPtr<AEntityChunkActor> NewChunk = GetEntityChunk(*EntityData);
 
         for (const FIntVector& ChunkableVoxel : ChunkableVoxels) {
           if (const FVoxelEntityData* VoxelEntityData =
@@ -161,6 +192,41 @@ void UEntityManager::UpdateEntityChunk(
       }
     }
   }
+
+  SplitVoxels = OriginalVoxels;
+  SplitVoxels.Add(GlobalCoord);
+}
+
+UEntityManager::UEntityManager() {
+  bWantsInitializeComponent = true;
+}
+
+TObjectPtr<AEntityChunkActor> UEntityManager::GetEntityChunk(
+    const FVoxelEntityData& EntityData) {
+  const TObjectPtr<const UVoxelEntityDataAsset> EntityDataAsset =
+      EntityData.GetEntityDataAsset();
+
+  if (!EntityDataAsset) {
+    return nullptr;
+  }
+
+  const TObjectPtr<UWorld> World = GetWorld();
+  if (!World) {
+    return nullptr;
+  }
+
+  TObjectPtr<AEntityChunkActor> NewEntityChunkActor;
+
+  if (EntityDataAsset->EntityChunkActorClass) {
+    NewEntityChunkActor = World->SpawnActor<AEntityChunkActor>(
+        EntityDataAsset->EntityChunkActorClass);
+  } else {
+    NewEntityChunkActor = World->SpawnActor<AEntityChunkActor>();
+  }
+
+  EntityChunks.Add(NewEntityChunkActor);
+
+  return NewEntityChunkActor;
 }
 
 bool UEntityManager::GetChunkableEntityCoords(

@@ -11,44 +11,44 @@ UCLASS()
 class VOXEL_API UEntityManager : public UActorComponent {
   GENERATED_BODY()
 
-  const FIntVector NeighborOffsets[26] = {
-      FIntVector(1, 0, 0),   FIntVector(-1, 0, 0),  FIntVector(0, 1, 0),
-      FIntVector(0, -1, 0),  FIntVector(0, 0, 1),   FIntVector(0, 0, -1),
-
-      FIntVector(1, 1, 0),   FIntVector(1, -1, 0),  FIntVector(-1, 1, 0),
-      FIntVector(-1, -1, 0), FIntVector(1, 0, 1),   FIntVector(1, 0, -1),
-      FIntVector(-1, 0, 1),  FIntVector(-1, 0, -1), FIntVector(0, 1, 1),
-      FIntVector(0, 1, -1),  FIntVector(0, -1, 1),  FIntVector(0, -1, -1),
-
-      FIntVector(1, 1, 1),   FIntVector(1, 1, -1),  FIntVector(1, -1, 1),
-      FIntVector(1, -1, -1), FIntVector(-1, 1, 1),  FIntVector(-1, 1, -1),
-      FIntVector(-1, -1, 1), FIntVector(-1, -1, -1)};
+  const FIntVector NeighborOffsets[6] = {
+      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
+      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
 
  public:
-  void OnEntityDataCreated(const FIntVector& GlobalCoord,
-                           const FVoxelEntityData& EntityData);
-  void OnEntityDataDestroyed(const FIntVector& GlobalCoord,
-                             const FVoxelEntityData& EntityData);
+  void SetDirtyEntity(const FIntVector& GlobalCoord);
 
-  void OnEntityDataModified(const FIntVector& GlobalCoord,
-                            const FVoxelEntityData& EntityData);
+  void OnEntityModified(const FIntVector& GlobalCoord,
+                        const FVoxelEntityData& EntityData);
+
+  void FlushDirtyEntities();
 
  private:
   UEntityManager();
 
   virtual void InitializeComponent() override;
 
-  void UpdateEntityChunk(const TObjectPtr<AEntityChunkActor>& OriginalChunk);
+  void MergeEntityChunk(const FIntVector& GlobalCoord,
+                        const FVoxelEntityData& EntityData,
+                        const TSet<FIntVector>& ProcessedVoxels,
+                        TSet<FIntVector>& MergedVoxels);
+
+  void SplitEntityChunk(const FIntVector& GlobalCoord,
+                        const TSet<FIntVector>& ProcessedVoxels,
+                        TSet<FIntVector>& SplitVoxels);
+
   bool GetChunkableEntityCoords(const FIntVector& StartCoord,
                                 TSet<FIntVector>& VisitedCoords,
                                 TSet<FIntVector>& ChunkableEntityCoords) const;
-  TObjectPtr<AEntityChunkActor> CreateEntityChunk(
+  TObjectPtr<AEntityChunkActor> GetEntityChunk(
       const FVoxelEntityData& EntityData);
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY()
   TObjectPtr<class UDataManager> DataManager;
 
   TMap<FIntVector, TObjectPtr<AEntityChunkActor>> EntityToChunk;
 
   TSet<TObjectPtr<AEntityChunkActor>> EntityChunks;
+
+  TSet<FIntVector> DirtyEntityVoxels;
 };

@@ -1,13 +1,13 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "DataAssets/VoxelBaseDataAsset.h"
 #include "DataAssets/VoxelBlockDataAsset.h"
 
 // clang-format off
 #include "BuildManager.generated.h"
 // clang-format on
 
+class UEntityManager;
 class UVoxelBlockDataAsset;
 class UDataManager;
 class UMeshManager;
@@ -45,9 +45,12 @@ class VOXEL_API UBuildManager : public UActorComponent {
       const TFunction<void(const FIntVector&)>& VoxelModifier) const;
   bool IsSurfaceVoxel(const FIntVector& VoxelCoord) const;
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY()
   TObjectPtr<UDataManager> DataManager;
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY()
   TObjectPtr<UMeshManager> MeshManager;
+
+  UPROPERTY()
+  TObjectPtr<UEntityManager> EntityManager;
 };

@@ -72,12 +72,12 @@ class VOXEL_API UDataManager : public UActorComponent {
 
   TMap<FIntVector, FVoxelChunk> VoxelChunks;
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY()
   TObjectPtr<UDebugManager> DebugManager;
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY()
   TObjectPtr<UMeshManager> MeshManager;
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY()
   TObjectPtr<UEntityManager> EntityManager;
 };

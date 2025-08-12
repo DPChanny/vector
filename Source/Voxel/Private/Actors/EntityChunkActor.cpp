@@ -1,8 +1,18 @@
 ﻿#include "Actors/EntityChunkActor.h"
 #include "Actors/VoxelWorldActor.h"
 #include "Components/EntityComponent.h"
+#include "DataAssets/VoxelEntityDataAsset.h"
 #include "Kismet/GameplayStatics.h"
 #include "Managers/DataManager.h"
+
+bool AEntityChunkActor::IsChunkableWith(const FVoxelEntityData& Other) const {
+  if (Entities.IsEmpty()) {
+    return false;
+  }
+  return dynamic_cast<const FVoxelEntityData*>(
+             DataManager->GetVoxelData(*Entities.begin()))
+      ->IsChunkableWith(&Other);
+}
 
 void AEntityChunkActor::BeginPlay() {
   Super::BeginPlay();
@@ -18,7 +28,7 @@ void AEntityChunkActor::BeginPlay() {
 
 void AEntityChunkActor::AddEntity(const FIntVector& VoxelCoord,
                                   const FVoxelEntityData& EntityData) {
-  ManagedVoxels.Add(VoxelCoord);
+  Entities.Add(VoxelCoord);
   UpdateLocation();
 
   for (const TObjectPtr<UEntityComponent>& Component : Components) {
@@ -30,7 +40,7 @@ void AEntityChunkActor::AddEntity(const FIntVector& VoxelCoord,
 
 void AEntityChunkActor::RemoveEntity(const FIntVector& VoxelCoord,
                                      const FVoxelEntityData& EntityData) {
-  ManagedVoxels.Remove(VoxelCoord);
+  Entities.Remove(VoxelCoord);
   UpdateLocation();
 
   for (const TObjectPtr<UEntityComponent>& Component : Components) {
@@ -41,24 +51,24 @@ void AEntityChunkActor::RemoveEntity(const FIntVector& VoxelCoord,
 }
 
 bool AEntityChunkActor::IsEmpty() const {
-  return ManagedVoxels.IsEmpty();
+  return Entities.IsEmpty();
 }
 
-void AEntityChunkActor::OnEntityDataModified(
-    const FIntVector& VoxelCoord, const FVoxelEntityData& EntityData) {
+void AEntityChunkActor::OnEntityModified(const FIntVector& VoxelCoord,
+                                         const FVoxelEntityData& EntityData) {
   UpdateLocation();
   for (const TObjectPtr<UEntityComponent>& Component : Components) {
     if (Component) {
-      Component->OnEntityDataModified(VoxelCoord, EntityData);
+      Component->OnEntityModified(VoxelCoord, EntityData);
     }
   }
 }
 
 void AEntityChunkActor::UpdateLocation() {
   FVector Location = FVector::ZeroVector;
-  for (const FIntVector& VoxelCoord : ManagedVoxels) {
+  for (const FIntVector& VoxelCoord : Entities) {
     Location += FVector(DataManager->GlobalToWorldCoord(VoxelCoord));
   }
-  Location /= ManagedVoxels.Num();
+  Location /= Entities.Num();
   SetActorLocation(Location);
 }

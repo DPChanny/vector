@@ -4,15 +4,14 @@
 
 #include "Components/HealthComponent.h"
 
-UTurretComponent::UTurretComponent() : ManagedVoxels(nullptr) {
+UTurretComponent::UTurretComponent() : Entities(nullptr) {
   TargetClass = AVectorPlayerCharacter::StaticClass();
-  bWantsInitializeComponent = true;
 }
 
 bool UTurretComponent::IsValidTarget(const TObjectPtr<AActor> Actor) const {
   return FVector::Dist(Actor->GetActorLocation(),
                        GetOwner()->GetActorLocation()) <
-         Amplifier(BaseRange, RangeBalancer, ManagedVoxels->Num(),
+         Amplifier(BaseRange, RangeBalancer, Entities->Num(),
                    HealthComponent->CurrentHealth / HealthComponent->MaxHealth);
 }
 
@@ -27,10 +26,10 @@ void UTurretComponent::TickComponent(
 
   if (Timer > 0) {
     Timer -= DeltaTime;
-  } else {
+  } else if (!Targets.IsEmpty()) {
     Timer = TimeInterval;
     const float Damage =
-        Amplifier(BaseDamage, DamageBalancer, ManagedVoxels->Num(),
+        Amplifier(BaseDamage, DamageBalancer, Entities->Num(),
                   HealthComponent->CurrentHealth / HealthComponent->MaxHealth);
     for (const auto Target : Targets) {
       if (Target->GetClass()->ImplementsInterface(UDamageable::StaticClass())) {
@@ -38,8 +37,8 @@ void UTurretComponent::TickComponent(
                                       Damage, 0);
       }
       DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(),
-                    Target->GetActorLocation(), FColor::Red, false, 5.f, 0,
-                    .5f);
+                    Target->GetActorLocation(), FColor::Red, false,
+                    TimeInterval / 2, 0, .25f);
     }
   }
 }
@@ -47,7 +46,8 @@ void UTurretComponent::TickComponent(
 void UTurretComponent::InitializeComponent() {
   Super::InitializeComponent();
 
-  ManagedVoxels = &Cast<AEntityChunkActor>(GetOwner())->GetEntities();
+  Entities = &EntityChunkActor->GetEntities();
+  Timer = TimeInterval;
 }
 
 float UTurretComponent::Amplifier(const float Base, const float Balancer,

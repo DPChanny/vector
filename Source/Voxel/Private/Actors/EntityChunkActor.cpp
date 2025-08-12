@@ -14,6 +14,13 @@ bool AEntityChunkActor::IsChunkableWith(const FVoxelEntityData& Other) const {
       ->IsChunkableWith(&Other);
 }
 
+FVoxelEntityData* AEntityChunkActor::GetCache(const FIntVector& GlobalCoord) {
+  if (FVoxelEntityData** CacheData = Cache.Find(GlobalCoord)) {
+    return *CacheData;
+  }
+  return nullptr;
+}
+
 void AEntityChunkActor::BeginPlay() {
   Super::BeginPlay();
 
@@ -26,27 +33,35 @@ void AEntityChunkActor::BeginPlay() {
   GetComponents<UEntityComponent>(Components);
 }
 
-void AEntityChunkActor::AddEntity(const FIntVector& VoxelCoord,
-                                  const FVoxelEntityData& EntityData) {
-  Entities.Add(VoxelCoord);
+void AEntityChunkActor::AddEntity(const FIntVector& GlobalCoord,
+                                  const FVoxelEntityData& NewEntityData) {
+  Entities.Add(GlobalCoord);
   UpdateLocation();
 
   for (const TObjectPtr<UEntityComponent>& Component : Components) {
     if (Component) {
-      Component->OnEntityAdded(VoxelCoord, EntityData);
+      Component->OnEntityAdded(GlobalCoord, NewEntityData);
     }
+  }
+
+  if (bCacheEnabled) {
+    Cache.Add(GlobalCoord,
+              dynamic_cast<FVoxelEntityData*>(NewEntityData.Clone()));
   }
 }
 
-void AEntityChunkActor::RemoveEntity(const FIntVector& VoxelCoord,
-                                     const FVoxelEntityData& EntityData) {
-  Entities.Remove(VoxelCoord);
+void AEntityChunkActor::RemoveEntity(const FIntVector& GlobalCoord) {
+  Entities.Remove(GlobalCoord);
   UpdateLocation();
 
   for (const TObjectPtr<UEntityComponent>& Component : Components) {
     if (Component) {
-      Component->OnEntityRemoved(VoxelCoord, EntityData);
+      Component->OnEntityRemoved(GlobalCoord);
     }
+  }
+
+  if (bCacheEnabled) {
+    Cache.Remove(GlobalCoord);
   }
 }
 
@@ -54,13 +69,19 @@ bool AEntityChunkActor::IsEmpty() const {
   return Entities.IsEmpty();
 }
 
-void AEntityChunkActor::OnEntityModified(const FIntVector& VoxelCoord,
-                                         const FVoxelEntityData& EntityData) {
+void AEntityChunkActor::OnEntityModified(
+    const FIntVector& GlobalCoord, const FVoxelEntityData& NewEntityData) {
   UpdateLocation();
+
   for (const TObjectPtr<UEntityComponent>& Component : Components) {
     if (Component) {
-      Component->OnEntityModified(VoxelCoord, EntityData);
+      Component->OnEntityModified(GlobalCoord, NewEntityData);
     }
+  }
+
+  if (bCacheEnabled) {
+    Cache.Add(GlobalCoord,
+              dynamic_cast<FVoxelEntityData*>(NewEntityData.Clone()));
   }
 }
 

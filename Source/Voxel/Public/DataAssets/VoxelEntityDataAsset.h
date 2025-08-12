@@ -55,6 +55,10 @@ struct FVoxelEntityData : public FVoxelBlockData {
                            GetBlockDataAsset()->MaxDurability
                      : -1.f;
   }
+
+  virtual FVoxelBaseData* Clone() const override {
+    return new FVoxelEntityData(*this);
+  };
 };
 
 struct FVoxelEntityParams final : FVoxelBlockParams {

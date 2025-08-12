@@ -13,19 +13,22 @@ class VOXEL_API AEntityChunkActor : public AActor {
   GENERATED_BODY()
 
  public:
-  virtual void AddEntity(const FIntVector& VoxelCoord,
-                         const FVoxelEntityData& EntityData);
-  virtual void RemoveEntity(const FIntVector& VoxelCoord,
-                            const FVoxelEntityData& EntityData);
+  virtual void AddEntity(const FIntVector& GlobalCoord,
+                         const FVoxelEntityData& NewEntityData);
+  virtual void RemoveEntity(const FIntVector& GlobalCoord);
 
   bool IsEmpty() const;
 
-  virtual void OnEntityModified(const FIntVector& VoxelCoord,
-                                const FVoxelEntityData& EntityData);
+  virtual void OnEntityModified(const FIntVector& GlobalCoord,
+                                const FVoxelEntityData& NewEntityData);
 
   const TSet<FIntVector>& GetEntities() const { return Entities; }
 
   bool IsChunkableWith(const FVoxelEntityData& Other) const;
+
+  FVoxelEntityData* GetCache(const FIntVector& GlobalCoord);
+
+  bool bCacheEnabled = false;
 
  private:
   virtual void BeginPlay() override;
@@ -38,4 +41,7 @@ class VOXEL_API AEntityChunkActor : public AActor {
   TArray<TObjectPtr<UEntityComponent>> Components;
 
   void UpdateLocation();
+
+ protected:
+  TMap<FIntVector, FVoxelEntityData*> Cache;
 };

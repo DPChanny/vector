@@ -96,7 +96,7 @@ void UEntityManager::MergeEntityChunk(const FIntVector& GlobalCoord,
         if (const FVoxelEntityData* VoxelEntityData =
                 dynamic_cast<const FVoxelEntityData*>(
                     DataManager->GetVoxelData(VoxelCoord))) {
-          ChunkToUpdate->RemoveEntity(VoxelCoord, *VoxelEntityData);
+          ChunkToUpdate->RemoveEntity(VoxelCoord);
           EntityToChunk.Remove(VoxelCoord);
         }
       }
@@ -140,7 +140,7 @@ void UEntityManager::SplitEntityChunk(const FIntVector& GlobalCoord,
   if (const FVoxelEntityData* EntityData =
           dynamic_cast<const FVoxelEntityData*>(
               DataManager->GetVoxelData(GlobalCoord))) {
-    OriginalChunk->RemoveEntity(GlobalCoord, *EntityData);
+    OriginalChunk->RemoveEntity(GlobalCoord);
   }
   EntityToChunk.Remove(GlobalCoord);
   OriginalVoxels.Remove(GlobalCoord);
@@ -159,7 +159,7 @@ void UEntityManager::SplitEntityChunk(const FIntVector& GlobalCoord,
     if (const FVoxelEntityData* EntityData =
             dynamic_cast<const FVoxelEntityData*>(
                 DataManager->GetVoxelData(VoxelCoord))) {
-      OriginalChunk->RemoveEntity(VoxelCoord, *EntityData);
+      OriginalChunk->RemoveEntity(VoxelCoord);
     }
     EntityToChunk.Remove(VoxelCoord);
   }

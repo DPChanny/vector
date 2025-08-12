@@ -15,7 +15,7 @@ class VECTOR_API UTurretComponent : public UTargetComponent {
  public:
   virtual bool IsValidTarget(TObjectPtr<AActor> Actor) const override;
   virtual void TickComponent(
-      float DeltaTime, enum ELevelTick TickType,
+      float DeltaTime, ELevelTick TickType,
       FActorComponentTickFunction* ThisTickFunction) override;
 
  private:
@@ -29,7 +29,7 @@ class VECTOR_API UTurretComponent : public UTargetComponent {
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<const UHealthComponent> HealthComponent;
 
-  const TSet<FIntVector>* ManagedVoxels;
+  const TSet<FIntVector>* Entities;
 
   UPROPERTY(EditDefaultsOnly)
   float RangeBalancer = 5.f;

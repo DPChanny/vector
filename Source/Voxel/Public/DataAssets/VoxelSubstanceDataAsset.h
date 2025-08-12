@@ -5,10 +5,11 @@
 #include "VoxelSubstanceDataAsset.generated.h"
 
 UCLASS(Abstract)
+
 class VOXEL_API UVoxelSubstanceDataAsset : public UVoxelBaseDataAsset {
   GENERATED_BODY()
 
-public:
+ public:
   UVoxelSubstanceDataAsset();
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voxel | Substance")
@@ -16,6 +17,7 @@ public:
 };
 
 USTRUCT()
+
 struct FVoxelSubstanceData : public FVoxelBaseData {
   GENERATED_BODY()
 
@@ -26,12 +28,16 @@ struct FVoxelSubstanceData : public FVoxelBaseData {
   }
 
   explicit FVoxelSubstanceData(
-      const TObjectPtr<const UVoxelSubstanceDataAsset> &InDataAsset)
+      const TObjectPtr<const UVoxelSubstanceDataAsset>& InDataAsset)
       : FVoxelBaseData(InDataAsset) {}
+
+  virtual FVoxelBaseData* Clone() const override {
+    return new FVoxelSubstanceData(*this);
+  };
 };
 
 struct FVoxelSubstanceParams : FVoxelBaseParams {
-  virtual FVoxelBaseParams *Clone() const override {
+  virtual FVoxelBaseParams* Clone() const override {
     return new FVoxelSubstanceParams(*this);
   }
 };

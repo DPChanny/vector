@@ -10,10 +10,13 @@ class VOXEL_API UHealthComponent : public UEntityComponent {
   GENERATED_BODY()
 
  public:
-  virtual void OnEntityAdded(const FIntVector& VoxelCoord,
-                             const FVoxelEntityData& Data) override;
-  virtual void OnEntityRemoved(const FIntVector& VoxelCoord,
-                               const FVoxelEntityData& Data) override;
+  virtual void InitializeComponent() override;
+
+  virtual void OnEntityAdded(const FIntVector& GlobalCoord,
+                             const FVoxelEntityData& NewEntityData) override;
+  virtual void OnEntityRemoved(const FIntVector& GlobalCoord) override;
+  virtual void OnEntityModified(const FIntVector& GlobalCoord,
+                                const FVoxelEntityData& NewEntityData) override;
 
   UPROPERTY(VisibleAnywhere)
   float MaxHealth;

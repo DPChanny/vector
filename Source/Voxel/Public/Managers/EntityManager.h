@@ -11,9 +11,14 @@ UCLASS()
 class VOXEL_API UEntityManager : public UActorComponent {
   GENERATED_BODY()
 
-  const FIntVector NeighborOffsets[6] = {
-      FIntVector(1, 0, 0),  FIntVector(-1, 0, 0), FIntVector(0, 1, 0),
-      FIntVector(0, -1, 0), FIntVector(0, 0, 1),  FIntVector(0, 0, -1)};
+  const FIntVector NeighborOffsets[18] = {
+      FIntVector(1, 0, 0),   FIntVector(-1, 0, 0),  FIntVector(0, 1, 0),
+      FIntVector(0, -1, 0),  FIntVector(0, 0, 1),   FIntVector(0, 0, -1),
+
+      FIntVector(1, 1, 0),   FIntVector(1, -1, 0),  FIntVector(-1, 1, 0),
+      FIntVector(-1, -1, 0), FIntVector(1, 0, 1),   FIntVector(1, 0, -1),
+      FIntVector(-1, 0, 1),  FIntVector(-1, 0, -1), FIntVector(0, 1, 1),
+      FIntVector(0, 1, -1),  FIntVector(0, -1, 1),  FIntVector(0, -1, -1)};
 
  public:
   void SetDirtyEntity(const FIntVector& GlobalCoord);

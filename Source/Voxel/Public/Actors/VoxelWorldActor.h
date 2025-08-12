@@ -60,7 +60,7 @@ class VOXEL_API AVoxelWorldActor : public AActor {
   AVoxelWorldActor();
 
   UPROPERTY(EditDefaultsOnly, Category = "World | World")
-  int32 ChunkSize = 10;
+  int32 ChunkSize = 32;
 
   UPROPERTY(EditDefaultsOnly, Category = "World | World")
   int32 VoxelSize = 50;
@@ -77,8 +77,8 @@ class VOXEL_API AVoxelWorldActor : public AActor {
   UPROPERTY(EditDefaultsOnly, Category = "World | Nexus")
   float NexusPlacementRadius = 1000.f;
 
-  UPROPERTY(EditDefaultsOnly, Category = "Debug")
-  TSubclassOf<AVoxelDebugActor> VoxelDebugActor;
+  UPROPERTY(EditDefaultsOnly, Category = "World | Debug")
+  TSubclassOf<AVoxelDebugActor> VoxelDebugActorClass;
 
   UPROPERTY()
   TArray<TObjectPtr<APlayerStart>> PlayerStarts;

@@ -19,7 +19,7 @@ void AVoxelWorldActor::Initialize(const int32 NumberOfPlayers) {
   MeshManager = NewObject<UMeshManager>(this);
   EntityManager = NewObject<UEntityManager>(this);
 
-  DebugManager->Initialize(VoxelDebugActor);
+  DebugManager->Initialize(VoxelDebugActorClass);
   DataManager->Initialize(ChunkSize, VoxelSize, VoxelChunkActorClass,
                           VoxelDefaultBlockDataAsset);
   BuildManager->Initialize();
@@ -61,8 +61,6 @@ void AVoxelWorldActor::InitializeNexuses(const int32 NexusCount) {
                    FMath::FRandRange(-RandomJitter, RandomJitter));
 
     NewRoom.Center = Center + Dir * NexusPlacementRadius + Jitter;
-
-    NewRoom.Center = FVector(500, 500, 500);
 
     Nexuses.Add(NewRoom);
 

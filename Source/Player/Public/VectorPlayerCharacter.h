@@ -50,13 +50,13 @@ class PLAYER_API AVectorPlayerCharacter : public APawn, public IDamageable {
   TObjectPtr<AVoxelWorldActor> World;
 
   UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
-  float MaxHealth;
+  float MaxHealth = 100.f;
 
   UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
   float Range = 100.f;
 
   UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
-  float Distance = 200.f;
+  float Distance = 500.f;
 
   UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
   float Recoil = 0.f;

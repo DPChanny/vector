@@ -162,7 +162,9 @@ FIntVector UDataManager::ChunkToGlobalCoord(
 
 FIntVector UDataManager::GlobalToLocalCoord(
     const FIntVector& GlobalCoord) const {
-  return GlobalCoord % ChunkSize;
+  return FIntVector((GlobalCoord.X % ChunkSize + ChunkSize) % ChunkSize,
+                    (GlobalCoord.Y % ChunkSize + ChunkSize) % ChunkSize,
+                    (GlobalCoord.Z % ChunkSize + ChunkSize) % ChunkSize);
 }
 
 int32 UDataManager::GlobalCoordToIndex(const FIntVector& GlobalCoord) const {

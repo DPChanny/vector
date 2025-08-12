@@ -10,7 +10,7 @@
 
 void UDataManager::Initialize(
     const int32 InChunkSize, const int32 InVoxelSize,
-    const TSubclassOf<AVoxelChunkActor>& InVoxelChunkActor,
+    const TSubclassOf<AVoxelChunkActor>& InVoxelChunkActorClass,
     const TObjectPtr<UVoxelBlockDataAsset>& InVoxelDefaultBlockDataAsset) {
   const AVoxelWorldActor* VoxelWorld = Cast<AVoxelWorldActor>(GetOuter());
   DebugManager = VoxelWorld->GetDebugManager();
@@ -19,7 +19,7 @@ void UDataManager::Initialize(
   ChunkSize = InChunkSize;
   VoxelSize = InVoxelSize;
   ChunkVolume = ChunkSize * ChunkSize * ChunkSize;
-  VoxelChunkClass = InVoxelChunkActor;
+  VoxelChunkActorClass = InVoxelChunkActorClass;
   VoxelDefaultBlockDataAsset = InVoxelDefaultBlockDataAsset;
 
   VoxelChunks.Empty();
@@ -30,7 +30,7 @@ FVoxelChunk* UDataManager::LoadVoxelChunk(const FIntVector& ChunkCoord) {
     return VoxelChunks.Find(ChunkCoord);
   }
 
-  if (!VoxelChunkClass) {
+  if (!VoxelChunkActorClass) {
     return nullptr;
   }
 
@@ -47,7 +47,7 @@ FVoxelChunk* UDataManager::LoadVoxelChunk(const FIntVector& ChunkCoord) {
   SpawnParams.Owner = Cast<AActor>(GetOuter());
 
   NewVoxelChunk.VoxelChunkActor = World->SpawnActor<AVoxelChunkActor>(
-      VoxelChunkClass, GlobalToWorldCoord(ChunkToGlobalCoord(ChunkCoord)),
+      VoxelChunkActorClass, GlobalToWorldCoord(ChunkToGlobalCoord(ChunkCoord)),
       FRotator::ZeroRotator, SpawnParams);
 
   if (AActor* Owner = Cast<AActor>(GetOuter())) {

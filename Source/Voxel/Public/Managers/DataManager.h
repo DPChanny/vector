@@ -25,7 +25,7 @@ class VOXEL_API UDataManager : public UObject {
 
   void Initialize(
       int32 InChunkSize, int32 InVoxelSize,
-      const TSubclassOf<AVoxelChunkActor>& InVoxelChunkActor,
+      const TSubclassOf<AVoxelChunkActor>& InVoxelChunkActorClass,
       const TObjectPtr<UVoxelBlockDataAsset>& InVoxelDefaultBlockDataAsset);
 
   inline bool IsVoxelChunkLoaded(const FIntVector& ChunkCoord) const;
@@ -66,7 +66,7 @@ class VOXEL_API UDataManager : public UObject {
   TMap<FIntVector, FVoxelChunk> VoxelChunks;
 
   UPROPERTY()
-  TSubclassOf<AVoxelChunkActor> VoxelChunkClass;
+  TSubclassOf<AVoxelChunkActor> VoxelChunkActorClass;
   int32 VoxelSize;
 
   int32 ChunkSize;

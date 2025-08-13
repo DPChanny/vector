@@ -37,7 +37,7 @@ class VOXEL_API UTurretComponent : public UTargetComponent {
   float Timer = 0.f;
 
   UPROPERTY(EditDefaultsOnly)
-  float TimeInterval = 5.f;
+  float TimeInterval = 2.5f;
 
   UPROPERTY(EditDefaultsOnly)
   float BaseDamage = 50.f;

@@ -51,10 +51,10 @@ AVectorPlayerCharacter::AVectorPlayerCharacter() {
   Light->SetupAttachment(Camera);
 
   Light->SetIntensityUnits(ELightUnits::Lumens);
-  Light->SetIntensity(50.f);
-  Light->SetOuterConeAngle(40.f);
+  Light->SetIntensity(5.f);
+  Light->SetOuterConeAngle(30.f);
   Light->SetInnerConeAngle(0.f);
-  Light->SetAttenuationRadius(500.f);
+  Light->SetAttenuationRadius(200.f);
   Light->SetSourceRadius(25.f);
 }
 

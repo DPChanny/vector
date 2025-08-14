@@ -2,9 +2,7 @@
 
 #include "CoreMinimal.h"
 
-// clang-format off
 #include "VoxelChunk.generated.h"
-// clang-format on
 
 struct FVoxelBaseData;
 struct FVoxelBaseParams;
@@ -29,6 +27,6 @@ struct VOXEL_API FVoxelChunk {
   TObjectPtr<AVoxelChunkActor> VoxelChunkActor;
 
  private:
-  FVoxelBaseData** VoxelDataArray;
   int32 VoxelCount;
+  FVoxelBaseData** VoxelDataArray;
 };

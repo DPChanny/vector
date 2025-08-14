@@ -7,6 +7,10 @@
 #include "Managers/EntityManager.h"
 #include "Managers/MeshManager.h"
 
+UDataManager::UDataManager() {
+  bWantsInitializeComponent = true;
+}
+
 void UDataManager::InitializeComponent() {
   Super::InitializeComponent();
 
@@ -151,10 +155,6 @@ FIntVector UDataManager::GlobalToLocalCoord(
 
 int32 UDataManager::GlobalCoordToIndex(const FIntVector& GlobalCoord) const {
   return LocalCoordToIndex(GlobalToLocalCoord(GlobalCoord));
-}
-
-UDataManager::UDataManager() {
-  bWantsInitializeComponent = true;
 }
 
 FIntVector UDataManager::LocalToGlobalCoord(

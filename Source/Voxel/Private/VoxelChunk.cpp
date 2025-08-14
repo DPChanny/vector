@@ -5,9 +5,9 @@
 FVoxelChunk::FVoxelChunk(
     const int32 InChunkSize,
     const TObjectPtr<UVoxelBaseDataAsset>& InVoxelDataAsset,
-    const FVoxelBaseParams& InVoxelParams) {
-  VoxelCount = InChunkSize * InChunkSize * InChunkSize;
-  VoxelDataArray = new FVoxelBaseData*[VoxelCount];
+    const FVoxelBaseParams& InVoxelParams)
+    : VoxelCount(InChunkSize * InChunkSize * InChunkSize),
+      VoxelDataArray(new FVoxelBaseData*[VoxelCount]) {
   for (int32 i = 0; i < VoxelCount; ++i) {
     VoxelDataArray[i] = InVoxelDataAsset->ConstructVoxelData(InVoxelParams);
   }

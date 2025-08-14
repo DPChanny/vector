@@ -17,6 +17,10 @@ void UBuildManager::InitializeComponent() {
   }
 }
 
+UBuildManager::UBuildManager() {
+  bWantsInitializeComponent = true;
+}
+
 void UBuildManager::DamageBlocksInRadius(const FIntVector& CenterGlobalCoord,
                                          const float Radius,
                                          const float DamageAmount) const {
@@ -156,10 +160,6 @@ void UBuildManager::GetGlobalCoordsInRadius(
       }
     }
   }
-}
-
-UBuildManager::UBuildManager() {
-  bWantsInitializeComponent = true;
 }
 
 void UBuildManager::ProcessVoxelsInRadius(

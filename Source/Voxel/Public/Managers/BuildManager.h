@@ -3,9 +3,7 @@
 #include "CoreMinimal.h"
 #include "DataAssets/VoxelBlockDataAsset.h"
 
-// clang-format off
 #include "BuildManager.generated.h"
-// clang-format on
 
 class UEntityManager;
 class UVoxelBlockDataAsset;

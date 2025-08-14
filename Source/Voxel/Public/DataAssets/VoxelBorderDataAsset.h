@@ -3,9 +3,7 @@
 #include "CoreMinimal.h"
 #include "VoxelSubstanceDataAsset.h"
 
-// clang-format off
 #include "VoxelBorderDataAsset.generated.h"
-// clang-format on
 
 UCLASS()
 

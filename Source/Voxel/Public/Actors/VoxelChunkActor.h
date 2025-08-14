@@ -21,11 +21,11 @@ class VOXEL_API AVoxelChunkActor : public AActor, public IDamageable {
   void Initialize(const FIntVector& InChunkCoord);
   void UpdateMesh() const;
 
+ private:
   virtual void OnDamage_Implementation(const FVector HitPoint,
                                        const float DamageAmount,
                                        const float DamageRange) override;
 
- private:
   UPROPERTY(EditDefaultsOnly)
   TObjectPtr<UMaterialInterface> Material;
 

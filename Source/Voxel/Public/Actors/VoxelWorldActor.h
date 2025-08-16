@@ -30,31 +30,10 @@ class VOXEL_API AVoxelWorldActor : public AActor {
   GENERATED_BODY()
 
  public:
-  const TObjectPtr<UDataManager>& GetDataManager() const { return DataManager; }
-
-  const TObjectPtr<UMeshManager>& GetMeshManager() const { return MeshManager; }
-
-  const TObjectPtr<UDebugManager>& GetDebugManager() const {
-    return DebugManager;
-  }
-
-  const TObjectPtr<UBuildManager>& GetBuildManager() const {
-    return BuildManager;
-  }
-
-  const TObjectPtr<UEntityManager>& GetEntityManager() const {
-    return EntityManager;
-  }
-
-  void Initialize(int32 NumberOfPlayers);
-
-  const TArray<TObjectPtr<APlayerStart>>& GetPlayerStarts() const {
-    return PlayerStarts;
-  }
+  void InitializeNexuses(int32 NexusCount,
+                         TSet<TObjectPtr<APlayerStart>>& OutPlayerStart);
 
  private:
-  void InitializeNexuses(int32 NexusCount);
-
   AVoxelWorldActor();
 
   UPROPERTY(EditDefaultsOnly, Category = "Nexus")
@@ -62,8 +41,6 @@ class VOXEL_API AVoxelWorldActor : public AActor {
 
   UPROPERTY(EditDefaultsOnly, Category = "Nexus")
   float NexusPlacementRadius = 1000.f;
-
-  TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 
   UPROPERTY(VisibleAnywhere, Category = "Managers")
   TObjectPtr<UDataManager> DataManager;

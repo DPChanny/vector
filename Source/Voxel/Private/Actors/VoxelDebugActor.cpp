@@ -26,32 +26,34 @@ AVoxelDebugActor::AVoxelDebugActor() {
 void AVoxelDebugActor::BeginPlay() {
   Super::BeginPlay();
 
-  if (const TObjectPtr<UUserWidget> UserWidget =
-          Widget->GetUserWidgetObject()) {
-    DisplayWidget = Cast<UVoxelDebugWidget>(UserWidget);
+  if (const TObjectPtr<AActor> VoxelWorld = GetOwner()) {
+    DataManager = VoxelWorld->GetComponentByClass<UDataManager>();
   }
 }
 
-void AVoxelDebugActor::Initialize(const FIntVector &InVoxelCoord,
-                                  const FColor &Color) {
-  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
-          Cast<AVoxelWorldActor>(GetOwner())) {
-    DataManager = VoxelWorld->GetDataManager();
+void AVoxelDebugActor::PostInitializeComponents() {
+  Super::PostInitializeComponents();
+
+  if (const TObjectPtr<UUserWidget> UserWidget =
+          Widget->GetUserWidgetObject()) {
+    DebugWidget = Cast<UVoxelDebugWidget>(UserWidget);
   }
+}
 
+void AVoxelDebugActor::Initialize(const FIntVector& InVoxelCoord,
+                                  const FColor& Color) {
   VoxelCoord = InVoxelCoord;
-
   Box->SetBoxExtent(FVector(DataManager->GetVoxelSize() / 2 * .85f));
 
   UpdateActor(Color);
 }
 
-void AVoxelDebugActor::UpdateActor(const FColor &Color) const {
-  if (!DataManager || !DisplayWidget) {
+void AVoxelDebugActor::UpdateActor(const FColor& Color) const {
+  if (!DataManager || !DebugWidget) {
     return;
   }
 
-  const FVoxelBaseData *VoxelData = DataManager->GetVoxelData(VoxelCoord);
+  const FVoxelBaseData* VoxelData = DataManager->GetVoxelData(VoxelCoord);
   if (!VoxelData) {
     return;
   }
@@ -65,14 +67,14 @@ void AVoxelDebugActor::UpdateActor(const FColor &Color) const {
 
   Text += FString::Printf(TEXT("Density: %.2f\n"), VoxelData->GetDensity());
 
-  if (const FVoxelBlockData *VoxelBlockData =
-          dynamic_cast<const FVoxelBlockData *>(VoxelData)) {
+  if (const FVoxelBlockData* VoxelBlockData =
+          dynamic_cast<const FVoxelBlockData*>(VoxelData)) {
     Text += FString::Printf(TEXT("Durability: %.2f / %.2f\n"),
                             VoxelBlockData->Durability,
                             VoxelBlockData->GetBlockDataAsset()->MaxDurability);
   }
 
-  DisplayWidget->UpdateText(Text);
+  DebugWidget->UpdateText(Text);
 
   Box->ShapeColor = Color;
   Box->MarkRenderStateDirty();

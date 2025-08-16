@@ -61,8 +61,8 @@ AVectorPlayerCharacter::AVectorPlayerCharacter() {
 void AVectorPlayerCharacter::BeginPlay() {
   Super::BeginPlay();
 
-  World = Cast<AVoxelWorldActor>(UGameplayStatics::GetActorOfClass(
-      GetWorld(), AVoxelWorldActor::StaticClass()));
+  VoxelWorld = UGameplayStatics::GetActorOfClass(
+      GetWorld(), AVoxelWorldActor::StaticClass());
 }
 
 void AVectorPlayerCharacter::Tick(const float DeltaTime) {
@@ -108,15 +108,26 @@ void AVectorPlayerCharacter::Fire() const {
 
   if (bHit) {
     if (Poop) {
-      const FIntVector CenterGlobalCoord =
-          World->GetDataManager()->WorldToGlobalCoord(HitResult.ImpactPoint);
+      const TObjectPtr<UBuildManager> BuildManager =
+          VoxelWorld->GetComponentByClass<UBuildManager>();
+      const TObjectPtr<UDataManager> DataManager =
+          VoxelWorld->GetComponentByClass<UDataManager>();
 
-      World->GetBuildManager()->ConstructBlocksInRadius(
-          CenterGlobalCoord, Range, 10, Poop, FVoxelEntityParams(0, 0));
+      if (BuildManager && DataManager) {
+        const FIntVector CenterGlobalCoord =
+            DataManager->WorldToGlobalCoord(HitResult.ImpactPoint);
 
-      World->GetDebugManager()->SetDebugVoxel(CenterGlobalCoord,
-                                              FColor::Yellow);
-      World->GetDebugManager()->FlushDebugVoxelBuffer();
+        BuildManager->ConstructBlocksInRadius(CenterGlobalCoord, Range, 10,
+                                              Poop, FVoxelEntityParams(0, 0));
+
+        const TObjectPtr<UDebugManager> DebugManager =
+            VoxelWorld->GetComponentByClass<UDebugManager>();
+
+        if (DebugManager) {
+          DebugManager->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
+          DebugManager->FlushDebugVoxelBuffer();
+        }
+      }
     }
   }
 }

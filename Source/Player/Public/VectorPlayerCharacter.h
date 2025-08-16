@@ -49,7 +49,7 @@ class PLAYER_API AVectorPlayerCharacter : public APawn, public IDamageable {
   TObjectPtr<UVoxelBlockDataAsset> Poop;
 
   UPROPERTY(VisibleAnywhere, Category = "Player")
-  TObjectPtr<AVoxelWorldActor> World;
+  TObjectPtr<AActor> VoxelWorld;
 
   UPROPERTY(EditDefaultsOnly, Category = "Player | Stats")
   float WalkSpeed = 100.f;

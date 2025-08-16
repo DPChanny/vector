@@ -2,30 +2,27 @@
 
 #include "Actors/VoxelWorldActor.h"
 #include "Engine/World.h"
-#include "GameFramework/PlayerController.h"
+#include "GameFramework/Controller.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
-#include "UObject/ObjectPtr.h"
 
-AActor *
-AVectorGameMode::FindPlayerStart_Implementation(AController *Player,
-                                                const FString &IncomingName) {
-  if (!bVoxelWorldSetupAttempted) {
+AActor* AVectorGameMode::FindPlayerStart_Implementation(AController* Controller,
+                                                        const FString& Name) {
+  if (!bNexusInitialized) {
     if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
             Cast<AVoxelWorldActor>(UGameplayStatics::GetActorOfClass(
                 GetWorld(), AVoxelWorldActor::StaticClass()))) {
       const int32 NumDesiredPlayers = GetNumPlayers();
-      VoxelWorld->Initialize(NumDesiredPlayers);
-
-      AvailablePlayerStarts.Empty();
-      AvailablePlayerStarts.Append(VoxelWorld->GetPlayerStarts());
+      VoxelWorld->InitializeNexuses(NumDesiredPlayers, AvailablePlayerStarts);
     }
-    bVoxelWorldSetupAttempted = true;
+
+    bNexusInitialized = true;
   }
 
   if (!AvailablePlayerStarts.IsEmpty()) {
-    const TObjectPtr<APlayerStart> ChosenPlayerStart = AvailablePlayerStarts[0];
-    AvailablePlayerStarts.RemoveAt(0);
+    const TObjectPtr<APlayerStart> ChosenPlayerStart =
+        *AvailablePlayerStarts.begin();
+    AvailablePlayerStarts.Remove(ChosenPlayerStart);
 
     return ChosenPlayerStart;
   }
@@ -33,5 +30,5 @@ AVectorGameMode::FindPlayerStart_Implementation(AController *Player,
   UE_LOG(LogTemp, Warning,
          TEXT("No dynamic PlayerStarts available. Falling back to default "
               "FindPlayerStart behavior."));
-  return Super::FindPlayerStart_Implementation(Player, IncomingName);
+  return Super::FindPlayerStart_Implementation(Controller, Name);
 }

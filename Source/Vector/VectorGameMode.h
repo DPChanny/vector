@@ -1,20 +1,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
+#include "GameFramework/GameMode.h"
 #include "VectorGameMode.generated.h"
 
+class AVoxelWorldActor;
+
 UCLASS()
-class VECTOR_API AVectorGameMode : public AGameModeBase {
+
+class VECTOR_API AVectorGameMode : public AGameMode {
   GENERATED_BODY()
 
-protected:
-  virtual AActor *
-  FindPlayerStart_Implementation(AController *Player,
-                                 const FString &IncomingName) override;
+  virtual AActor* FindPlayerStart_Implementation(AController* Controller,
+                                                 const FString& Name) override;
 
-  UPROPERTY()
-  TArray<TObjectPtr<APlayerStart>> AvailablePlayerStarts;
+  TSet<TObjectPtr<APlayerStart>> AvailablePlayerStarts;
 
-  bool bVoxelWorldSetupAttempted = false;
+  bool bNexusInitialized = false;
 };

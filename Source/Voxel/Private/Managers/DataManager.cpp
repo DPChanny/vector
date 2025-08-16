@@ -50,7 +50,7 @@ FVoxelChunk* UDataManager::LoadVoxelChunk(const FIntVector& ChunkCoord) {
     NewVoxelChunk.VoxelChunkActor->AttachToActor(
         Owner, FAttachmentTransformRules::KeepWorldTransform);
   }
-  NewVoxelChunk.VoxelChunkActor->Initialize(ChunkCoord);
+  NewVoxelChunk.VoxelChunkActor->SetChunkCoord(ChunkCoord);
 
   VoxelChunks.Add(ChunkCoord, MoveTemp(NewVoxelChunk));
 

@@ -18,60 +18,38 @@ AVoxelWorldActor::AVoxelWorldActor() {
   EntityManager = CreateDefaultSubobject<UEntityManager>(TEXT("EntityManager"));
 }
 
-void AVoxelWorldActor::Initialize(const int32 NumberOfPlayers) {
-  InitializeNexuses(NumberOfPlayers);
-
-  MeshManager->FlushDirtyChunks();
-}
-
-void AVoxelWorldActor::InitializeNexuses(const int32 NexusCount) {
+void AVoxelWorldActor::InitializeNexuses(
+    const int32 NexusCount, TSet<TObjectPtr<APlayerStart>>& OutPlayerStart) {
   Nexuses.Empty();
-  for (TObjectPtr StartPoint : PlayerStarts) {
-    if (StartPoint) {
-      StartPoint->Destroy();
-    }
-  }
-  PlayerStarts.Empty();
-
-  const FVector Center = FVector::ZeroVector;
-  const float RandomJitter = NexusPlacementRadius * 0.08f;
 
   for (int32 i = 0; i < NexusCount; ++i) {
-    FNexus NewRoom;
-    NewRoom.Radius = NexusRadius;
-
     const float Phi = acos(1 - 2 * (i + 0.5f) / NexusCount);
     constexpr float GoldenRatio = 1.618033988749895f;
     const float Theta = GoldenRatio * 2 * PI * i;
 
-    FVector Dir;
-    Dir.X = FMath::Sin(Phi) * FMath::Cos(Theta);
-    Dir.Y = FMath::Sin(Phi) * FMath::Sin(Theta);
-    Dir.Z = FMath::Cos(Phi);
+    FVector Dir(FMath::Sin(Phi) * FMath::Cos(Theta),
+                FMath::Sin(Phi) * FMath::Sin(Theta), FMath::Cos(Phi));
 
-    FVector Jitter(FMath::FRandRange(-RandomJitter, RandomJitter),
-                   FMath::FRandRange(-RandomJitter, RandomJitter),
-                   FMath::FRandRange(-RandomJitter, RandomJitter));
+    FNexus NewNexus(Dir * NexusPlacementRadius, NexusRadius);
 
-    NewRoom.Center = Center + Dir * NexusPlacementRadius + Jitter;
-
-    Nexuses.Add(NewRoom);
+    Nexuses.Add(NewNexus);
 
     TSet<FIntVector> GlobalCoordsInRadius;
     BuildManager->GetGlobalCoordsInRadius(
-        DataManager->WorldToGlobalCoord(NewRoom.Center), NewRoom.Radius,
+        DataManager->WorldToGlobalCoord(NewNexus.Center), NewNexus.Radius,
         GlobalCoordsInRadius);
 
     for (const FIntVector& GlobalCoord : GlobalCoordsInRadius) {
       DataManager->SetVoxelData(GlobalCoord, new FVoxelVoidData(), false);
     }
 
-    FTransform SpawnTransform(FRotator::ZeroRotator, NewRoom.Center);
-    TObjectPtr<APlayerStart> NewPlayerStart =
-        GetWorld()->SpawnActor<APlayerStart>(APlayerStart::StaticClass(),
-                                             SpawnTransform);
-    if (NewPlayerStart) {
-      PlayerStarts.Add(NewPlayerStart);
+    if (TObjectPtr<APlayerStart> NewPlayerStart =
+            GetWorld()->SpawnActor<APlayerStart>(APlayerStart::StaticClass(),
+                                                 NewNexus.Center,
+                                                 FRotator::ZeroRotator)) {
+      OutPlayerStart.Add(NewPlayerStart);
     }
   }
+
+  MeshManager->FlushDirtyChunks();
 }

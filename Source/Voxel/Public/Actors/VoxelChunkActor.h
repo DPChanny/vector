@@ -18,7 +18,9 @@ class VOXEL_API AVoxelChunkActor : public AActor, public IDamageable {
  public:
   AVoxelChunkActor();
 
-  void Initialize(const FIntVector& InChunkCoord);
+  virtual void BeginPlay() override;
+
+  void SetChunkCoord(const FIntVector& InChunkCoord);
   void UpdateMesh() const;
 
  private:

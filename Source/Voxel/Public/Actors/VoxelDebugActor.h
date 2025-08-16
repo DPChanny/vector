@@ -17,6 +17,7 @@ class VOXEL_API AVoxelDebugActor : public AActor {
   AVoxelDebugActor();
 
   virtual void BeginPlay() override;
+  virtual void PostInitializeComponents() override;
 
   FIntVector VoxelCoord;
 
@@ -30,7 +31,7 @@ class VOXEL_API AVoxelDebugActor : public AActor {
   TObjectPtr<UWidgetComponent> Widget;
 
   UPROPERTY(VisibleAnywhere)
-  TObjectPtr<UVoxelDebugWidget> DisplayWidget;
+  TObjectPtr<UVoxelDebugWidget> DebugWidget;
 
  public:
   void Initialize(const FIntVector& InVoxelCoord, const FColor& Color);

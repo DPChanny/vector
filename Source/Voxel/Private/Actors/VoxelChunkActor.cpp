@@ -1,6 +1,5 @@
 #include "Actors/VoxelChunkActor.h"
 
-#include "Actors/VoxelWorldActor.h"
 #include "DataAssets/VoxelSubstanceDataAsset.h"
 #include "Engine/World.h"
 #include "Managers/BuildManager.h"
@@ -20,13 +19,17 @@ AVoxelChunkActor::AVoxelChunkActor() : ChunkCoord(FIntVector::ZeroValue) {
   Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 
-void AVoxelChunkActor::Initialize(const FIntVector& InChunkCoord) {
-  if (const TObjectPtr<AVoxelWorldActor> VoxelWorld =
-          Cast<AVoxelWorldActor>(GetOwner())) {
-    DataManager = VoxelWorld->GetDataManager();
-    DebugManager = VoxelWorld->GetDebugManager();
-    BuildManager = VoxelWorld->GetBuildManager();
+void AVoxelChunkActor::BeginPlay() {
+  Super::BeginPlay();
+
+  if (const TObjectPtr<AActor> VoxelWorld = GetOwner()) {
+    DataManager = VoxelWorld->GetComponentByClass<UDataManager>();
+    DebugManager = VoxelWorld->GetComponentByClass<UDebugManager>();
+    BuildManager = VoxelWorld->GetComponentByClass<UBuildManager>();
   }
+}
+
+void AVoxelChunkActor::SetChunkCoord(const FIntVector& InChunkCoord) {
   ChunkCoord = InChunkCoord;
 }
 

@@ -20,7 +20,7 @@ class VOXEL_API UTargetComponent : public UEntityComponent {
   TSubclassOf<AActor> TargetClass;
 
   UPROPERTY(EditDefaultsOnly)
-  uint8 MaxTargetCount = 1;
+  int32 MaxTargetCount = 1;
 
  protected:
   virtual void InitializeComponent() override;

@@ -23,7 +23,7 @@ struct FVoxelEntityData : public FVoxelBlockData {
   GENERATED_BODY()
 
   UPROPERTY(VisibleAnywhere, Category = "Voxel | Entity")
-  uint8 TeamID = 0;
+  int32 TeamID = -1;
 
   FVoxelEntityData() = default;
 
@@ -33,7 +33,7 @@ struct FVoxelEntityData : public FVoxelBlockData {
 
   explicit FVoxelEntityData(
       const TObjectPtr<const UVoxelEntityDataAsset>& InDataAsset,
-      const float InDurability, const uint8 InTeamID)
+      const float InDurability, const int32 InTeamID)
       : FVoxelBlockData(InDataAsset, InDurability), TeamID(InTeamID) {}
 
   TObjectPtr<const UVoxelEntityDataAsset> GetEntityDataAsset() const {
@@ -62,9 +62,9 @@ struct FVoxelEntityData : public FVoxelBlockData {
 };
 
 struct FVoxelEntityParams final : FVoxelBlockParams {
-  uint8 TeamID;
+  int32 TeamID;
 
-  explicit FVoxelEntityParams(const float InDurability, const uint8 InTeamID)
+  explicit FVoxelEntityParams(const float InDurability, const int32 InTeamID)
       : FVoxelBlockParams(InDurability), TeamID(InTeamID) {}
 
   virtual FVoxelBaseParams* Clone() const override {

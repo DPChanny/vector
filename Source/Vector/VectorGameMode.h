@@ -13,8 +13,4 @@ class VECTOR_API AVectorGameMode : public AGameMode {
 
   virtual AActor* FindPlayerStart_Implementation(AController* Controller,
                                                  const FString& Name) override;
-
-  TSet<TObjectPtr<APlayerStart>> AvailablePlayerStarts;
-
-  bool bNexusInitialized = false;
 };

@@ -8,6 +8,8 @@ public class Vector : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+		bUseRTTI = true;
+
 		PublicDependencyModuleNames.AddRange(["Core"]);
 
 		PrivateDependencyModuleNames.AddRange([

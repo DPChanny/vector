@@ -18,6 +18,7 @@ public class Lobby : ModuleRules
 			"SlateCore",
 			"UMG",
 
+			"Vector",
 			"VectorCore"
 		]);
 	}

@@ -4,7 +4,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "LobbyGameState.generated.h"
 
-class ALobbyPlayerState;
+class AVectorPlayerState;
 
 USTRUCT()
 
@@ -18,7 +18,7 @@ struct FTeam {
   FString Password;
 
   UPROPERTY(VisibleAnywhere)
-  TArray<TObjectPtr<ALobbyPlayerState>> Members;
+  TArray<TObjectPtr<AVectorPlayerState>> Members;
 };
 
 UCLASS()

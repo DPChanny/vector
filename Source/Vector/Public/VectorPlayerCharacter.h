@@ -15,7 +15,7 @@ class UVoxelBlockDataAsset;
 
 UCLASS()
 
-class PLAYER_API AVectorPlayerCharacter : public APawn, public IDamageable {
+class VECTOR_API AVectorPlayerCharacter : public APawn, public IDamageable {
   GENERATED_BODY()
 
  public:

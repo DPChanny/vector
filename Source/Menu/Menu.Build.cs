@@ -1,12 +1,10 @@
 ﻿using UnrealBuildTool;
 
-public class Voxel : ModuleRules
+public class Menu : ModuleRules
 {
-	public Voxel(ReadOnlyTargetRules target) : base(target)
+	public Menu(ReadOnlyTargetRules target) : base(target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
-		bUseRTTI = true;
 
 		PublicDependencyModuleNames.AddRange([
 			"Core"
@@ -16,13 +14,9 @@ public class Voxel : ModuleRules
 			"CoreUObject",
 			"Engine",
 
-			"ProceduralMeshComponent",
-
 			"Slate",
 			"SlateCore",
-			"UMG",
-
-			"VectorCore"
+			"UMG"
 		]);
 	}
 }

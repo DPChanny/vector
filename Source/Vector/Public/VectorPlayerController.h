@@ -2,18 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "InputActionValue.h"
 #include "VectorPlayerController.generated.h"
 
+struct FInputActionValue;
 class UInputMappingContext;
 class UInputAction;
 class AVectorPlayerCharacter;
 
 UCLASS()
-class PLAYER_API AVectorPlayerController : public APlayerController {
+
+class VECTOR_API AVectorPlayerController : public APlayerController {
   GENERATED_BODY()
 
-protected:
+ protected:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
   TObjectPtr<UInputMappingContext> IMC_VectorPlayer;
 
@@ -32,16 +33,16 @@ protected:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
   TObjectPtr<UInputAction> IA_Roll;
 
-private:
+ private:
   virtual void BeginPlay() override;
 
   virtual void SetupInputComponent() override;
 
-  void Move(const FInputActionValue &Value);
-  void Fire(const FInputActionValue &Value);
-  void Roll(const FInputActionValue &Value);
-  void Look(const FInputActionValue &Value);
-  void Eat(const FInputActionValue &Value);
+  void Move(const FInputActionValue& Value);
+  void Fire(const FInputActionValue& Value);
+  void Roll(const FInputActionValue& Value);
+  void Look(const FInputActionValue& Value);
+  void Eat(const FInputActionValue& Value);
 
   UPROPERTY()
   TObjectPtr<AVectorPlayerCharacter> ControlledCharacter;

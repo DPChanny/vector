@@ -5,10 +5,6 @@
 
 #include "VoxelBlockDataAsset.generated.h"
 
-class UMaterialInterface;
-class UNiagaraSystem;
-class USoundCue;
-
 UCLASS()
 
 class VOXEL_API UVoxelBlockDataAsset : public UVoxelSubstanceDataAsset {

@@ -4,9 +4,11 @@
 #include "GameFramework/GameStateBase.h"
 #include "LobbyGameState.generated.h"
 
+class ALobbyPlayerState;
+
 USTRUCT()
 
-struct FTeamInfo {
+struct FTeam {
   GENERATED_BODY()
 
   UPROPERTY(VisibleAnywhere)
@@ -16,14 +18,18 @@ struct FTeamInfo {
   FString Password;
 
   UPROPERTY(VisibleAnywhere)
-  TArray<APlayerState> Members;
+  TArray<TObjectPtr<ALobbyPlayerState>> Members;
 };
 
 UCLASS()
-class ALobbyGameState : public AGameStateBase {
+
+class LOBBY_API ALobbyGameState : public AGameStateBase {
   GENERATED_BODY()
 
-public:
+ public:
+  virtual void GetLifetimeReplicatedProps(
+      TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
   UPROPERTY(Replicated, VisibleAnywhere)
   bool bUsePassword = false;
 
@@ -34,5 +40,5 @@ public:
   int32 MaxTeams;
 
   UPROPERTY(VisibleAnywhere)
-  TArray<FTeamInfo> Teams;
+  TArray<FTeam> Teams;
 };

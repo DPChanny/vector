@@ -6,17 +6,13 @@ public class VectorCore : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(
-			[
-				"Core"
-			]
-		);
+		PublicDependencyModuleNames.AddRange([
+			"Core"
+		]);
 
-		PrivateDependencyModuleNames.AddRange(
-			[
-				"CoreUObject",
-				"Engine"
-			]
-		);
+		PrivateDependencyModuleNames.AddRange([
+			"CoreUObject",
+			"Engine"
+		]);
 	}
 }

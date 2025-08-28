@@ -31,14 +31,30 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
       TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
   UPROPERTY(Replicated, VisibleAnywhere)
-  bool bUsePassword = false;
-
-  UPROPERTY(Replicated, VisibleAnywhere)
   int32 MaxPlayersPerTeam;
 
   UPROPERTY(Replicated, VisibleAnywhere)
   int32 MaxTeams;
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY(Replicated, VisibleAnywhere)
   TArray<FTeam> Teams;
+
+  UPROPERTY(Replicated, VisibleAnywhere)
+  bool bPasswordAllowed = true;
+  UPROPERTY(Replicated, VisibleAnywhere)
+  bool bAddTeamAllowed = true;
+  UPROPERTY(Replicated, VisibleAnywhere)
+  bool bJoinTeamAllowed = true;
+
+  UPROPERTY(Replicated, VisibleAnywhere)
+  bool bUsePassword = true;
+
+  void AddTeam(const FString& TeamName, const FString& Password,
+               const bool bIsServer = false);
+
+  void JoinTeam(int32 TeamID, const FString& Password,
+                AVectorPlayerState* PlayerState, const bool bIsServer = false);
+
+  UFUNCTION(BlueprintCallable)
+  TArray<FString> GetTeamNames() const;
 };

@@ -1,30 +1,17 @@
 ﻿#include "LobbyGameMode.h"
+#include "LobbyGameState.h"
+#include "VectorGameInstance.h"
 
-AActor* ALobbyGameMode::FindPlayerStart_Implementation(AController* Controller,
-                                                       const FString& Name) {
-  return Super::FindPlayerStart_Implementation(Controller, Name);
-}
+void ALobbyGameMode::StartGame() const {
+  if (GetWorld()->GetFirstLocalPlayerFromController()) {
+    if (const TObjectPtr<UVectorGameInstance> GI =
+            Cast<UVectorGameInstance>(GetGameInstance())) {
+      if (const TObjectPtr<ALobbyGameState> GS =
+              GetGameState<ALobbyGameState>()) {
+        GI->TeamNames = GS->GetTeamNames();
+      }
+    }
+  }
 
-APlayerController* ALobbyGameMode::Login(UPlayer* NewPlayer,
-                                         ENetRole InRemoteRole,
-                                         const FString& Portal,
-                                         const FString& Options,
-                                         const FUniqueNetIdRepl& UniqueId,
-                                         FString& ErrorMessage) {
-  return Super::Login(NewPlayer, InRemoteRole, Portal, Options, UniqueId,
-                      ErrorMessage);
-}
-
-void ALobbyGameMode::PreLogin(const FString& Options, const FString& Address,
-                              const FUniqueNetIdRepl& UniqueId,
-                              FString& ErrorMessage) {
-  Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
-}
-
-void ALobbyGameMode::PostLogin(APlayerController* NewPlayer) {
-  Super::PostLogin(NewPlayer);
-}
-
-void ALobbyGameMode::RestartPlayer(AController* NewPlayer) {
-  Super::RestartPlayer(NewPlayer);
+  GetWorld()->ServerTravel(TEXT("/Game/Vector/Maps/Vector?listen"));
 }

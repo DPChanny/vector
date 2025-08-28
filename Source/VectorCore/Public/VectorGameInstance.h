@@ -9,5 +9,6 @@ UCLASS()
 class VECTORCORE_API UVectorGameInstance : public UGameInstance {
   GENERATED_BODY()
 
+public:
   TArray<FString> TeamNames;
 };

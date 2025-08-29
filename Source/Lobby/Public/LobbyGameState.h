@@ -18,6 +18,9 @@ struct FTeam {
   FString Password;
 
   UPROPERTY(VisibleAnywhere)
+  TObjectPtr<AVectorPlayerState> Leader;
+
+  UPROPERTY(VisibleAnywhere)
   TArray<TObjectPtr<AVectorPlayerState>> Members;
 };
 
@@ -36,8 +39,8 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
   UPROPERTY(Replicated, VisibleAnywhere)
   int32 MaxTeams;
 
-  UPROPERTY(Replicated, VisibleAnywhere)
-  TArray<FTeam> Teams;
+  UPROPERTY(VisibleAnywhere)
+  TMap<FString, FTeam> Teams;
 
   UPROPERTY(Replicated, VisibleAnywhere)
   bool bPasswordAllowed = true;
@@ -49,12 +52,11 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
   UPROPERTY(Replicated, VisibleAnywhere)
   bool bUsePassword = true;
 
-  void AddTeam(const FString& TeamName, const FString& Password,
-               const bool bIsServer = false);
+  void AddTeam(const FString& Name, const FString& Password,
+               const TObjectPtr<AVectorPlayerState> VectorPlayerState);
 
-  void JoinTeam(int32 TeamID, const FString& Password,
-                AVectorPlayerState* PlayerState, const bool bIsServer = false);
+  void JoinTeam(const FString& Name, const FString& Password,
+                const TObjectPtr<AVectorPlayerState> VectorPlayerState);
 
-  UFUNCTION(BlueprintCallable)
-  TArray<FString> GetTeamNames() const;
+  void LeaveTeam(const TObjectPtr<AVectorPlayerState> VectorPlayerState);
 };

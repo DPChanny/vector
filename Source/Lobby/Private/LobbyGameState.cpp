@@ -1,4 +1,5 @@
 ﻿#include "LobbyGameState.h"
+
 #include "Net/UnrealNetwork.h"
 #include "VectorPlayerState.h"
 
@@ -7,20 +8,30 @@ void ALobbyGameState::GetLifetimeReplicatedProps(
   Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
   DOREPLIFETIME(ALobbyGameState, Teams);
+
   DOREPLIFETIME(ALobbyGameState, MaxPlayersPerTeam);
   DOREPLIFETIME(ALobbyGameState, MaxTeams);
+
   DOREPLIFETIME(ALobbyGameState, bPasswordAllowed);
+  DOREPLIFETIME(ALobbyGameState, bJoinTeamAllowed);
+  DOREPLIFETIME(ALobbyGameState, bAddTeamAllowed);
 }
 
-void ALobbyGameState::JoinTeam(const int32 TeamID, const FString& Password,
-                               AVectorPlayerState* PlayerState,
-                               const bool bIsServer) {
-  if (!bIsServer && !bJoinTeamAllowed) {
+void ALobbyGameState::JoinTeam(
+    const FString& Name, const FString& Password,
+    const TObjectPtr<AVectorPlayerState> VectorPlayerState) {
+  if (!HasAuthority() || !VectorPlayerState) {
     return;
   }
 
-  FTeam& Team = Teams[TeamID];
-  if (bPasswordAllowed && Team.Password.Compare(Password)) {
+  if (!Teams.Contains(Name)) {
+    return;
+  }
+
+  FTeam& Team = Teams[Name];
+
+  if (bPasswordAllowed && !Team.Password.IsEmpty() &&
+      Team.Password != Password) {
     return;
   }
 
@@ -28,15 +39,42 @@ void ALobbyGameState::JoinTeam(const int32 TeamID, const FString& Password,
     return;
   }
 
-  if (!Team.Members.Contains(PlayerState)) {
-    Team.Members.Add(PlayerState);
-    PlayerState->TeamID = TeamID;
-  }
+  LeaveTeam(VectorPlayerState);
+
+  Team.Members.Add(VectorPlayerState);
+  VectorPlayerState->TeamName = Name;
 }
 
-void ALobbyGameState::AddTeam(const FString& TeamName, const FString& Password,
-                              const bool bIsServer) {
-  if (!bIsServer && !bAddTeamAllowed) {
+void ALobbyGameState::LeaveTeam(
+    const TObjectPtr<AVectorPlayerState> VectorPlayerState) {
+  if (!HasAuthority() || !VectorPlayerState) {
+    return;
+  }
+
+  FString& Name = VectorPlayerState->TeamName;
+
+  if (Name.IsEmpty()) {
+    return;
+  }
+
+  if (Teams.Contains(Name)) {
+    FTeam& Team = Teams[Name];
+    Team.Members.Remove(VectorPlayerState);
+
+    if (Team.Members.IsEmpty()) {
+      Teams.Remove(Name);
+    } else if (Team.Leader == VectorPlayerState) {
+      Team.Leader = Team.Members[0];
+    }
+  }
+
+  Name.Empty();
+}
+
+void ALobbyGameState::AddTeam(
+    const FString& Name, const FString& Password,
+    const TObjectPtr<AVectorPlayerState> VectorPlayerState) {
+  if (!HasAuthority() || !VectorPlayerState) {
     return;
   }
 
@@ -44,22 +82,13 @@ void ALobbyGameState::AddTeam(const FString& TeamName, const FString& Password,
     return;
   }
 
-  for (const FTeam& Team : Teams) {
-    if (Team.Name == TeamName) {
-      return;
-    }
+  if (Teams.Contains(Name)) {
+    return;
   }
 
-  FTeam NewTeam;
-  NewTeam.Name = TeamName;
-  NewTeam.Password = Password;
-  Teams.Add(NewTeam);
-}
+  LeaveTeam(VectorPlayerState);
 
-TArray<FString> ALobbyGameState::GetTeamNames() const {
-  TArray<FString> Names;
-  for (const FTeam& Team : Teams) {
-    Names.Add(Team.Name);
-  }
-  return Names;
+  Teams.Emplace(Name, {Name, Password, VectorPlayerState, {VectorPlayerState}});
+
+  VectorPlayerState->TeamName = Name;
 }

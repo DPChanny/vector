@@ -5,15 +5,12 @@
 #include "LobbyPlayerController.generated.h"
 
 class AVectorPlayerState;
-class ALobbyGameState;
+class ALobbyGameMode;
 
 UCLASS()
 
 class LOBBY_API ALobbyPlayerController : public APlayerController {
   GENERATED_BODY()
-
-  UPROPERTY()
-  TObjectPtr<ALobbyGameState> LobbyGameState;
 
   UPROPERTY()
   TObjectPtr<AVectorPlayerState> VectorPlayerState;
@@ -22,11 +19,14 @@ class LOBBY_API ALobbyPlayerController : public APlayerController {
 
  public:
   UFUNCTION(BlueprintCallable, Server, Reliable)
-  void ServerAddTeam(const FString& TeamName, const FString& Password) const;
+  void ServerAddTeam(const FString& Name, const FString& Password) const;
 
   UFUNCTION(BlueprintCallable, Server, Reliable)
-  void ServerJoinTeam(const int32& TeamID, const FString& Password) const;
+  void ServerJoinTeam(const FString& Name, const FString& Password) const;
 
   UFUNCTION(BlueprintCallable, Server, Reliable)
-  void ServerSetPlayerName(const FString& NewName) const;
+  void ServerLeaveTeam() const;
+
+  UFUNCTION(BlueprintCallable, Server, Reliable)
+  void ServerSetPlayerName(const FString& Name) const;
 };

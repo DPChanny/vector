@@ -5,6 +5,7 @@
 #include "GameFramework/Pawn.h"
 #include "VectorPlayerCharacter.generated.h"
 
+class AVectorPlayerState;
 struct FInputActionValue;
 class AVoxelWorldActor;
 class USphereComponent;
@@ -20,6 +21,9 @@ class VECTOR_API AVectorPlayerCharacter : public APawn, public IDamageable {
 
  public:
   AVectorPlayerCharacter();
+
+  UPROPERTY()
+  TObjectPtr<AVectorPlayerState> VectorPlayerState;
 
   void Move(const FInputActionValue& Value) const;
   void Look(const FInputActionValue& Value);

@@ -23,7 +23,7 @@ struct FVoxelEntityData : public FVoxelBlockData {
   GENERATED_BODY()
 
   UPROPERTY(VisibleAnywhere, Category = "Voxel | Entity")
-  int32 TeamID = -1;
+  FString TeamName;
 
   FVoxelEntityData() = default;
 
@@ -33,8 +33,8 @@ struct FVoxelEntityData : public FVoxelBlockData {
 
   explicit FVoxelEntityData(
       const TObjectPtr<const UVoxelEntityDataAsset>& InDataAsset,
-      const float InDurability, const int32 InTeamID)
-      : FVoxelBlockData(InDataAsset, InDurability), TeamID(InTeamID) {}
+      const float InDurability, const FString& InTeamName)
+      : FVoxelBlockData(InDataAsset, InDurability), TeamName(InTeamName) {}
 
   TObjectPtr<const UVoxelEntityDataAsset> GetEntityDataAsset() const {
     return Cast<const UVoxelEntityDataAsset>(DataAsset);
@@ -47,7 +47,7 @@ struct FVoxelEntityData : public FVoxelBlockData {
 
     return GetEntityDataAsset()->GetClass() ==
                Other->GetEntityDataAsset()->GetClass() &&
-           TeamID == Other->TeamID;
+           TeamName == Other->TeamName;
   }
 
   virtual float GetDensity() const override {
@@ -62,10 +62,11 @@ struct FVoxelEntityData : public FVoxelBlockData {
 };
 
 struct FVoxelEntityParams final : FVoxelBlockParams {
-  int32 TeamID;
+  FString TeamName;
 
-  explicit FVoxelEntityParams(const float InDurability, const int32 InTeamID)
-      : FVoxelBlockParams(InDurability), TeamID(InTeamID) {}
+  explicit FVoxelEntityParams(const float InDurability,
+                              const FString& InTeamName)
+      : FVoxelBlockParams(InDurability), TeamName(InTeamName) {}
 
   virtual FVoxelBaseParams* Clone() const override {
     return new FVoxelEntityParams(*this);

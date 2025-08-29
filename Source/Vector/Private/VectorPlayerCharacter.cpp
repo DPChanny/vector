@@ -11,6 +11,7 @@
 #include "Managers/BuildManager.h"
 #include "Managers/DataManager.h"
 #include "Managers/DebugManager.h"
+#include "VectorPlayerState.h"
 
 AVectorPlayerCharacter::AVectorPlayerCharacter() {
   PrimaryActorTick.bCanEverTick = true;
@@ -63,6 +64,7 @@ void AVectorPlayerCharacter::BeginPlay() {
 
   VoxelWorld = UGameplayStatics::GetActorOfClass(
       GetWorld(), AVoxelWorldActor::StaticClass());
+  VectorPlayerState = GetPlayerState<AVectorPlayerState>();
 }
 
 void AVectorPlayerCharacter::Tick(const float DeltaTime) {
@@ -113,17 +115,18 @@ void AVectorPlayerCharacter::Fire() const {
       const TObjectPtr<UDataManager> DataManager =
           VoxelWorld->GetComponentByClass<UDataManager>();
 
-      if (BuildManager && DataManager) {
+      if (DataManager) {
         const FIntVector CenterGlobalCoord =
             DataManager->WorldToGlobalCoord(HitResult.ImpactPoint);
 
-        BuildManager->ConstructBlocksInRadius(CenterGlobalCoord, Range, 10,
-                                              Poop, FVoxelEntityParams(0, 0));
+        if (VectorPlayerState && BuildManager) {
+          BuildManager->ConstructBlocksInRadius(
+              CenterGlobalCoord, Range, 10, Poop,
+              FVoxelEntityParams(0, VectorPlayerState->TeamName));
+        }
 
-        const TObjectPtr<UDebugManager> DebugManager =
-            VoxelWorld->GetComponentByClass<UDebugManager>();
-
-        if (DebugManager) {
+        if (const TObjectPtr<UDebugManager> DebugManager =
+                VoxelWorld->GetComponentByClass<UDebugManager>()) {
           DebugManager->SetDebugVoxel(CenterGlobalCoord, FColor::Yellow);
           DebugManager->FlushDebugVoxelBuffer();
         }

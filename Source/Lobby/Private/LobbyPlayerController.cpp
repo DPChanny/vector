@@ -12,7 +12,7 @@ void ALobbyPlayerController::ServerAddTeam_Implementation(
     const FString& Name, const FString& Password) const {
   if (const TObjectPtr<ALobbyGameMode> LobbyGameMode =
           GetWorld()->GetAuthGameMode<ALobbyGameMode>()) {
-    LobbyGameMode->HandleAddTeamRequest(Name, Password, this);
+    LobbyGameMode->HandleAddTeamRequest(Name, Password, VectorPlayerState);
   }
 }
 
@@ -20,14 +20,14 @@ void ALobbyPlayerController::ServerJoinTeam_Implementation(
     const FString& Name, const FString& Password) const {
   if (const TObjectPtr<ALobbyGameMode> LobbyGameMode =
           GetWorld()->GetAuthGameMode<ALobbyGameMode>()) {
-    LobbyGameMode->HandleJoinTeamRequest(Name, Password, this);
+    LobbyGameMode->HandleJoinTeamRequest(Name, Password, VectorPlayerState);
   }
 }
 
 void ALobbyPlayerController::ServerLeaveTeam_Implementation() const {
   if (const TObjectPtr<ALobbyGameMode> LobbyGameMode =
           GetWorld()->GetAuthGameMode<ALobbyGameMode>()) {
-    LobbyGameMode->HandleLeaveTeamRequest(this);
+    LobbyGameMode->HandleLeaveTeamRequest(VectorPlayerState);
   }
 }
 

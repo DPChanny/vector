@@ -30,6 +30,9 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
   GENERATED_BODY()
 
  public:
+  UPROPERTY(Replicated)
+  TObjectPtr<AVectorPlayerState> LobbyOwner;
+
   virtual void GetLifetimeReplicatedProps(
       TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 

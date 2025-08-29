@@ -4,6 +4,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "LobbyGameMode.generated.h"
 
+class AVectorPlayerState;
 class ALobbyGameState;
 
 UCLASS()
@@ -20,14 +21,16 @@ class LOBBY_API ALobbyGameMode : public AGameModeBase {
   UFUNCTION(BlueprintCallable)
   void StartGame() const;
 
+  virtual void PostLogin(APlayerController* NewPlayer) override;
+
   void HandleAddTeamRequest(
       const FString& Name, const FString& Password,
-      const TObjectPtr<const APlayerController> PlayerController) const;
+      TObjectPtr<AVectorPlayerState> VectorPlayerState) const;
 
   void HandleJoinTeamRequest(
       const FString& Name, const FString& Password,
-      const TObjectPtr<const APlayerController> PlayerController) const;
+      TObjectPtr<AVectorPlayerState> VectorPlayerState) const;
 
   void HandleLeaveTeamRequest(
-      const TObjectPtr<const APlayerController> PlayerController) const;
+      TObjectPtr<AVectorPlayerState> VectorPlayerState) const;
 };

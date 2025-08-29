@@ -9,35 +9,66 @@ void ALobbyGameMode::BeginPlay() {
 }
 
 void ALobbyGameMode::StartGame() const {
-  GetWorld()->ServerTravel(TEXT("/Game/Vector/Maps/Vector?listen"));
+  if (!LobbyGameState) {
+    return;
+  }
+
+  for (TObjectPtr PlayerState : LobbyGameState->PlayerArray) {
+    if (const TObjectPtr<AVectorPlayerState> VectorPlayerState =
+            Cast<AVectorPlayerState>(PlayerState)) {
+      if (VectorPlayerState->TeamName.IsEmpty()) {
+        return;
+      }
+    }
+
+    GetWorld()->ServerTravel(TEXT("/Game/Vector/Maps/Vector"));
+  }
+}
+
+void ALobbyGameMode::PostLogin(APlayerController* NewPlayer) {
+  Super::PostLogin(NewPlayer);
+
+  if (LobbyGameState && !LobbyGameState->LobbyOwner) {
+    LobbyGameState->LobbyOwner =
+        NewPlayer->GetPlayerState<AVectorPlayerState>();
+  }
 }
 
 void ALobbyGameMode::HandleAddTeamRequest(
     const FString& Name, const FString& Password,
-    const TObjectPtr<const APlayerController> PlayerController) const {
-  if (!LobbyGameState->bAddTeamAllowed &&
-      !PlayerController->IsLocalController()) {
+    const TObjectPtr<AVectorPlayerState> VectorPlayerState) const {
+  if (!VectorPlayerState || !LobbyGameState) {
     return;
   }
 
-  LobbyGameState->AddTeam(
-      Name, Password, PlayerController->GetPlayerState<AVectorPlayerState>());
+  if (!LobbyGameState->bAddTeamAllowed &&
+      VectorPlayerState != LobbyGameState->LobbyOwner) {
+    return;
+  }
+
+  LobbyGameState->AddTeam(Name, Password, VectorPlayerState);
 }
 
 void ALobbyGameMode::HandleJoinTeamRequest(
     const FString& Name, const FString& Password,
-    const TObjectPtr<const APlayerController> PlayerController) const {
-  if (!LobbyGameState->bJoinTeamAllowed &&
-      !PlayerController->IsLocalController()) {
+    const TObjectPtr<AVectorPlayerState> VectorPlayerState) const {
+  if (!VectorPlayerState || !LobbyGameState) {
     return;
   }
 
-  LobbyGameState->JoinTeam(
-      Name, Password, PlayerController->GetPlayerState<AVectorPlayerState>());
+  if (!LobbyGameState->bJoinTeamAllowed &&
+      VectorPlayerState != LobbyGameState->LobbyOwner) {
+    return;
+  }
+
+  LobbyGameState->JoinTeam(Name, Password, VectorPlayerState);
 }
 
 void ALobbyGameMode::HandleLeaveTeamRequest(
-    const TObjectPtr<const APlayerController> PlayerController) const {
-  LobbyGameState->LeaveTeam(
-      PlayerController->GetPlayerState<AVectorPlayerState>());
+    const TObjectPtr<AVectorPlayerState> VectorPlayerState) const {
+  if (!VectorPlayerState || !LobbyGameState) {
+    return;
+  }
+
+  LobbyGameState->LeaveTeam(VectorPlayerState);
 }

@@ -15,6 +15,8 @@ void ALobbyGameState::GetLifetimeReplicatedProps(
   DOREPLIFETIME(ALobbyGameState, bPasswordAllowed);
   DOREPLIFETIME(ALobbyGameState, bJoinTeamAllowed);
   DOREPLIFETIME(ALobbyGameState, bAddTeamAllowed);
+
+  DOREPLIFETIME(ALobbyGameState, LobbyOwner);
 }
 
 void ALobbyGameState::JoinTeam(

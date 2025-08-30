@@ -2,13 +2,10 @@
 #include "LobbyGameState.h"
 #include "VectorPlayerState.h"
 
-void ALobbyGameMode::BeginPlay() {
-  Super::BeginPlay();
-
-  LobbyGameState = GetGameState<ALobbyGameState>();
-}
-
 void ALobbyGameMode::StartGame() const {
+  const TObjectPtr<ALobbyGameState> LobbyGameState =
+      GetGameState<ALobbyGameState>();
+
   if (!LobbyGameState) {
     return;
   }
@@ -20,15 +17,48 @@ void ALobbyGameMode::StartGame() const {
         return;
       }
     }
-
-    GetWorld()->ServerTravel(TEXT("/Game/Vector/Maps/Vector"));
   }
+
+  GetWorld()->ServerTravel(TEXT("/Game/Vector/Maps/Vector"));
+}
+
+void ALobbyGameMode::PreLogin(const FString& Options, const FString& Address,
+                              const FUniqueNetIdRepl& UniqueId,
+                              FString& ErrorMessage) {
+  const TObjectPtr<ALobbyGameState> LobbyGameState =
+      GetGameState<ALobbyGameState>();
+
+  if (!LobbyGameState) {
+    ErrorMessage = "No Game State";
+    return;
+  }
+
+  Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+  if (!ErrorMessage.IsEmpty()) {
+    return;
+  }
+
+  if (LobbyGameState->IsFull()) {
+    ErrorMessage = "Lobby Is Full";
+  }
+}
+
+APawn* ALobbyGameMode::SpawnDefaultPawnFor_Implementation(
+    AController* NewPlayer, AActor* StartSpot) {
+  return nullptr;
 }
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer) {
   Super::PostLogin(NewPlayer);
 
-  if (LobbyGameState && !LobbyGameState->LobbyOwner) {
+  const TObjectPtr<ALobbyGameState> LobbyGameState =
+      GetGameState<ALobbyGameState>();
+
+  if (!LobbyGameState) {
+    return;
+  }
+
+  if (!LobbyGameState->LobbyOwner) {
     LobbyGameState->LobbyOwner =
         NewPlayer->GetPlayerState<AVectorPlayerState>();
   }
@@ -37,7 +67,14 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer) {
 void ALobbyGameMode::HandleAddTeamRequest(
     const FString& Name, const FString& Password,
     const TObjectPtr<AVectorPlayerState> VectorPlayerState) const {
-  if (!VectorPlayerState || !LobbyGameState) {
+  if (!VectorPlayerState) {
+    return;
+  }
+
+  const TObjectPtr<ALobbyGameState> LobbyGameState =
+      GetGameState<ALobbyGameState>();
+
+  if (!LobbyGameState) {
     return;
   }
 
@@ -52,7 +89,14 @@ void ALobbyGameMode::HandleAddTeamRequest(
 void ALobbyGameMode::HandleJoinTeamRequest(
     const FString& Name, const FString& Password,
     const TObjectPtr<AVectorPlayerState> VectorPlayerState) const {
-  if (!VectorPlayerState || !LobbyGameState) {
+  if (!VectorPlayerState) {
+    return;
+  }
+
+  const TObjectPtr<ALobbyGameState> LobbyGameState =
+      GetGameState<ALobbyGameState>();
+
+  if (!LobbyGameState) {
     return;
   }
 
@@ -66,9 +110,12 @@ void ALobbyGameMode::HandleJoinTeamRequest(
 
 void ALobbyGameMode::HandleLeaveTeamRequest(
     const TObjectPtr<AVectorPlayerState> VectorPlayerState) const {
-  if (!VectorPlayerState || !LobbyGameState) {
+  if (!VectorPlayerState) {
     return;
   }
 
-  LobbyGameState->LeaveTeam(VectorPlayerState);
+  if (const TObjectPtr<ALobbyGameState> LobbyGameState =
+          GetGameState<ALobbyGameState>()) {
+    LobbyGameState->LeaveTeam(VectorPlayerState);
+  }
 }

@@ -73,6 +73,10 @@ void ALobbyGameState::LeaveTeam(
   Name.Empty();
 }
 
+bool ALobbyGameState::IsFull() const {
+  return PlayerArray.Num() > MaxPlayersPerTeam * MaxPlayersPerTeam;
+}
+
 void ALobbyGameState::AddTeam(
     const FString& Name, const FString& Password,
     const TObjectPtr<AVectorPlayerState> VectorPlayerState) {

@@ -62,4 +62,6 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
                 const TObjectPtr<AVectorPlayerState> VectorPlayerState);
 
   void LeaveTeam(const TObjectPtr<AVectorPlayerState> VectorPlayerState);
+
+  bool IsFull() const;
 };

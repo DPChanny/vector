@@ -15,11 +15,6 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "Player",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "VectorCore",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
@@ -27,10 +22,7 @@
 		{
 			"Name": "Lobby",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine"
-			]
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "Menu",

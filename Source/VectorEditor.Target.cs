@@ -15,7 +15,6 @@ public class VectorEditorTarget : TargetRules
 
 	private void RegisterModulesCreatedByRider()
 	{
-		ExtraModuleNames.AddRange(new[] { "VectorCore", "Lobby", "Menu" });
-		ExtraModuleNames.AddRange(["Voxel", "Player"]);
+		ExtraModuleNames.AddRange(["VectorCore", "Lobby", "Menu", "Voxel"]);
 	}
 }

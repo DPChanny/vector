@@ -5,24 +5,7 @@
 #include "LobbyGameState.generated.h"
 
 class AVectorPlayerState;
-
-USTRUCT()
-
-struct FTeam {
-  GENERATED_BODY()
-
-  UPROPERTY(VisibleAnywhere)
-  FString Name;
-
-  UPROPERTY(VisibleAnywhere)
-  FString Password;
-
-  UPROPERTY(VisibleAnywhere)
-  TObjectPtr<AVectorPlayerState> Leader;
-
-  UPROPERTY(VisibleAnywhere)
-  TArray<TObjectPtr<AVectorPlayerState>> Members;
-};
+class UTeam;
 
 UCLASS()
 
@@ -36,6 +19,9 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
   virtual void GetLifetimeReplicatedProps(
       TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+  virtual bool ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch,
+                                   FReplicationFlags* RepFlags) override;
+
   UPROPERTY(Replicated, VisibleAnywhere)
   int32 MaxPlayersPerTeam;
 
@@ -43,7 +29,7 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
   int32 MaxTeams;
 
   UPROPERTY(VisibleAnywhere)
-  TMap<FString, FTeam> Teams;
+  TMap<FString, TObjectPtr<UTeam>> Teams;
 
   UPROPERTY(Replicated, VisibleAnywhere)
   bool bPasswordAllowed = true;
@@ -62,6 +48,9 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
                 const TObjectPtr<AVectorPlayerState> VectorPlayerState);
 
   void LeaveTeam(const TObjectPtr<AVectorPlayerState> VectorPlayerState);
+
+  UFUNCTION(NetMulticast, Reliable)
+  void OnTeamsChanged();
 
   bool IsFull() const;
 };

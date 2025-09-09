@@ -18,9 +18,8 @@ public class Voxel : ModuleRules
 
 			"ProceduralMeshComponent",
 
-			"Slate",
-			"SlateCore",
 			"UMG",
+			"CommonUI",
 
 			"VectorCore"
 		]);

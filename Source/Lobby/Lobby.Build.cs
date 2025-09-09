@@ -14,9 +14,8 @@ public class Lobby : ModuleRules
 			"CoreUObject",
 			"Engine",
 
-			"Slate",
-			"SlateCore",
 			"UMG",
+			"CommonUI",
 
 			"Vector",
 			"VectorCore"

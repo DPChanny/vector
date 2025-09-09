@@ -22,7 +22,10 @@
 		{
 			"Name": "Lobby",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"CommonUI"
+			]
 		},
 		{
 			"Name": "Menu",
@@ -46,6 +49,10 @@
 		{
 			"Name": "VisualStudioCodeSourceCodeAccess",
 			"Enabled": false
+		},
+		{
+			"Name": "CommonUI",
+			"Enabled": true
 		}
 	]
 }

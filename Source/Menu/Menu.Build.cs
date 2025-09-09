@@ -14,9 +14,8 @@ public class Menu : ModuleRules
 			"CoreUObject",
 			"Engine",
 
-			"Slate",
-			"SlateCore",
-			"UMG"
+			"UMG",
+			"CommonUI"
 		]);
 	}
 }

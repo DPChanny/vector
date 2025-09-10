@@ -38,56 +38,38 @@ bool ALobbyGameState::ReplicateSubobjects(UActorChannel* Channel,
 
 void ALobbyGameState::JoinTeam(
     const FString& Name, const FString& Password,
-    const TObjectPtr<AVectorPlayerState> VectorPlayerState) {
+    const TObjectPtr<AVectorPlayerState> VectorPlayerState) const {
   if (!HasAuthority() || !VectorPlayerState) {
     return;
   }
 
-  if (!Teams.Contains(Name)) {
-    return;
+  if (!VectorPlayerState->TeamName.IsEmpty() &&
+      VectorPlayerState->TeamName != Name) {
+    LeaveTeam(VectorPlayerState);
   }
 
-  UTeam& Team = *Teams[Name];
-
-  if (bPasswordAllowed && !Team.Password.IsEmpty() &&
-      Team.Password != Password) {
-    return;
+  if (const TObjectPtr<UTeam> Team = Teams.FindRef(Name)) {
+    Team->Join(VectorPlayerState, Password);
   }
-
-  if (Team.Members.Num() >= MaxPlayersPerTeam) {
-    return;
-  }
-
-  LeaveTeam(VectorPlayerState);
-
-  Team.Members.Add(VectorPlayerState);
-  VectorPlayerState->TeamName = Name;
 }
 
 void ALobbyGameState::LeaveTeam(
-    const TObjectPtr<AVectorPlayerState> VectorPlayerState) {
-  if (!HasAuthority() || !VectorPlayerState) {
+    const TObjectPtr<AVectorPlayerState> VectorPlayerState) const {
+  if (!HasAuthority() || !VectorPlayerState ||
+      VectorPlayerState->TeamName.IsEmpty()) {
     return;
   }
 
-  FString& Name = VectorPlayerState->TeamName;
-
-  if (Name.IsEmpty()) {
-    return;
+  if (const TObjectPtr<UTeam> Team =
+          Teams.FindRef(VectorPlayerState->TeamName)) {
+    Team->Leave(VectorPlayerState);
   }
+}
 
-  if (Teams.Contains(Name)) {
-    UTeam& Team = *Teams[Name];
-    Team.Members.Remove(VectorPlayerState);
-
-    if (Team.Members.IsEmpty()) {
-      Teams.Remove(Name);
-    } else if (Team.Leader == VectorPlayerState) {
-      Team.Leader = Team.Members[0];
-    }
+void ALobbyGameState::RemoveTeam(const FString& TeamName) {
+  if (HasAuthority()) {
+    Teams.Remove(TeamName);
   }
-
-  Name.Empty();
 }
 
 void ALobbyGameState::OnTeamsChanged_Implementation() {}
@@ -103,17 +85,21 @@ void ALobbyGameState::AddTeam(
     return;
   }
 
-  if (Teams.Num() >= MaxTeams) {
+  if (Teams.Num() >= MaxTeams || Teams.Contains(Name)) {
     return;
   }
 
-  if (Teams.Contains(Name)) {
-    return;
+  if (!VectorPlayerState->TeamName.IsEmpty()) {
+    LeaveTeam(VectorPlayerState);
   }
 
-  LeaveTeam(VectorPlayerState);
+  const TObjectPtr<UTeam> NewTeam = NewObject<UTeam>(this);
+  NewTeam->Name = Name;
+  NewTeam->Password = Password;
+  NewTeam->Leader = VectorPlayerState;
+  NewTeam->OwningGameState = this;
 
-  // Teams.Emplace(Name, Name, Password, VectorPlayerState, {VectorPlayerState});
+  Teams.Add(Name, NewTeam);
 
-  VectorPlayerState->TeamName = Name;
+  NewTeam->Join(VectorPlayerState, Password);
 }

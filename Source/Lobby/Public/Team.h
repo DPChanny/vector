@@ -4,18 +4,23 @@
 #include "Team.generated.h"
 
 class AVectorPlayerState;
+class ALobbyGameState;
 
 UCLASS()
 
-class UTeam : public UObject {
+class LOBBY_API UTeam : public UObject {
   GENERATED_BODY()
 
+ public:
   virtual bool IsSupportedForNetworking() const override { return true; }
 
   virtual void GetLifetimeReplicatedProps(
       TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
- public:
+  void Join(TObjectPtr<AVectorPlayerState> PlayerState,
+            const FString& InPassword);
+  void Leave(TObjectPtr<AVectorPlayerState> PlayerState);
+
   UPROPERTY(VisibleAnywhere, Replicated)
   FString Name;
 
@@ -27,4 +32,7 @@ class UTeam : public UObject {
 
   UPROPERTY(VisibleAnywhere, Replicated)
   TArray<TObjectPtr<AVectorPlayerState>> Members;
+
+  UPROPERTY()
+  TObjectPtr<ALobbyGameState> OwningGameState;
 };

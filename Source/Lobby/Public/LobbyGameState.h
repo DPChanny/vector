@@ -45,9 +45,11 @@ class LOBBY_API ALobbyGameState : public AGameStateBase {
                const TObjectPtr<AVectorPlayerState> VectorPlayerState);
 
   void JoinTeam(const FString& Name, const FString& Password,
-                const TObjectPtr<AVectorPlayerState> VectorPlayerState);
+                const TObjectPtr<AVectorPlayerState> VectorPlayerState) const;
 
-  void LeaveTeam(const TObjectPtr<AVectorPlayerState> VectorPlayerState);
+  void LeaveTeam(const TObjectPtr<AVectorPlayerState> VectorPlayerState) const;
+
+  void RemoveTeam(const FString& TeamName);
 
   UFUNCTION(NetMulticast, Reliable)
   void OnTeamsChanged();

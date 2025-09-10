@@ -48,5 +48,10 @@ void UTeam::Leave(const TObjectPtr<AVectorPlayerState> PlayerState) {
     } else if (Leader == PlayerState) {
       Leader = Members[0];
     }
+    OnTeamMembersChanged.Broadcast();
   }
+}
+
+void UTeam::OnRep_Members() const {
+  OnTeamMembersChanged.Broadcast();
 }

@@ -21,6 +21,12 @@ class LOBBY_API UTeam : public UObject {
             const FString& InPassword);
   void Leave(TObjectPtr<AVectorPlayerState> PlayerState);
 
+  DECLARE_MULTICAST_DELEGATE(FOnTeamMembersChanged);
+  FOnTeamMembersChanged OnTeamMembersChanged;
+
+  UFUNCTION()
+  void OnRep_Members() const;
+
   UPROPERTY(VisibleAnywhere, Replicated)
   FString Name;
 
@@ -30,7 +36,7 @@ class LOBBY_API UTeam : public UObject {
   UPROPERTY(VisibleAnywhere, Replicated)
   TObjectPtr<AVectorPlayerState> Leader;
 
-  UPROPERTY(VisibleAnywhere, Replicated)
+  UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Members)
   TArray<TObjectPtr<AVectorPlayerState>> Members;
 
   UPROPERTY()
